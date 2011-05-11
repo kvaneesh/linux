@@ -11,18 +11,18 @@
  * Flags for nfsd_permission
  */
 #define NFSD_MAY_NOP		0
-#define NFSD_MAY_EXEC		1 /* == MAY_EXEC */
-#define NFSD_MAY_WRITE		2 /* == MAY_WRITE */
-#define NFSD_MAY_READ		4 /* == MAY_READ */
-#define NFSD_MAY_SATTR		8
-#define NFSD_MAY_TRUNC		16
-#define NFSD_MAY_LOCK		32
-#define NFSD_MAY_OWNER_OVERRIDE	64
-#define NFSD_MAY_LOCAL_ACCESS	128 /* IRIX doing local access check on device special file*/
-#define NFSD_MAY_BYPASS_GSS_ON_ROOT 256
-#define NFSD_MAY_NOT_BREAK_LEASE 512
-#define NFSD_MAY_CREATE_DIR	1024
-#define NFSD_MAY_CREATE_FILE	2048
+#define NFSD_MAY_EXEC		0x1 /* == MAY_EXEC */
+#define NFSD_MAY_WRITE		0x2 /* == MAY_WRITE */
+#define NFSD_MAY_READ		0x4 /* == MAY_READ */
+#define NFSD_MAY_SATTR		0x8
+#define NFSD_MAY_TRUNC		0x10
+#define NFSD_MAY_LOCK		0x20
+#define NFSD_MAY_OWNER_OVERRIDE	0x40
+#define NFSD_MAY_LOCAL_ACCESS	0x80 /* IRIX doing local access check on device special file*/
+#define NFSD_MAY_BYPASS_GSS_ON_ROOT	0x100
+#define NFSD_MAY_NOT_BREAK_LEASE	0x200
+#define NFSD_MAY_CREATE_DIR		0x400
+#define NFSD_MAY_CREATE_FILE		0x800
 
 #define NFSD_MAY_CREATE		(NFSD_MAY_EXEC|NFSD_MAY_WRITE)
 #define NFSD_MAY_REMOVE		(NFSD_MAY_EXEC|NFSD_MAY_WRITE|NFSD_MAY_TRUNC)
