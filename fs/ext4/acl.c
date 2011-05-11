@@ -181,7 +181,7 @@ ext4_get_acl(struct inode *inode, int type)
  *
  * inode->i_mutex: down unless called from ext4_new_inode
  */
-static int
+int
 ext4_set_acl(handle_t *handle, struct inode *inode, int type,
 	     struct posix_acl *acl)
 {
