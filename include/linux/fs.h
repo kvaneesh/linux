@@ -64,6 +64,8 @@ struct inodes_stat_t {
 #define MAY_CHDIR 64
 #define MAY_CREATE_FILE 128
 #define MAY_CREATE_DIR 256
+#define MAY_DELETE_CHILD 512
+#define MAY_DELETE_SELF 1024
 
 /*
  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
