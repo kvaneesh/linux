@@ -1754,6 +1754,12 @@ extern int ext4_orphan_del(handle_t *, struct inode *);
 extern int ext4_htree_fill_tree(struct file *dir_file, __u32 start_hash,
 				__u32 start_minor_hash, __u32 *next_hash);
 
+#if defined(CONFIG_EXT4_FS_POSIX_ACL) || defined(CONFIG_EXT4_FS_RICHACL)
+extern int ext4_check_acl(struct inode *, int, unsigned int);
+#else
+# define ext4_check_acl NULL
+#endif
+
 /* resize.c */
 extern int ext4_group_add(struct super_block *sb,
 				struct ext4_new_group_data *input);
