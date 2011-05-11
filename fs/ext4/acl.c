@@ -130,17 +130,16 @@ fail:
  * Inode operation get_posix_acl().
  *
  * inode->i_mutex: don't care
+ * We don't check whether posix acl is enabled or not.
+ * Caller should make sure of that.
  */
-static struct posix_acl *
+struct posix_acl *
 ext4_get_acl(struct inode *inode, int type)
 {
 	int name_index;
 	char *value = NULL;
 	struct posix_acl *acl;
 	int retval;
-
-	if (!IS_POSIXACL(inode))
-		return NULL;
 
 	acl = get_cached_acl(inode, type);
 	if (acl != ACL_NOT_CACHED)
@@ -241,6 +240,9 @@ int
 ext4_check_posix_acl(struct inode *inode, int mask, unsigned int flags)
 {
 	struct posix_acl *acl;
+
+	if (!IS_POSIXACL(inode))
+		return -EAGAIN;
 
 	if (flags & IPERM_FLAG_RCU) {
 		if (!negative_cached_acl(inode, ACL_TYPE_ACCESS))
