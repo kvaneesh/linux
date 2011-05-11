@@ -45,9 +45,9 @@
 #include <linux/statfs.h>
 #include <linux/utsname.h>
 #include <linux/sunrpc/svcauth_gss.h>
+#include <linux/nfs4_acl.h>
 
 #include "idmap.h"
-#include "acl.h"
 #include "xdr4.h"
 #include "vfs.h"
 
