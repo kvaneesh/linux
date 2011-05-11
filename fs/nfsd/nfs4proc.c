@@ -481,13 +481,6 @@ nfsd4_create(struct svc_rqst *rqstp, struct nfsd4_compound_state *cstate,
 
 	fh_init(&resfh, NFS4_FHSIZE);
 
-	status = fh_verify(rqstp, &cstate->current_fh, S_IFDIR,
-			   NFSD_MAY_CREATE);
-	if (status == nfserr_symlink)
-		status = nfserr_notdir;
-	if (status)
-		return status;
-
 	status = check_attr_support(rqstp, cstate, create->cr_bmval,
 				    nfsd_attrmask);
 	if (status)
