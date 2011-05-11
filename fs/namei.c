@@ -181,8 +181,6 @@ static int acl_permission_check(struct inode *inode, int mask, unsigned int flag
 {
 	umode_t			mode = inode->i_mode;
 
-	mask &= MAY_READ | MAY_WRITE | MAY_EXEC;
-
 	if (current_user_ns() != inode_userns(inode))
 		goto other_perms;
 
@@ -203,7 +201,7 @@ other_perms:
 	/*
 	 * If the DACs are ok we don't need any capability check.
 	 */
-	if ((mask & ~mode) == 0)
+	if ((mask & (MAY_READ | MAY_WRITE | MAY_EXEC) & ~mode) == 0)
 		return 0;
 	return -EACCES;
 }
