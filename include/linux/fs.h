@@ -66,6 +66,9 @@ struct inodes_stat_t {
 #define MAY_CREATE_DIR 256
 #define MAY_DELETE_CHILD 512
 #define MAY_DELETE_SELF 1024
+#define MAY_TAKE_OWNERSHIP 2048
+#define MAY_CHMOD 4096
+#define MAY_SET_TIMES 8192
 
 /*
  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
