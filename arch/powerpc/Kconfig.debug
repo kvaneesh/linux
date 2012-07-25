@@ -262,6 +262,11 @@ config PPC_EARLY_DEBUG_OPAL_HVSI
 	  Select this to enable early debugging for the PowerNV platform
 	  using an "hvsi" console
 
+config PPC_EARLY_DEBUG_MAMBO
+	bool "Mambo console"
+	help
+	  Select this to enable early debugging on mambo
+
 endchoice
 
 config PPC_EARLY_DEBUG_OPAL
