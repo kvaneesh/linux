@@ -86,6 +86,8 @@ int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 	spin_lock_init(mm->context.cop_lockp);
 #endif /* CONFIG_PPC_ICSWX */
 
+	INIT_LIST_HEAD(&mm->context.pgtable_list);
+
 	return 0;
 }
 
@@ -99,11 +101,21 @@ EXPORT_SYMBOL_GPL(__destroy_context);
 
 void destroy_context(struct mm_struct *mm)
 {
+	struct page *page;
+	struct list_head *item, *tmp;
+
 #ifdef CONFIG_PPC_ICSWX
 	drop_cop(mm->context.acop, mm);
 	kfree(mm->context.cop_lockp);
 	mm->context.cop_lockp = NULL;
 #endif /* CONFIG_PPC_ICSWX */
+	list_for_each_safe(item, tmp, &mm->context.pgtable_list) {
+		page = list_entry(item, struct page, lru);
+		list_del(&page->lru);
+		pgtable_page_dtor(page);
+		atomic_set(&page->_mapcount, -1);
+		__free_page(page);
+	}
 	__destroy_context(mm->context.id);
 	subpage_prot_free(mm);
 	mm->context.id = MMU_NO_CONTEXT;

@@ -498,6 +498,10 @@ typedef struct {
 	unsigned long acop;	/* mask of enabled coprocessor types */
 	unsigned int cop_pid;	/* pid value used with coprocessors */
 #endif /* CONFIG_PPC_ICSWX */
+#ifdef CONFIG_PPC_64K_PAGES
+	/* for 2K page table support */
+	struct list_head pgtable_list;
+#endif
 } mm_context_t;
 
 
