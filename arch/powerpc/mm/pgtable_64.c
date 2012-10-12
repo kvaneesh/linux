@@ -337,3 +337,193 @@ EXPORT_SYMBOL(__ioremap_at);
 EXPORT_SYMBOL(iounmap);
 EXPORT_SYMBOL(__iounmap);
 EXPORT_SYMBOL(__iounmap_at);
+
+#ifdef CONFIG_PPC_64K_PAGES
+/*
+ * we support 15 fragments per PTE page. This is limited by how many
+ * bits we can pack in page->_mapcount. We use the first half for
+ * tracking the usage for rcu page table free.
+ */
+#define FRAG_MASK_BITS	15
+#define FRAG_MASK ((1 << FRAG_MASK_BITS) - 1)
+/*
+ * We use a 2K PTE page fragment and another 2K for storing
+ * real_pte_t hash index
+ */
+#define PTE_FRAG_SIZE (2 * PTRS_PER_PTE * sizeof(pte_t))
+
+static inline unsigned int atomic_xor_bits(atomic_t *v, unsigned int bits)
+{
+	unsigned int old, new;
+
+	do {
+		old = atomic_read(v);
+		new = old ^ bits;
+	} while (atomic_cmpxchg(v, old, new) != old);
+	return new;
+}
+
+unsigned long *page_table_alloc(struct mm_struct *mm, unsigned long vmaddr)
+{
+	struct page *page;
+	unsigned int mask, bit;
+	unsigned long *table;
+
+	spin_lock(&mm->page_table_lock);
+	mask = FRAG_MASK;
+	if (!list_empty(&mm->context.pgtable_list)) {
+		page = list_first_entry(&mm->context.pgtable_list,
+					struct page, lru);
+		table = (unsigned long *) page_address(page);
+		mask = atomic_read(&page->_mapcount);
+		/*
+		 * Update with the higher order mask bits accumulated,
+		 * added as a part of rcu free.
+		 */
+		mask = mask | (mask >> FRAG_MASK_BITS);
+	}
+	if ((mask & FRAG_MASK) == FRAG_MASK) {
+		spin_unlock(&mm->page_table_lock);
+		page = alloc_page(GFP_KERNEL|__GFP_REPEAT);
+		if (!page)
+			return NULL;
+		pgtable_page_ctor(page);
+		atomic_set(&page->_mapcount, 1);
+		table = (unsigned long *) page_address(page);
+		spin_lock(&mm->page_table_lock);
+		INIT_LIST_HEAD(&page->lru);
+		list_add(&page->lru, &mm->context.pgtable_list);
+	} else {
+		/* The second half is used for real_pte_t hindex */
+		for (bit = 1; mask & bit; bit <<= 1)
+			table = (unsigned long *)((char *)table + PTE_FRAG_SIZE);
+
+		mask = atomic_xor_bits(&page->_mapcount, bit);
+		/*
+		 * We have taken up all the space, remove this from
+		 * the list, we will add it back when we have a free slot
+		 */
+		if ((mask & FRAG_MASK) == FRAG_MASK)
+			list_del_init(&page->lru);
+	}
+	spin_unlock(&mm->page_table_lock);
+	/*
+	 * zero out the newly allocated area, this make sure we don't
+	 * see the old left over pte values
+	 */
+	memset(table, 0, PTE_FRAG_SIZE);
+	return table;
+}
+
+void page_table_free(struct mm_struct *mm, unsigned long *table)
+{
+	struct page *page;
+	unsigned int bit, mask;
+
+	/* Free 4K page table fragment of a 64K page */
+	page = virt_to_page(table);
+	bit = 1 << ((__pa(table) & ~PAGE_MASK) / PTE_FRAG_SIZE);
+	spin_lock(&mm->page_table_lock);
+	mask = atomic_xor_bits(&page->_mapcount, bit);
+	if (mask == 0)
+		list_del(&page->lru);
+	else if (mask & FRAG_MASK) {
+		/*
+		 * Add the page table page to pgtable_list so that
+		 * the free fragment can be used by the next alloc
+		 */
+		list_del_init(&page->lru);
+		list_add(&page->lru, &mm->context.pgtable_list);
+	}
+	spin_unlock(&mm->page_table_lock);
+	if (mask == 0) {
+		pgtable_page_dtor(page);
+		atomic_set(&page->_mapcount, -1);
+		__free_page(page);
+	}
+}
+
+#ifdef CONFIG_SMP
+static void __page_table_free_rcu(void *table)
+{
+	unsigned int bit;
+	struct page *page;
+	/*
+	 * this is a PTE page free 4K page table
+	 * fragment of a 64K page.
+	 */
+	page = virt_to_page(table);
+	bit = 1 << ((__pa(table) & ~PAGE_MASK) / PTE_FRAG_SIZE);
+	bit <<= FRAG_MASK_BITS;
+	/*
+	 * clear the higher half and if nobody used the page in
+	 * between, even lower half would be zero.
+	 */
+	if (atomic_xor_bits(&page->_mapcount, bit) == 0) {
+		pgtable_page_dtor(page);
+		atomic_set(&page->_mapcount, -1);
+		__free_page(page);
+	}
+}
+
+static void page_table_free_rcu(struct mmu_gather *tlb, unsigned long *table)
+{
+	struct page *page;
+	struct mm_struct *mm;
+	unsigned int bit, mask;
+
+	mm = tlb->mm;
+	/* Free 4K page table fragment of a 64K page */
+	page = virt_to_page(table);
+	bit = 1 << ((__pa(table) & ~PAGE_MASK) / PTE_FRAG_SIZE);
+	spin_lock(&mm->page_table_lock);
+	/*
+	 * stash the actual mask in higher half, and clear the lower half
+	 * and selectively, add remove from pgtable list
+	 */
+	mask = atomic_xor_bits(&page->_mapcount, bit | (bit << FRAG_MASK_BITS));
+	if (!(mask & FRAG_MASK))
+		list_del(&page->lru);
+	else {
+		/*
+		 * Add the page table page to pgtable_list so that
+		 * the free fragment can be used by the next alloc.
+		 * We will not be able to use it untill the rcu grace period
+		 * is over, because we have the corresponding high half bit set
+		 * and page_table_alloc looks at the high half bit.
+		 */
+		list_del_init(&page->lru);
+		list_add_tail(&page->lru, &mm->context.pgtable_list);
+	}
+	spin_unlock(&mm->page_table_lock);
+	tlb_remove_table(tlb, table);
+}
+
+void pgtable_free_tlb(struct mmu_gather *tlb, void *table, int shift)
+{
+	unsigned long pgf = (unsigned long)table;
+
+	BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
+	pgf |= shift;
+	if (shift == 0)
+		/* PTE page needs special handling */
+		page_table_free_rcu(tlb, table);
+	else
+		tlb_remove_table(tlb, (void *)pgf);
+}
+
+void __tlb_remove_table(void *_table)
+{
+	void *table = (void *)((unsigned long)_table & ~MAX_PGTABLE_INDEX_SIZE);
+	unsigned shift = (unsigned long)_table & MAX_PGTABLE_INDEX_SIZE;
+
+	if (!shift)
+		/* PTE page needs special handling */
+		__page_table_free_rcu(table);
+	else {
+		BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
+		kmem_cache_free(PGT_CACHE(shift), table);
+	}
+}
+#endif
+#endif /* CONFIG_PPC_64K_PAGES */
