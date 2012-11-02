@@ -338,8 +338,13 @@ static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
 #define pgoff_to_pte(off)	((pte_t) {((off) << PTE_RPN_SHIFT)|_PAGE_FILE})
 #define PTE_FILE_MAX_BITS	(BITS_PER_LONG - PTE_RPN_SHIFT)
 
-void pgtable_cache_add(unsigned shift, void (*ctor)(void *));
+extern void __pgtable_cache_add(unsigned index, unsigned long table_size,
+				void (*ctor)(void *));
 void pgtable_cache_init(void);
+static inline void pgtable_cache_add(unsigned shift, void (*ctor)(void *))
+{
+	return __pgtable_cache_add(shift, sizeof(void *) << shift, ctor);
+}
 
 /*
  * find_linux_pte returns the address of a linux pte for a given
