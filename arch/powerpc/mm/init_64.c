@@ -88,7 +88,11 @@ static void pgd_ctor(void *addr)
 
 static void pmd_ctor(void *addr)
 {
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	memset(addr, 0, PMD_TABLE_SIZE * 2);
+#else
 	memset(addr, 0, PMD_TABLE_SIZE);
+#endif
 }
 
 struct kmem_cache *pgtable_cache[MAX_PGTABLE_INDEX_SIZE];
@@ -138,7 +142,16 @@ void __pgtable_cache_add(unsigned int index, unsigned long table_size,
 void pgtable_cache_init(void)
 {
 	pgtable_cache_add(PGD_INDEX_SIZE, pgd_ctor);
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	/*
+	 * we store the pgtable details in the second half of PMD
+	 */
+	if (PGT_CACHE(PMD_INDEX_SIZE))
+		pr_err("PMD Page cache already initialized with different size\n");
+	__pgtable_cache_add(PMD_INDEX_SIZE, PMD_TABLE_SIZE * 2, pmd_ctor);
+#else
 	pgtable_cache_add(PMD_INDEX_SIZE, pmd_ctor);
+#endif
 	if (!PGT_CACHE(PGD_INDEX_SIZE) || !PGT_CACHE(PMD_INDEX_SIZE))
 		panic("Couldn't allocate pgtable caches");
 
