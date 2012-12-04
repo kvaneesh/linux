@@ -27,7 +27,8 @@ static void *real_vmalloc_addr(void *x)
 	unsigned long addr = (unsigned long) x;
 	pte_t *p;
 
-	p = find_linux_pte(swapper_pg_dir, addr);
+/* FIXME!! */
+	p = find_linux_pte(swapper_pg_dir, addr, NULL);
 	if (!p || !pte_present(*p))
 		return NULL;
 	/* assume we don't have huge pages in vmalloc space... */
@@ -145,6 +146,7 @@ static void remove_revmap_chain(struct kvm *kvm, long pte_index,
 	unlock_rmap(rmap);
 }
 
+/* FIXME!! check */
 static pte_t lookup_linux_pte(pgd_t *pgdir, unsigned long hva,
 			      int writing, unsigned long *pte_sizep)
 {
@@ -152,7 +154,7 @@ static pte_t lookup_linux_pte(pgd_t *pgdir, unsigned long hva,
 	unsigned long ps = *pte_sizep;
 	unsigned int shift;
 
-	ptep = find_linux_pte_or_hugepte(pgdir, hva, &shift);
+	ptep = find_linux_pte_or_hugepte(pgdir, hva, &shift, NULL);
 	if (!ptep)
 		return __pte(0);
 	if (shift)

@@ -346,39 +346,18 @@ static inline void pgtable_cache_add(unsigned shift, void (*ctor)(void *))
 	return __pgtable_cache_add(shift, sizeof(void *) << shift, ctor);
 }
 
-/*
- * find_linux_pte returns the address of a linux pte for a given
- * effective address and directory.  If not found, it returns zero.
- */
-static inline pte_t *find_linux_pte(pgd_t *pgdir, unsigned long ea)
-{
-	pgd_t *pg;
-	pud_t *pu;
-	pmd_t *pm;
-	pte_t *pt = NULL;
-
-	pg = pgdir + pgd_index(ea);
-	if (!pgd_none(*pg)) {
-		pu = pud_offset(pg, ea);
-		if (!pud_none(*pu)) {
-			pm = pmd_offset(pu, ea);
-			if (pmd_present(*pm))
-				pt = pte_offset_kernel(pm, ea);
-		}
-	}
-	return pt;
-}
-
+pte_t *find_linux_pte(pgd_t *pgdir, unsigned long ea, unsigned int *thp);
 #ifdef CONFIG_HUGETLB_PAGE
 pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea,
-				 unsigned *shift);
+				 unsigned *shift, unsigned int *hugepage);
 #else
 static inline pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea,
-					       unsigned *shift)
+					       unsigned *shift,
+					       unsigned int *hugepage)
 {
 	if (shift)
 		*shift = 0;
-	return find_linux_pte(pgdir, ea);
+	return find_linux_pte(pgdir, ea, hugepage);
 }
 #endif /* !CONFIG_HUGETLB_PAGE */
 

@@ -110,6 +110,7 @@ static inline unsigned long compute_tlbie_rb(unsigned long v, unsigned long r,
 	return rb;
 }
 
+/* FIXME !! should we use hpte_actual_psize ? */
 static inline unsigned long hpte_page_size(unsigned long h, unsigned long l)
 {
 	/* only handle 4k, 64k and 16M pages for now */

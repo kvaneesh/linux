@@ -682,8 +682,9 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 			 * while looking up and updating the pte.
 			 */
 			rcu_read_lock_sched();
+			/* FIXME!! */
 			ptep = find_linux_pte_or_hugepte(current->mm->pgd,
-							 hva, NULL);
+							 hva, NULL, NULL);
 			if (ptep && pte_present(*ptep)) {
 				pte = kvmppc_read_update_linux_pte(ptep, 1);
 				if (pte_write(pte))
