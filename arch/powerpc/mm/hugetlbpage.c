@@ -67,7 +67,8 @@ static inline unsigned int mmu_psize_to_shift(unsigned int mmu_psize)
 
 #define hugepd_none(hpd)	((hpd).pd == 0)
 
-pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea, unsigned *shift)
+pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea,
+				 unsigned *shift, unsigned int *thp)
 {
 	pgd_t *pg;
 	pud_t *pu;
@@ -77,6 +78,8 @@ pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea, unsigned *shift
 
 	if (shift)
 		*shift = 0;
+	if (thp)
+		*thp = 0;
 
 	pg = pgdir + pgd_index(ea);
 	if (is_hugepd(pg)) {
@@ -91,12 +94,24 @@ pte_t *find_linux_pte_or_hugepte(pgd_t *pgdir, unsigned long ea, unsigned *shift
 			pm = pmd_offset(pu, ea);
 			if (is_hugepd(pm))
 				hpdp = (hugepd_t *)pm;
-			else if (!pmd_none(*pm)) {
+			else if (pmd_large(*pm)) {
+				/* THP page */
+				if (thp) {
+					*thp = 1;
+					/*
+					 * This should be ok, except for few
+					 * flags most of the pte, large page
+					 * pmd bits map. We don't use the
+					 * returned value as pte_t in the caller.
+					 */
+					return (pte_t *)pm;
+				} else
+					return NULL;
+			} else if (!pmd_none(*pm)) {
 				return pte_offset_kernel(pm, ea);
 			}
 		}
 	}
-
 	if (!hpdp)
 		return NULL;
 
@@ -108,7 +123,7 @@ EXPORT_SYMBOL_GPL(find_linux_pte_or_hugepte);
 
 pte_t *huge_pte_offset(struct mm_struct *mm, unsigned long addr)
 {
-	return find_linux_pte_or_hugepte(mm->pgd, addr, NULL);
+	return find_linux_pte_or_hugepte(mm->pgd, addr, NULL, NULL);
 }
 
 static int __hugepte_alloc(struct mm_struct *mm, hugepd_t *hpdp,
@@ -614,7 +629,7 @@ follow_huge_addr(struct mm_struct *mm, unsigned long address, int write)
 	unsigned shift;
 	unsigned long mask;
 
-	ptep = find_linux_pte_or_hugepte(mm->pgd, address, &shift);
+	ptep = find_linux_pte_or_hugepte(mm->pgd, address, &shift, NULL);
 
 	/* Verify it is a huge page else bail. */
 	if (!ptep || !shift)
