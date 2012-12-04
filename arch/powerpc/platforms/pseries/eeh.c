@@ -261,7 +261,7 @@ static inline unsigned long eeh_token_to_phys(unsigned long token)
 	pte_t *ptep;
 	unsigned long pa;
 
-	ptep = find_linux_pte(init_mm.pgd, token);
+	ptep = find_linux_pte(init_mm.pgd, token, NULL);
 	if (!ptep)
 		return token;
 	pa = pte_pfn(*ptep) << PAGE_SHIFT;
