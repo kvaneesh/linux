@@ -154,7 +154,7 @@ extern unsigned long htab_hash_mask;
 struct mmu_psize_def
 {
 	unsigned int	shift;	/* number of bits */
-	unsigned int	penc;	/* HPTE encoding */
+	unsigned int	penc[MMU_PAGE_COUNT];	/* HPTE encoding */
 	unsigned int	tlbiel;	/* tlbiel supported for that page size */
 	unsigned long	avpnm;	/* bits to mask out in AVPN in the HPTE */
 	unsigned long	sllp;	/* SLB L||LP (exact mask to use in slbmte) */
@@ -254,16 +254,18 @@ static inline unsigned long hpte_encode_v(unsigned long vpn,
  * for the page size. We assume the pa is already "clean" that is properly
  * aligned for the requested page size
  */
-static inline unsigned long hpte_encode_r(unsigned long pa, int psize)
+static inline unsigned long hpte_encode_r(unsigned long pa, int base_psize,
+					  int actual_psize)
 {
 	unsigned long r;
 
 	/* A 4K page needs no special encoding */
-	if (psize == MMU_PAGE_4K)
+	if (actual_psize == MMU_PAGE_4K)
 		return pa & HPTE_R_RPN;
 	else {
-		unsigned int penc = mmu_psize_defs[psize].penc;
-		unsigned int shift = mmu_psize_defs[psize].shift;
+		unsigned int penc = mmu_psize_defs[base_psize].penc[actual_psize];
+		unsigned int shift = mmu_psize_defs[actual_psize].shift;
+		/* FIXME!! replace 12 by LP_SHIFT ? */
 		return (pa & ~((1ul << shift) - 1)) | (penc << 12);
 	}
 	return r;
