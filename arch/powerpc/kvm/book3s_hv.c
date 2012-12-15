@@ -1515,7 +1515,7 @@ static void kvmppc_add_seg_page_size(struct kvm_ppc_one_seg_page_size **sps,
 	(*sps)->page_shift = def->shift;
 	(*sps)->slb_enc = def->sllp;
 	(*sps)->enc[0].page_shift = def->shift;
-	(*sps)->enc[0].pte_enc = def->penc;
+	(*sps)->enc[0].pte_enc = def->penc[linux_psize];
 	(*sps)++;
 }
 
