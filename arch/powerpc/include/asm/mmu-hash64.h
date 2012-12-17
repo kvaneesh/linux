@@ -237,14 +237,14 @@ static inline unsigned long hpte_encode_avpn(unsigned long vpn, int psize,
 
 /*
  * This function sets the AVPN and L fields of the HPTE  appropriately
- * for the page size
+ * using the base page size and actual page size.
  */
-static inline unsigned long hpte_encode_v(unsigned long vpn,
-					  int psize, int ssize)
+static inline unsigned long hpte_encode_v(unsigned long vpn, int psize,
+					  int apsize, int ssize)
 {
 	unsigned long v;
 	v = hpte_encode_avpn(vpn, psize, ssize);
-	if (psize != MMU_PAGE_4K)
+	if (apsize != MMU_PAGE_4K)
 		v |= HPTE_V_LARGE;
 	return v;
 }
