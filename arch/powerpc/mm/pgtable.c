@@ -355,7 +355,7 @@ void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 /* FIXME!! May be all this should be in pgtable_64.c ? */
 #define PTE_FRAG_SIZE (2 * PTRS_PER_PTE * sizeof(pte_t))
 
-pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
+pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp, int tozero)
 {
 	pgtable_t pgtable;
 	unsigned long *pgtable_slot;
@@ -368,8 +368,13 @@ pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
 	 * Make sure we are invalidating all the entries. So that
 	 * we fault and create new entries later
 	 */
-	/* zero out the table before returning */
-	memset(pgtable, 0, PTE_FRAG_SIZE);
+	/* FIXME!! this is not correct. zero out the table before returning
+	 * because we are using this for other things.
+	 * zap_huge_pmd
+	 */
+	if (tozero)
+		/* Not needed, because we depoist a zeroed table ? */
+		memset(pgtable, 0, PTE_FRAG_SIZE);
 	return pgtable;
 }
 
