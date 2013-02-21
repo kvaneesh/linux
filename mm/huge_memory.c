@@ -1380,7 +1380,12 @@ int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		struct page *page;
 		pgtable_t pgtable;
 		pmd_t orig_pmd;
-		pgtable = pgtable_trans_huge_withdraw(tlb->mm, pmd);
+		/*
+		 * Withdraw the pgtable without zero out, because
+		 * the following pmd_get_and_clear will look at
+		 * pgtable contents, in case of architectures like ppc64
+		 */
+		pgtable = __pgtable_trans_huge_withdraw(tlb->mm, pmd, 0);
 		orig_pmd = pmdp_get_and_clear(tlb->mm, addr, pmd);
 		tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
 		if (is_huge_zero_pmd(orig_pmd)) {

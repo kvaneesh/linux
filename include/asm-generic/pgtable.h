@@ -169,6 +169,15 @@ extern void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 
 #ifndef __HAVE_ARCH_PGTABLE_WITHDRAW
 extern pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+/*
+ * Some archs use the deposited huge table internally. Request for a
+ * zeroed/non-zeroed pgtabled when withdrawing
+ */
+static inline pgtable_t __pgtable_trans_huge_withdraw(struct mm_struct *mm,
+						      pmd_t *pmdp, int tozero)
+{
+	return pgtable_trans_huge_withdraw(mm, pmdp);
+}
 #endif
 
 #ifndef __HAVE_ARCH_PMDP_INVALIDATE

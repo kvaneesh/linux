@@ -858,6 +858,12 @@ extern void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 
 #define __HAVE_ARCH_PGTABLE_WITHDRAW
 extern pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+
+static inline pgtable_t __pgtable_trans_huge_withdraw(struct mm_struct *mm,
+						      pmd_t *pmdp, int tozero)
+{
+	return pgtable_trans_huge_withdraw(mm, pmdp);
+}
 #endif
 
 /* Encode and de-code a swap entry */
