@@ -40,7 +40,7 @@
 #ifdef CONFIG_HUGETLB_PAGE
 extern unsigned int HPAGE_SHIFT;
 #else
-#define HPAGE_SHIFT PAGE_SHIFT
+#define HPAGE_SHIFT PMD_SHIFT
 #endif
 #define HPAGE_SIZE		((1UL) << HPAGE_SHIFT)
 #define HPAGE_MASK		(~(HPAGE_SIZE - 1))
