@@ -337,3 +337,140 @@ EXPORT_SYMBOL(__ioremap_at);
 EXPORT_SYMBOL(iounmap);
 EXPORT_SYMBOL(__iounmap);
 EXPORT_SYMBOL(__iounmap_at);
+
+#ifdef CONFIG_PPC_64K_PAGES
+/*
+ * we support 16 fragments per PTE page. This is limited by how many
+ * bits we can pack in page->_mapcount. We use the first half for
+ * tracking the usage for rcu page table free.
+ */
+#define PTE_FRAG_NR	16
+/*
+ * We use a 2K PTE page fragment and another 2K for storing
+ * real_pte_t hash index
+ */
+#define PTE_FRAG_SIZE (2 * PTRS_PER_PTE * sizeof(pte_t))
+
+static pte_t *get_from_cache(struct mm_struct *mm)
+{
+	int index;
+	pte_t *ret = NULL;
+	struct page *page;
+
+	spin_lock(&mm->page_table_lock);
+	page = mm->context.pgtable_page;
+	if (page) {
+		void *p = page_address(page);
+		index = atomic_add_return(1, &page->_mapcount);
+		ret = (pte_t *) (p + (index * PTE_FRAG_SIZE));
+		/*
+		 * If we have taken up all the fragments mark PTE page NULL
+		 */
+		if (index == PTE_FRAG_NR - 1)
+			mm->context.pgtable_page = NULL;
+	}
+	spin_unlock(&mm->page_table_lock);
+	return ret;
+}
+
+static pte_t *__alloc_for_cache(struct mm_struct *mm, int kernel)
+{
+	pte_t *ret = NULL;
+	struct page *page = alloc_page(GFP_KERNEL | __GFP_NOTRACK |
+				       __GFP_REPEAT | __GFP_ZERO);
+	if (!page)
+		return NULL;
+
+	spin_lock(&mm->page_table_lock);
+	/*
+	 * If we find pgtable_page set, we return
+	 * the allocated page with single fragement
+	 * count.
+	 */
+	if (likely(!mm->context.pgtable_page)) {
+		atomic_set(&page->_count, PTE_FRAG_NR);
+		atomic_set(&page->_mapcount, 0);
+		mm->context.pgtable_page = page;
+	}
+	spin_unlock(&mm->page_table_lock);
+
+	ret = (unsigned long *)page_address(page);
+	if (!kernel)
+		pgtable_page_ctor(page);
+
+	return ret;
+}
+
+pte_t *page_table_alloc(struct mm_struct *mm, unsigned long vmaddr, int kernel)
+{
+	pte_t *pte;
+
+	pte = get_from_cache(mm);
+	if (pte)
+		return pte;
+
+	return __alloc_for_cache(mm, kernel);
+}
+
+void page_table_free(struct mm_struct *mm, unsigned long *table, int kernel)
+{
+	struct page *page = virt_to_page(table);
+	if (put_page_testzero(page)) {
+		if (!kernel)
+			pgtable_page_dtor(page);
+		reset_page_mapcount(page);
+		free_hot_cold_page(page, 0);
+	}
+}
+
+#ifdef CONFIG_SMP
+static void page_table_free_rcu(void *table)
+{
+	struct page *page = virt_to_page(table);
+	if (put_page_testzero(page)) {
+		pgtable_page_dtor(page);
+		reset_page_mapcount(page);
+		free_hot_cold_page(page, 0);
+	}
+}
+
+void pgtable_free_tlb(struct mmu_gather *tlb, void *table, int shift)
+{
+	unsigned long pgf = (unsigned long)table;
+
+	BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
+	pgf |= shift;
+	tlb_remove_table(tlb, (void *)pgf);
+}
+
+void __tlb_remove_table(void *_table)
+{
+	void *table = (void *)((unsigned long)_table & ~MAX_PGTABLE_INDEX_SIZE);
+	unsigned shift = (unsigned long)_table & MAX_PGTABLE_INDEX_SIZE;
+
+	if (!shift)
+		/* PTE page needs special handling */
+		page_table_free_rcu(table);
+	else {
+		BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
+		kmem_cache_free(PGT_CACHE(shift), table);
+	}
+}
+#else
+void pgtable_free_tlb(struct mmu_gather *tlb, void *table, int shift)
+{
+	if (!shift) {
+		/* PTE page needs special handling */
+		struct page *page = virt_to_page(table);
+		if (put_page_testzero(page)) {
+			pgtable_page_dtor(page);
+			reset_page_mapcount(page);
+			free_hot_cold_page(page, 0);
+		}
+	} else {
+		BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
+		kmem_cache_free(PGT_CACHE(shift), table);
+	}
+}
+#endif
+#endif /* CONFIG_PPC_64K_PAGES */

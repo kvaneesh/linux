@@ -86,6 +86,9 @@ int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 	spin_lock_init(mm->context.cop_lockp);
 #endif /* CONFIG_PPC_ICSWX */
 
+#ifdef CONFIG_PPC_64K_PAGES
+	mm->context.pgtable_page = NULL;
+#endif
 	return 0;
 }
 
@@ -97,13 +100,45 @@ void __destroy_context(int context_id)
 }
 EXPORT_SYMBOL_GPL(__destroy_context);
 
+#ifdef CONFIG_PPC_64K_PAGES
+static void destroy_pagetable_page(struct mm_struct *mm)
+{
+	int count;
+	struct page *page;
+
+	page = mm->context.pgtable_page;
+	if (!page)
+		return;
+
+	/* drop all the pending references */
+	count = atomic_read(&page->_mapcount) + 1;
+	/* We allow PTE_FRAG_NR(16) fragments from a PTE page */
+	count = atomic_sub_return(16 - count, &page->_count);
+	if (!count) {
+		pgtable_page_dtor(page);
+		reset_page_mapcount(page);
+		free_hot_cold_page(page, 0);
+	}
+}
+
+#else
+static inline void destroy_pagetable_page(struct mm_struct *mm)
+{
+	return;
+}
+#endif
+
+
 void destroy_context(struct mm_struct *mm)
 {
+
 #ifdef CONFIG_PPC_ICSWX
 	drop_cop(mm->context.acop, mm);
 	kfree(mm->context.cop_lockp);
 	mm->context.cop_lockp = NULL;
 #endif /* CONFIG_PPC_ICSWX */
+
+	destroy_pagetable_page(mm);
 	__destroy_context(mm->context.id);
 	subpage_prot_free(mm);
 	mm->context.id = MMU_NO_CONTEXT;
