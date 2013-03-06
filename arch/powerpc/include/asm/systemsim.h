@@ -128,5 +128,38 @@ static inline int callthru7(int command, unsigned long arg1, unsigned long arg2,
 	return (c);
 }
 
+#define SimWriteConsoleCode 0
+#define SimReadConsoleCode  60
+#define SimExitCode	    31
+/**
+ * mambo_write_console: Write a char to the console.
+ * @c:  pointer to char written to Mambo's output console.
+ */
+static inline int mambo_write_console(char *c)
+{
+	return(callthru3(SimWriteConsoleCode, (unsigned long)c,
+			 (unsigned long)1, (unsigned long)1));
+}
+/**
+ * mambo_read_console: read a char from console's stdin
+ *
+ * Returns character read, or -1 if nothing was read
+ */
+static inline int mambo_read_console(void)
+{
+	return(callthru0(SimReadConsoleCode));
+}
+/**
+ * mamb_stop_simulation: stop the simulation
+ *
+ * Cause the simulator to stop as if requested by the user.
+ *
+ */
+static inline int mambo_stop_simulation(void)
+{
+	return(callthru0(SimExitCode));
+}
+
+
 #endif /* __KERNEL__ */
 #endif/* _SYSTEMSIM_CONFIG_H_ */
