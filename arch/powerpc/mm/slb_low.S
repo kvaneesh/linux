@@ -31,13 +31,20 @@
  * No other registers are examined or changed.
  */
 _GLOBAL(slb_allocate_realmode)
-	/* r3 = faulting address */
+	/*
+	 * check for bad kernel/user address
+	 * (ea & ~REGION_MASK) >= PGTABLE_RANGE
+	 */
+	clrldi  r9,r3,4
+	li	r10,-1
+	clrldi  r10,r10,(64 - 46)
+	cmpld	cr7,r9,r10
+	bgt	cr7,8f
 
 	srdi	r9,r3,60		/* get region */
-	srdi	r10,r3,28		/* get esid */
 	cmpldi	cr7,r9,0xc		/* cmp PAGE_OFFSET for later use */
 
-	/* r3 = address, r10 = esid, cr7 = <> PAGE_OFFSET */
+	/* r3 = address, cr7 = <> PAGE_OFFSET */
 	blt	cr7,0f			/* user or kernel? */
 
 	/* kernel address: proto-VSID = ESID */
@@ -56,18 +63,26 @@ _GLOBAL(slb_allocate_realmode)
 	 */
 _GLOBAL(slb_miss_kernel_load_linear)
 	li	r11,0
-	li	r9,0x1
+	/*
+	 * context = (MAX_CONTEXT - 3) + ((ea >> 60) - 0xc)
+	 */
+	srdi	r9,r3,60
+	subi	r9,r9,(0xc + 3 + 1)
+	lis	r10, 8
+	add	r9,r9,r10
+	srdi	r10,r3,SID_SHIFT	/* get esid */
 	/*
 	 * for 1T we shift 12 bits more.  slb_finish_load_1T will do
 	 * the necessary adjustment
 	 */
-	rldimi  r10,r9,(CONTEXT_BITS + USER_ESID_BITS),0
+	rldimi  r10,r9,USER_ESID_BITS,0
 BEGIN_FTR_SECTION
 	b	slb_finish_load
 END_MMU_FTR_SECTION_IFCLR(MMU_FTR_1T_SEGMENT)
 	b	slb_finish_load_1T
 
 1:
+	srdi	r10,r3,SID_SHIFT	/* get esid */
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 	/* Check virtual memmap region. To be patches at kernel boot */
 	cmpldi	cr0,r9,0xf
@@ -91,23 +106,26 @@ _GLOBAL(slb_miss_kernel_load_vmemmap)
 	_GLOBAL(slb_miss_kernel_load_io)
 	li	r11,0
 6:
-	li	r9,0x1
+	/*
+	 * context = (MAX_CONTEXT - 3) + ((ea >> 60) - 0xc)
+	 */
+	srdi	r9,r3,60
+	subi	r9,r9,(0xc + 3 + 1)
+	lis	r10,8
+	add	r9,r9,r10
+	srdi	r10,r3,SID_SHIFT
 	/*
 	 * for 1T we shift 12 bits more.  slb_finish_load_1T will do
 	 * the necessary adjustment
 	 */
-	rldimi  r10,r9,(CONTEXT_BITS + USER_ESID_BITS),0
+	rldimi  r10,r9,USER_ESID_BITS,0
 BEGIN_FTR_SECTION
 	b	slb_finish_load
 END_MMU_FTR_SECTION_IFCLR(MMU_FTR_1T_SEGMENT)
 	b	slb_finish_load_1T
 
-0:	/* user address: proto-VSID = context << 15 | ESID. First check
-	 * if the address is within the boundaries of the user region
-	 */
-	srdi.	r9,r10,USER_ESID_BITS
-	bne-	8f			/* invalid ea bits set */
-
+0:
+	srdi	r10,r3,SID_SHIFT	/* get esid */
 
 	/* when using slices, we extract the psize off the slice bitmaps
 	 * and then we need to get the sllp encoding off the mmu_psize_defs
