@@ -557,3 +557,41 @@ void update_mmu_cache_pmd(struct vm_area_struct *vma, unsigned long addr,
 }
 
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+
+/*
+ * find_linux_pte returns the address of a linux pte for a given
+ * effective address and directory.  If not found, it returns zero.
+ */
+pte_t *find_linux_pte(pgd_t *pgdir, unsigned long ea, unsigned int *hugepage)
+{
+	pgd_t *pg;
+	pud_t *pu;
+	pmd_t *pm;
+	pte_t *pt = NULL;
+
+	if (hugepage)
+		*hugepage = 0;
+	pg = pgdir + pgd_index(ea);
+	if (!pgd_none(*pg)) {
+		pu = pud_offset(pg, ea);
+		if (!pud_none(*pu)) {
+			pm = pmd_offset(pu, ea);
+			if (pmd_large(*pm)) {
+				/* THP page */
+				if (hugepage) {
+					*hugepage = 1;
+					/*
+					 * This should be ok, except for few
+					 * flags. Most of the pte and hugepage
+					 * pmd bits overlap. We don't use the
+					 * returned value as pte_t in the caller.
+					 */
+					return (pte_t *)pm;
+				} else
+					return NULL;
+			} else if (pmd_present(*pm))
+				pt = pte_offset_kernel(pm, ea);
+		}
+	}
+	return pt;
+}
