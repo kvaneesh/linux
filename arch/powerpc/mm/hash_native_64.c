@@ -428,41 +428,51 @@ static void hpte_decode(struct hash_pte *hpte, unsigned long slot,
 			int *psize, int *apsize, int *ssize, unsigned long *vpn)
 {
 	unsigned long avpn, pteg, vpi;
-	unsigned long hpte_r = hpte->r;
 	unsigned long hpte_v = hpte->v;
 	unsigned long vsid, seg_off;
-	int i, size, a_size, shift, penc;
+	int size, a_size, shift, mask;
+	/* Look at the 8 bit LP value */
+	unsigned int lp = (hpte->r >> LP_SHIFT) & ((1 << LP_BITS) - 1);
 
 	if (!(hpte_v & HPTE_V_LARGE)) {
 		size   = MMU_PAGE_4K;
 		a_size = MMU_PAGE_4K;
 	} else {
-		for (i = 0; i < LP_BITS; i++) {
-			if ((hpte_r & LP_MASK(i+1)) == LP_MASK(i+1))
-				break;
-		}
-		penc = LP_MASK(i+1) >> LP_SHIFT;
 		for (size = 0; size < MMU_PAGE_COUNT; size++) {
 
 			/* valid entries have a shift value */
 			if (!mmu_psize_defs[size].shift)
 				continue;
-			for (a_size = 0; a_size < MMU_PAGE_COUNT; a_size++) {
 
-				/* 4K pages are not represented by LP */
-				if (a_size == MMU_PAGE_4K)
-					continue;
-
+			/* start from 1 ignoring MMU_PAGE_4K */
+			for (a_size = 1; a_size < MMU_PAGE_COUNT; a_size++) {
 				/* valid entries have a shift value */
 				if (!mmu_psize_defs[a_size].shift)
 					continue;
 
-				if (penc == mmu_psize_defs[size].penc[a_size])
+				/* invalid penc */
+				if (mmu_psize_defs[size].penc[a_size] == -1)
+					continue;
+				/*
+				 * encoding bits per actual page size
+				 *        PTE LP     actual page size
+				 *    rrrr rrrz		>=8KB
+				 *    rrrr rrzz		>=16KB
+				 *    rrrr rzzz		>=32KB
+				 *    rrrr zzzz		>=64KB
+				 * .......
+				 */
+				shift = mmu_psize_defs[a_size].shift - LP_SHIFT;
+				if (shift > LP_BITS)
+					shift = LP_BITS;
+				mask = (1 << shift) - 1;
+				if ((lp & mask) ==
+				    mmu_psize_defs[size].penc[a_size]) {
 					goto out;
+				}
 			}
 		}
 	}
-
 out:
 	/* This works for all page sizes, and for 256M and 1T segments */
 	*ssize = hpte_v >> HPTE_V_SSIZE_SHIFT;
