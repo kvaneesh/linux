@@ -206,7 +206,10 @@ void __flush_hash_table_range(struct mm_struct *mm, unsigned long start,
 	local_irq_save(flags);
 	arch_enter_lazy_mmu_mode();
 	for (; start < end; start += PAGE_SIZE) {
-		pte_t *ptep = find_linux_pte(mm->pgd, start);
+		/*
+		 * We won't find hugepages here.
+		 */
+		pte_t *ptep = find_linux_pte(mm->pgd, start, NULL);
 		unsigned long pte;
 
 		if (ptep == NULL)

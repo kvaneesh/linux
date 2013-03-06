@@ -125,7 +125,7 @@ static int read_user_stack_slow(void __user *ptr, void *ret, int nb)
 	if (!pgdir)
 		return -EFAULT;
 
-	ptep = find_linux_pte_or_hugepte(pgdir, addr, &shift);
+	ptep = find_linux_pte_or_hugepte(pgdir, addr, &shift, NULL);
 	if (!shift)
 		shift = PAGE_SHIFT;
 
