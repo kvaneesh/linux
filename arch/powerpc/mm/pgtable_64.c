@@ -338,6 +338,19 @@ EXPORT_SYMBOL(iounmap);
 EXPORT_SYMBOL(__iounmap);
 EXPORT_SYMBOL(__iounmap_at);
 
+/*
+ * For hugepage we have pfn in the pmd, we use PMD_HUGE_RPN_SHIFT bits for flags
+ * For PTE page, we have a PTE_FRAG_SIZE (4K) aligned virtual address.
+ */
+struct page *pmd_page(pmd_t pmd)
+{
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	if (pmd_val(pmd) & PMD_ISHUGE)
+		return pfn_to_page(pmd_pfn(pmd));
+#endif
+	return virt_to_page(pmd_page_vaddr(pmd));
+}
+
 #ifdef CONFIG_PPC_64K_PAGES
 /*
  * we support 16 fragments per PTE page. This is limited by how many
