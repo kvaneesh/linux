@@ -103,7 +103,7 @@ repeat:
 
 		/* Insert into the hash table, primary slot */
 		slot = ppc_md.hpte_insert(hpte_group, vpn, pa, rflags, 0,
-					  mmu_psize, ssize);
+					  mmu_psize, mmu_psize, ssize);
 
 		/* Primary is full, try the secondary */
 		if (unlikely(slot == -1)) {
@@ -111,7 +111,7 @@ repeat:
 				      HPTES_PER_GROUP) & ~0x7UL;
 			slot = ppc_md.hpte_insert(hpte_group, vpn, pa, rflags,
 						  HPTE_V_SECONDARY,
-						  mmu_psize, ssize);
+						  mmu_psize, mmu_psize, ssize);
 			if (slot == -1) {
 				if (mftb() & 0x1)
 					hpte_group = ((hash & htab_hash_mask) *
