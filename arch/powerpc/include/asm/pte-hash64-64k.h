@@ -38,6 +38,23 @@
  */
 #define PTE_RPN_SHIFT	(30)
 
+/*
+ * THP pages can't be special. So use the _PAGE_SPECIAL
+ */
+#define _PAGE_SPLITTING _PAGE_SPECIAL
+
+/*
+ * PTE flags to conserve for HPTE identification for THP page.
+ * We drop _PAGE_COMBO here, because we overload that with _PAGE_TH_HUGE.
+ */
+#define _PAGE_THP_HPTEFLAGS	(_PAGE_BUSY | _PAGE_HASHPTE)
+
+/*
+ * We need to differentiate between explicit huge page and THP huge
+ * page, since THP huge page also need to track real subpage details
+ */
+#define _PAGE_THP_HUGE  _PAGE_COMBO
+
 #ifndef __ASSEMBLY__
 
 /*

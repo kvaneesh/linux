@@ -222,5 +222,10 @@ extern int gup_hugepte(pte_t *ptep, unsigned long sz, unsigned long addr,
 		       unsigned long end, int write, struct page **pages, int *nr);
 #endif /* __ASSEMBLY__ */
 
+#ifndef CONFIG_TRANSPARENT_HUGEPAGE
+#define pmd_large(pmd)		0
+#define has_transparent_hugepage() 0
+#endif
+
 #endif /* __KERNEL__ */
 #endif /* _ASM_POWERPC_PGTABLE_H */

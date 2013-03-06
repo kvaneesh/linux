@@ -37,8 +37,17 @@
 #define PAGE_SIZE		(ASM_CONST(1) << PAGE_SHIFT)
 
 #ifndef __ASSEMBLY__
-#ifdef CONFIG_HUGETLB_PAGE
+/*
+ * With hugetlbfs enabled we allow the HPAGE_SHIFT to run time
+ * configurable. But we enable THP only with 16MB hugepage.
+ * With only THP configured, we force hugepage size to 16MB.
+ * This should ensure that all subarchs that doesn't support
+ * THP continue to work fine with HPAGE_SHIFT usage.
+ */
+#if defined(CONFIG_HUGETLB_PAGE)
 extern unsigned int HPAGE_SHIFT;
+#elif defined(CONFIG_TRANSPARENT_HUGEPAGE)
+#define HPAGE_SHIFT PMD_SHIFT
 #else
 #define HPAGE_SHIFT PAGE_SHIFT
 #endif
