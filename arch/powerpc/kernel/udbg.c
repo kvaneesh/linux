@@ -16,6 +16,7 @@
 #include <linux/init.h>
 #include <asm/processor.h>
 #include <asm/udbg.h>
+#include <asm/systemsim.h>
 
 void (*udbg_putc)(char c);
 void (*udbg_flush)(void);
@@ -71,6 +72,8 @@ void __init udbg_early_init(void)
 	udbg_init_debug_opal_raw();
 #elif defined(CONFIG_PPC_EARLY_DEBUG_OPAL_HVSI)
 	udbg_init_debug_opal_hvsi();
+#elif defined(CONFIG_PPC_EARLY_DEBUG_MAMBO)
+	udbg_init_mambo();
 #endif
 
 #ifdef CONFIG_PPC_EARLY_DEBUG
@@ -178,3 +181,28 @@ void __init register_early_udbg_console(void)
 #if 0   /* if you want to use this as a regular output console */
 console_initcall(register_udbg_console);
 #endif
+
+#ifdef CONFIG_PPC_EARLY_DEBUG_MAMBO
+static void udbg_fss_real_putc(char c)
+{
+	mambo_write_console(&c);
+}
+
+static int udbg_fss_real_getc(void)
+{
+	return mambo_read_console();
+}
+
+static int udbg_fss_real_getc_poll(void)
+{
+	int c = mambo_read_console();
+	return c <= 0 ? -1 : c;
+}
+
+void __init udbg_init_mambo(void)
+{
+	udbg_putc = udbg_fss_real_putc;
+	udbg_getc = udbg_fss_real_getc;
+	udbg_getc_poll = udbg_fss_real_getc_poll;
+}
+#endif /* PPC_EARLY_DEBUG_MAMBO */
