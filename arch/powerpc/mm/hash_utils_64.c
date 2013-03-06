@@ -1041,11 +1041,16 @@ int hash_page(unsigned long ea, unsigned long access, unsigned long trap)
 		return 1;
 	}
 
+	if (hugeshift) {
+		if (pmd_trans_huge((pmd_t) *ptep))
+			return __hash_page_thp(ea, access, vsid, (pmd_t *)ptep,
+					       trap, local, ssize, psize);
 #ifdef CONFIG_HUGETLB_PAGE
-	if (hugeshift)
-		return __hash_page_huge(ea, access, vsid, ptep, trap, local,
-					ssize, hugeshift, psize);
-#endif /* CONFIG_HUGETLB_PAGE */
+		else
+			return __hash_page_huge(ea, access, vsid, ptep, trap,
+						local, ssize, hugeshift, psize);
+#endif
+	}
 
 #ifndef CONFIG_PPC_64K_PAGES
 	DBG_LOW(" i-pte: %016lx\n", pte_val(*ptep));
