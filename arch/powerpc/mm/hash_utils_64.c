@@ -955,7 +955,7 @@ int hash_page(unsigned long ea, unsigned long access, unsigned long trap)
 	unsigned long vsid;
 	struct mm_struct *mm;
 	pte_t *ptep;
-	unsigned hugeshift;
+	unsigned hugeshift, hugepage;
 	const struct cpumask *tmp;
 	int rc, user_region = 0, local = 0;
 	int psize, ssize;
@@ -1021,7 +1021,7 @@ int hash_page(unsigned long ea, unsigned long access, unsigned long trap)
 #endif /* CONFIG_PPC_64K_PAGES */
 
 	/* Get PTE and page size from page tables */
-	ptep = find_linux_pte_or_hugepte(pgdir, ea, &hugeshift);
+	ptep = find_linux_pte_or_hugepte(pgdir, ea, &hugeshift, &hugepage);
 	if (ptep == NULL || !pte_present(*ptep)) {
 		DBG_LOW(" no PTE !\n");
 		return 1;
@@ -1043,6 +1043,12 @@ int hash_page(unsigned long ea, unsigned long access, unsigned long trap)
 		return __hash_page_huge(ea, access, vsid, ptep, trap, local,
 					ssize, hugeshift, psize);
 #endif /* CONFIG_HUGETLB_PAGE */
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	if (hugepage)
+		return __hash_page_thp(ea, access, vsid, (pmd_t *)ptep,
+				       trap, local, ssize, psize);
+#endif
 
 #ifndef CONFIG_PPC_64K_PAGES
 	DBG_LOW(" i-pte: %016lx\n", pte_val(*ptep));
@@ -1149,7 +1155,11 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 	pgdir = mm->pgd;
 	if (pgdir == NULL)
 		return;
-	ptep = find_linux_pte(pgdir, ea);
+	/*
+	 * We haven't implemented update_mmu_cache_pmd yet. We get called
+	 * only for non hugepages. Hence can ignore THP here
+	 */
+	ptep = find_linux_pte(pgdir, ea, NULL);
 	if (!ptep)
 		return;
 
