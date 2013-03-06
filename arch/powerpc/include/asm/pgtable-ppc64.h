@@ -426,8 +426,7 @@ static inline unsigned long pmd_pfn(pmd_t pmd)
 	return pmd_val(pmd) >> PTE_RPN_SHIFT;
 }
 
-/* We will enable it in the last patch */
-#define has_transparent_hugepage() 0
+extern int has_transparent_hugepage(void);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
 static inline int pmd_young(pmd_t pmd)
