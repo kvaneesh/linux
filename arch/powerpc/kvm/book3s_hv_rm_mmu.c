@@ -146,24 +146,37 @@ static void remove_revmap_chain(struct kvm *kvm, long pte_index,
 }
 
 static pte_t lookup_linux_pte(pgd_t *pgdir, unsigned long hva,
-			      int writing, unsigned long *pte_sizep)
+			      int writing, unsigned long *pte_sizep,
+			      int *hugepage)
 {
 	pte_t *ptep;
 	unsigned long ps = *pte_sizep;
 	unsigned int shift;
 
-	ptep = find_linux_pte_or_hugepte(pgdir, hva, &shift, NULL);
+	ptep = find_linux_pte_or_hugepte(pgdir, hva, &shift, hugepage);
 	if (!ptep)
 		return __pte(0);
-	if (shift)
-		*pte_sizep = 1ul << shift;
-	else
-		*pte_sizep = PAGE_SIZE;
+	if (*hugepage) {
+		*pte_sizep = 1ul << 24;
+	} else {
+		if (shift)
+			*pte_sizep = 1ul << shift;
+		else
+			*pte_sizep = PAGE_SIZE;
+	}
 	if (ps > *pte_sizep)
 		return __pte(0);
-	if (!pte_present(*ptep))
-		return __pte(0);
-	return kvmppc_read_update_linux_pte(ptep, writing);
+
+	if (*hugepage) {
+		pmd_t *pmdp = (pmd_t *)ptep;
+		if (!pmd_large(*pmdp))
+			return __pmd(0);
+		return kvmppc_read_update_linux_hugepmd(pmdp, writing);
+	} else {
+		if (!pte_present(*ptep))
+			return __pte(0);
+		return kvmppc_read_update_linux_pte(ptep, writing);
+	}
 }
 
 static inline void unlock_hpte(unsigned long *hpte, unsigned long hpte_v)
@@ -239,18 +252,34 @@ long kvmppc_do_h_enter(struct kvm *kvm, unsigned long flags,
 		pte_size = PAGE_SIZE << (pa & KVMPPC_PAGE_ORDER_MASK);
 		pa &= PAGE_MASK;
 	} else {
+		int hugepage;
+
 		/* Translate to host virtual address */
 		hva = __gfn_to_hva_memslot(memslot, gfn);
 
 		/* Look up the Linux PTE for the backing page */
 		pte_size = psize;
-		pte = lookup_linux_pte(pgdir, hva, writing, &pte_size);
-		if (pte_present(pte)) {
-			if (writing && !pte_write(pte))
-				/* make the actual HPTE be read-only */
-				ptel = hpte_make_readonly(ptel);
-			is_io = hpte_cache_bits(pte_val(pte));
-			pa = pte_pfn(pte) << PAGE_SHIFT;
+		pte = lookup_linux_pte(pgdir, hva, writing, &pte_size, &hugepage);
+		if (hugepage) {
+			pmd_t pmd = (pmd_t)pte;
+			if (!pmd_large(pmd)) {
+				if (writing && !pmd_write(pmd))
+					/* make the actual HPTE be read-only */
+					ptel = hpte_make_readonly(ptel);
+				/*
+				 * we support hugepage only for RAM
+				 */
+				is_io = 0;
+				pa = pmd_pfn(pmd) << PAGE_SHIFT;
+			}
+		} else {
+			if (pte_present(pte)) {
+				if (writing && !pte_write(pte))
+					/* make the actual HPTE be read-only */
+					ptel = hpte_make_readonly(ptel);
+				is_io = hpte_cache_bits(pte_val(pte));
+				pa = pte_pfn(pte) << PAGE_SHIFT;
+			}
 		}
 	}
 
@@ -645,10 +674,18 @@ long kvmppc_h_protect(struct kvm_vcpu *vcpu, unsigned long flags,
 			gfn = ((r & HPTE_R_RPN) & ~(psize - 1)) >> PAGE_SHIFT;
 			memslot = __gfn_to_memslot(kvm_memslots(kvm), gfn);
 			if (memslot) {
+				int hugepage;
 				hva = __gfn_to_hva_memslot(memslot, gfn);
-				pte = lookup_linux_pte(pgdir, hva, 1, &psize);
-				if (pte_present(pte) && !pte_write(pte))
-					r = hpte_make_readonly(r);
+				pte = lookup_linux_pte(pgdir, hva, 1,
+						       &psize, &hugepage);
+				if (hugepage) {
+					pmd_t pmd = (pmd_t)pte;
+					if (pmd_large(pmd) && !pmd_write(pmd))
+						r = hpte_make_readonly(r);
+				} else {
+					if (pte_present(pte) && !pte_write(pte))
+						r = hpte_make_readonly(r);
+				}
 			}
 		}
 	}

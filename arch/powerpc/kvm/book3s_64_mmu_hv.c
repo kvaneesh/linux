@@ -675,6 +675,7 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 		}
 		/* if the guest wants write access, see if that is OK */
 		if (!writing && hpte_is_writable(r)) {
+			int hugepage;
 			pte_t *ptep, pte;
 
 			/*
@@ -683,11 +684,18 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 			 */
 			rcu_read_lock_sched();
 			ptep = find_linux_pte_or_hugepte(current->mm->pgd,
-							 hva, NULL, NULL);
-			if (ptep && pte_present(*ptep)) {
+							 hva, NULL, &hugepage);
+			if (!hugepage && ptep && pte_present(*ptep)) {
 				pte = kvmppc_read_update_linux_pte(ptep, 1);
 				if (pte_write(pte))
 					write_ok = 1;
+			} else if (hugepage && ptep) {
+				pmd_t pmd = *(pmd_t *)ptep;
+				if (pmd_large(pmd)) {
+					pmd = kvmppc_read_update_linux_hugepmd((pmd_t *)ptep, 1);
+					if (pmd_write(pmd))
+						write_ok = 1;
+				}
 			}
 			rcu_read_unlock_sched();
 		}
