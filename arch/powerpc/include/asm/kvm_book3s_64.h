@@ -110,6 +110,7 @@ static inline unsigned long compute_tlbie_rb(unsigned long v, unsigned long r,
 	return rb;
 }
 
+/* FIXME !! should we use hpte_actual_psize or hpte decode ? */
 static inline unsigned long hpte_page_size(unsigned long h, unsigned long l)
 {
 	/* only handle 4k, 64k and 16M pages for now */
@@ -187,6 +188,36 @@ static inline pte_t kvmppc_read_update_linux_pte(pte_t *p, int writing)
 	*p = pte;	/* clears _PAGE_BUSY */
 
 	return pte;
+}
+
+/*
+ * Lock and read a linux hugepage PMD.  If it's present and writable, atomically
+ * set dirty and referenced bits and return the PMD, otherwise return 0.
+ */
+static inline pmd_t kvmppc_read_update_linux_hugepmd(pmd_t *p, int writing)
+{
+	pmd_t pmd, tmp;
+
+	/* wait until _PAGE_BUSY is clear then set it atomically */
+	__asm__ __volatile__ (
+		"1:	ldarx	%0,0,%3\n"
+		"	andi.	%1,%0,%4\n"
+		"	bne-	1b\n"
+		"	ori	%1,%0,%4\n"
+		"	stdcx.	%1,0,%3\n"
+		"	bne-	1b"
+		: "=&r" (pmd), "=&r" (tmp), "=m" (*p)
+		: "r" (p), "i" (PMD_HUGE_BUSY)
+		: "cc");
+
+	if (pmd_large(pmd)) {
+		pmd = pmd_mkyoung(pmd);
+		if (writing && pmd_write(pmd))
+			pmd = pte_mkdirty(pmd);
+	}
+
+	*p = pmd;	/* clears PMD_HUGE_BUSY */
+	return pmd;
 }
 
 /* Return HPTE cache control bits corresponding to Linux pte bits */
