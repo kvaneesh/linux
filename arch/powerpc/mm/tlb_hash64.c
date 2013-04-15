@@ -189,6 +189,7 @@ void tlb_flush(struct mmu_gather *tlb)
 void __flush_hash_table_range(struct mm_struct *mm, unsigned long start,
 			      unsigned long end)
 {
+	int shift;
 	unsigned long flags;
 
 	start = _ALIGN_DOWN(start, PAGE_SIZE);
@@ -206,11 +207,15 @@ void __flush_hash_table_range(struct mm_struct *mm, unsigned long start,
 	local_irq_save(flags);
 	arch_enter_lazy_mmu_mode();
 	for (; start < end; start += PAGE_SIZE) {
-		pte_t *ptep = find_linux_pte(mm->pgd, start);
+		pte_t *ptep = find_linux_pte_or_hugepte(mm->pgd, start, &shift);
 		unsigned long pte;
 
 		if (ptep == NULL)
 			continue;
+		/*
+		 * We won't find hugepages here, this is iomem.
+		 */
+		BUG_ON(shift);
 		pte = pte_val(*ptep);
 		if (!(pte & _PAGE_HASHPTE))
 			continue;
