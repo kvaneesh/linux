@@ -9,12 +9,21 @@ extern struct kmem_cache *hugepte_cache;
 static inline pte_t *hugepd_page(hugepd_t hpd)
 {
 	BUG_ON(!hugepd_ok(hpd));
-	return (pte_t *)((hpd.pd & ~HUGEPD_SHIFT_MASK) | PD_HUGE);
+	/*
+	 * We have only four bits to encode, MMU page size
+	 */
+	BUILD_BUG_ON((MMU_PAGE_COUNT - 1) > 0xf);
+	return (pte_t *)(hpd.pd & ~HUGEPD_SHIFT_MASK);
+}
+
+static inline unsigned int hugepd_mmu_psize(hugepd_t hpd)
+{
+	return (hpd.pd & HUGEPD_SHIFT_MASK) >> 2;
 }
 
 static inline unsigned int hugepd_shift(hugepd_t hpd)
 {
-	return hpd.pd & HUGEPD_SHIFT_MASK;
+	return mmu_psize_to_shift(hugepd_mmu_psize(hpd));
 }
 
 static inline pte_t *hugepte_offset(hugepd_t *hpdp, unsigned long addr,

@@ -250,18 +250,6 @@ extern long long virt_phys_offset;
 #endif
 
 /*
- * Use the top bit of the higher-level page table entries to indicate whether
- * the entries we point to contain hugepages.  This works because we know that
- * the page tables live in kernel space.  If we ever decide to support having
- * page tables at arbitrary addresses, this breaks and will have to change.
- */
-#ifdef CONFIG_PPC64
-#define PD_HUGE 0x8000000000000000
-#else
-#define PD_HUGE 0x80000000
-#endif
-
-/*
  * Some number of bits at the level of the page table that points to
  * a hugepte are used to encode the size.  This masks those bits.
  */
@@ -356,7 +344,11 @@ typedef struct { signed long pd; } hugepd_t;
 #ifdef CONFIG_HUGETLB_PAGE
 static inline int hugepd_ok(hugepd_t hpd)
 {
-	return (hpd.pd > 0);
+	/*
+	 * hugepd pointer, bottom two bits == 00 and next 4 bits
+	 * indicate size of table
+	 */
+	return (((hpd.pd & 0x3) == 0x0) && ((hpd.pd & HUGEPD_SHIFT_MASK) != 0));
 }
 
 #define is_hugepd(pdep)               (hugepd_ok(*((hugepd_t *)(pdep))))
