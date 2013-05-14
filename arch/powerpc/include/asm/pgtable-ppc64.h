@@ -10,6 +10,7 @@
 #else
 #include <asm/pgtable-ppc64-4k.h>
 #endif
+#include <asm/barrier.h>
 
 #define FIRST_USER_ADDRESS	0
 
@@ -391,6 +392,20 @@ static inline void mark_hpte_slot_valid(unsigned char *hpte_slot_array,
 					unsigned int index, unsigned int hidx)
 {
 	hpte_slot_array[index] = hidx << 4 | 0x1 << 3;
+}
+
+static inline char *get_hpte_slot_array(pmd_t *pmdp)
+{
+	/*
+	 * The hpte hindex is stored in the pgtable whose address is in the
+	 * second half of the PMD
+	 *
+	 * Order this load with the test for pmd_trans_huge in the caller
+	 */
+	smp_rmb();
+	return *(char **)(pmdp + PTRS_PER_PMD);
+
+
 }
 
 extern void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
