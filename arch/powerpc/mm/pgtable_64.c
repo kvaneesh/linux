@@ -701,11 +701,7 @@ void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 	 * Flush all the hptes mapping this hugepage
 	 */
 	s_addr = addr & HPAGE_PMD_MASK;
-	/*
-	 * The hpte hindex are stored in the pgtable whose address is in the
-	 * second half of the PMD
-	 */
-	hpte_slot_array = *(char **)(pmdp + PTRS_PER_PMD);
+	hpte_slot_array = get_hpte_slot_array(pmdp);
 	/*
 	 * IF we try to do a HUGE PTE update after a withdraw is done.
 	 * we will find the below NULL. This happens when we do

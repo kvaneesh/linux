@@ -84,11 +84,7 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 
 	vpn = hpt_vpn(ea, vsid, ssize);
 	hash = hpt_hash(vpn, shift, ssize);
-	/*
-	 * The hpte hindex are stored in the pgtable whose address is in the
-	 * second half of the PMD
-	 */
-	hpte_slot_array = *(char **)(pmdp + PTRS_PER_PMD);
+	hpte_slot_array = get_hpte_slot_array(pmdp);
 
 	valid = hpte_valid(hpte_slot_array, index);
 	if (valid) {
