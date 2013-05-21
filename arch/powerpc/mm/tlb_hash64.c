@@ -244,8 +244,13 @@ void flush_tlb_pmd_range(struct mm_struct *mm, pmd_t *pmd, unsigned long addr)
 	start_pte = pte_offset_map(pmd, addr);
 	for (pte = start_pte; pte < start_pte + PTRS_PER_PTE; pte++) {
 		unsigned long pteval = pte_val(*pte);
-		if (pteval & _PAGE_HASHPTE)
+		if (pteval & _PAGE_HASHPTE) {
 			hpte_need_flush(mm, addr, pte, pteval, 0);
+			if (!(pteval & _PAGE_PRESENT)) {
+				printk("Hashed not present pte %lx pmd = %lx addr = %lx\n", pteval, pmd_val(*pmd), addr);
+				dump_stack();
+			}
+		}
 		addr += PAGE_SIZE;
 	}
 	arch_leave_lazy_mmu_mode();
