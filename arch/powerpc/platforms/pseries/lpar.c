@@ -526,6 +526,14 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 						param[0], param[1], param[2],
 						param[3], param[4], param[5],
 						param[6], param[7]);
+					if (rc != H_SUCCESS) {
+						int j;
+						printk("%s rc = %ld\n", __func__, rc);
+						for (j=0;j<=i;j++)
+							printk("vpn %ld pteval %lx\n",
+							       batch->vpn[j],
+							       pte_val(__rpte_to_pte(batch->pte[j])));
+					}
 					BUG_ON(rc != H_SUCCESS);
 					pix = 0;
 				}
@@ -537,6 +545,14 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 		rc = plpar_hcall9(H_BULK_REMOVE, param, param[0], param[1],
 				  param[2], param[3], param[4], param[5],
 				  param[6], param[7]);
+		if (rc != H_SUCCESS) {
+			int j;
+			printk("%s rc = %ld\n", __func__, rc);
+			for (j=0;j<=i;j++)
+				printk("vpn %ld pteval %lx\n",
+				       batch->vpn[j],
+				       pte_val(__rpte_to_pte(batch->pte[j])));
+		}
 		BUG_ON(rc != H_SUCCESS);
 	}
 
