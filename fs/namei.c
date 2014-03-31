@@ -3868,6 +3868,9 @@ int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_de
 	if (!inode)
 		return -ENOENT;
 
+	if (S_ISDIR(inode->i_mode))
+		return -EPERM;
+
 	error = may_create(dir, new_dentry);
 	if (error)
 		return error;
@@ -3881,8 +3884,6 @@ int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_de
 	if (IS_APPEND(inode) || IS_IMMUTABLE(inode))
 		return -EPERM;
 	if (!dir->i_op->link)
-		return -EPERM;
-	if (S_ISDIR(inode->i_mode))
 		return -EPERM;
 
 	error = security_inode_link(old_dentry, dir, new_dentry);
