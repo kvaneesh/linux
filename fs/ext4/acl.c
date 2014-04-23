@@ -144,8 +144,7 @@ fail:
  *
  * inode->i_mutex: don't care
  */
-struct posix_acl *
-ext4_get_acl(struct inode *inode, int type)
+struct posix_acl *ext4_get_posix_acl(struct inode *inode, int type)
 {
 	int name_index;
 	char *value = NULL;
@@ -239,7 +238,7 @@ __ext4_set_acl(handle_t *handle, struct inode *inode, int type,
 }
 
 int
-ext4_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ext4_set_posix_acl(struct inode *inode, struct posix_acl *acl, int type)
 {
 	handle_t *handle;
 	int error, retries = 0;
@@ -264,7 +263,7 @@ retry:
  * inode->i_mutex: up (access to inode is still exclusive)
  */
 int
-ext4_init_acl(handle_t *handle, struct inode *inode, struct inode *dir)
+ext4_init_posix_acl(handle_t *handle, struct inode *inode, struct inode *dir)
 {
 	struct posix_acl *default_acl, *acl;
 	int error;
