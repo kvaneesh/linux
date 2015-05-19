@@ -22,6 +22,7 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 		    pmd_t *pmdp, unsigned long trap, unsigned long flags,
 		    int ssize, unsigned int psize)
 {
+	__be64 opmd, npmd;
 	unsigned int index, valid;
 	unsigned char *hpte_slot_array;
 	unsigned long rflags, pa, hidx;
@@ -49,8 +50,10 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 		new_pmd = old_pmd | _PAGE_BUSY | _PAGE_ACCESSED;
 		if (access & _PAGE_RW)
 			new_pmd |= _PAGE_DIRTY;
-	} while (old_pmd != __cmpxchg_u64((unsigned long *)pmdp,
-					  old_pmd, new_pmd));
+		opmd = cpu_to_be64(old_pmd);
+		npmd = cpu_to_be64(new_pmd);
+	} while (opmd != __cmpxchg_u64((unsigned long *)pmdp, opmd, npmd));
+
 	rflags = htab_convert_pte_flags(new_pmd);
 
 #if 0

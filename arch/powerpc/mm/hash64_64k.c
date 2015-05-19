@@ -49,6 +49,7 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 		   pte_t *ptep, unsigned long trap, unsigned long flags,
 		   int ssize, int subpg_prot)
 {
+	__be64 opte, npte;
 	real_pte_t rpte;
 	unsigned long *hidxp;
 	unsigned long hpte_group;
@@ -79,8 +80,10 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 		new_pte = old_pte | _PAGE_BUSY | _PAGE_ACCESSED | _PAGE_COMBO;
 		if (access & _PAGE_RW)
 			new_pte |= _PAGE_DIRTY;
-	} while (old_pte != __cmpxchg_u64((unsigned long *)ptep,
-					  old_pte, new_pte));
+
+		opte = cpu_to_be64(old_pte);
+		npte = cpu_to_be64(new_pte);
+	} while (opte != __cmpxchg_u64((unsigned long *)ptep, opte, npte));
 	/*
 	 * Handle the subpage protection bits
 	 */
@@ -220,7 +223,7 @@ int __hash_page_64K(unsigned long ea, unsigned long access,
 		    unsigned long vsid, pte_t *ptep, unsigned long trap,
 		    unsigned long flags, int ssize)
 {
-
+	__be64 opte, npte;
 	unsigned long hpte_group;
 	unsigned long rflags, pa;
 	unsigned long old_pte, new_pte;
@@ -254,8 +257,9 @@ int __hash_page_64K(unsigned long ea, unsigned long access,
 		new_pte = old_pte | _PAGE_BUSY | _PAGE_ACCESSED;
 		if (access & _PAGE_RW)
 			new_pte |= _PAGE_DIRTY;
-	} while (old_pte != __cmpxchg_u64((unsigned long *)ptep,
-					  old_pte, new_pte));
+		opte = cpu_to_be64(old_pte);
+		npte = cpu_to_be64(new_pte);
+	} while (opte != __cmpxchg_u64((unsigned long *)ptep, opte, npte));
 
 	rflags = htab_convert_pte_flags(new_pte);
 
