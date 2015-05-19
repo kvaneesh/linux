@@ -516,6 +516,7 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 {
 
 	unsigned long old, tmp;
+	unsigned long busy = cpu_to_be64(_PAGE_BUSY);
 
 #ifdef CONFIG_DEBUG_VM
 	WARN_ON(!pmd_trans_huge(*pmdp));
@@ -523,17 +524,21 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 #endif
 
 #ifdef PTE_ATOMIC_UPDATES
+	clr = cpu_to_be64(clr);
+	set = cpu_to_be64(set);
 	__asm__ __volatile__(
 	"1:	ldarx	%0,0,%3\n\
-		andi.	%1,%0,%6\n\
+		and.	%1,%0,%6\n\
 		bne-	1b \n\
 		andc	%1,%0,%4 \n\
 		or	%1,%1,%7\n\
 		stdcx.	%1,0,%3 \n\
 		bne-	1b"
 	: "=&r" (old), "=&r" (tmp), "=m" (*pmdp)
-	: "r" (pmdp), "r" (clr), "m" (*pmdp), "i" (_PAGE_BUSY), "r" (set)
+	: "r" (pmdp), "r" (clr), "m" (*pmdp), "r" (busy), "r" (set)
 	: "cc" );
+
+	old = be64_to_cpu(old);
 #else
 	old = pmd_val(*pmdp);
 	*pmdp = __pmd((old & ~clr) | set);

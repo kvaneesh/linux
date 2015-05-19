@@ -299,6 +299,8 @@ static inline int hpte_cache_flags_ok(unsigned long ptel, unsigned long io_type)
  */
 static inline pte_t kvmppc_read_update_linux_pte(pte_t *ptep, int writing)
 {
+	__be64 opte, npte;
+	unsigned long old_ptev;
 	pte_t old_pte, new_pte = __pte(0);
 
 	while (1) {
@@ -306,24 +308,25 @@ static inline pte_t kvmppc_read_update_linux_pte(pte_t *ptep, int writing)
 		 * Make sure we don't reload from ptep
 		 */
 		old_pte = READ_ONCE(*ptep);
+		old_ptev = pte_val(old_pte);
 		/*
 		 * wait until _PAGE_BUSY is clear then set it atomically
 		 */
-		if (unlikely(pte_val(old_pte) & _PAGE_BUSY)) {
+		if (unlikely(old_ptev & _PAGE_BUSY)) {
 			cpu_relax();
 			continue;
 		}
 		/* If pte is not present return None */
-		if (unlikely(!(pte_val(old_pte) & _PAGE_PRESENT)))
+		if (unlikely(!(old_ptev & _PAGE_PRESENT)))
 			return __pte(0);
 
 		new_pte = pte_mkyoung(old_pte);
 		if (writing && pte_write(old_pte))
 			new_pte = pte_mkdirty(new_pte);
 
-		if (pte_val(old_pte) == __cmpxchg_u64((unsigned long *)ptep,
-						      pte_val(old_pte),
-						      pte_val(new_pte))) {
+		npte = cpu_to_be64(pte_val(new_pte));
+		opte = cpu_to_be64(old_ptev);
+		if (opte == __cmpxchg_u64((unsigned long *)ptep, opte, npte)) {
 			break;
 		}
 	}
