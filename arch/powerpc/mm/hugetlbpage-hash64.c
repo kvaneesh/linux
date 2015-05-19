@@ -55,7 +55,6 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 	 *	page is currently not DIRTY.
 	 */
 
-
 	do {
 		old_pte = pte_val(*ptep);
 		/* If PTE busy, retry the access */
@@ -69,8 +68,9 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 		new_pte = old_pte | H_PAGE_BUSY | H_PAGE_ACCESSED | H_PAGE_HASHPTE;
 		if (access & H_PAGE_RW)
 			new_pte |= H_PAGE_DIRTY;
-	} while(old_pte != __cmpxchg_u64((unsigned long *)ptep,
-					 old_pte, new_pte));
+	} while(cpu_to_be64(old_pte) != __cmpxchg_u64((unsigned long *)ptep,
+						      cpu_to_be64(old_pte),
+						      cpu_to_be64(new_pte)));
 	rflags = htab_convert_pte_flags(new_pte);
 
 	sz = ((1UL) << shift);
