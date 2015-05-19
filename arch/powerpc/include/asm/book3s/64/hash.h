@@ -1,6 +1,9 @@
 #ifndef _ASM_POWERPC_BOOK3S_64_HASH_H
 #define _ASM_POWERPC_BOOK3S_64_HASH_H
 #ifdef __KERNEL__
+#ifndef __ASSEMBLY__
+#include <asm/cmpxchg.h>
+#endif
 
 /*
  * Common bits between 4K and 64K pages in a linux-style PTE.
@@ -255,27 +258,36 @@ static inline unsigned long hlpte_update(struct mm_struct *mm,
 					 unsigned long set,
 					 int huge)
 {
-	unsigned long old, tmp;
+	pte_t pte;
+	unsigned long old_pte, new_pte;
 
-	__asm__ __volatile__(
-	"1:	ldarx	%0,0,%3		# pte_update\n\
-	andi.	%1,%0,%6\n\
-	bne-	1b \n\
-	andc	%1,%0,%4 \n\
-	or	%1,%1,%7\n\
-	stdcx.	%1,0,%3 \n\
-	bne-	1b"
-	: "=&r" (old), "=&r" (tmp), "=m" (*ptep)
-	: "r" (ptep), "r" (clr), "m" (*ptep), "i" (H_PAGE_BUSY), "r" (set)
-	: "cc" );
+	do {
+reload:
+		pte = READ_ONCE(*ptep);
+		old_pte = pte_val(pte);
+
+		/* If PTE busy, retry */
+		if (unlikely(old_pte & H_PAGE_BUSY))
+			goto reload;
+		/*
+		 * Try to lock the PTE, add ACCESSED and DIRTY if it was
+		 * a write access. Since this is 4K insert of 64K page size
+		 * also add _PAGE_COMBO
+		 */
+		new_pte = (old_pte | set) & ~clr;
+
+	} while (cpu_to_be64(old_pte) != __cmpxchg_u64((unsigned long *)ptep,
+						   cpu_to_be64(old_pte),
+						   cpu_to_be64(new_pte)));
+
 	/* huge pages use the old page table lock */
 	if (!huge)
 		assert_pte_locked(mm, addr);
 
-	if (old & H_PAGE_HASHPTE)
-		hpte_need_flush(mm, addr, ptep, old, huge);
+	if (old_pte & H_PAGE_HASHPTE)
+		hpte_need_flush(mm, addr, ptep, old_pte, huge);
 
-	return old;
+	return old_pte;
 }
 
 /*
@@ -322,21 +334,30 @@ static inline void huge_hlptep_set_wrprotect(struct mm_struct *mm,
  */
 static inline void __hlptep_set_access_flags(pte_t *ptep, pte_t entry)
 {
+	pte_t pte;
+	unsigned long old_pte, new_pte;
 	unsigned long bits = pte_val(entry) &
 		(H_PAGE_DIRTY | H_PAGE_ACCESSED | H_PAGE_RW | H_PAGE_EXEC);
 
-	unsigned long old, tmp;
 
-	__asm__ __volatile__(
-	"1:	ldarx	%0,0,%4\n\
-		andi.	%1,%0,%6\n\
-		bne-	1b \n\
-		or	%0,%3,%0\n\
-		stdcx.	%0,0,%4\n\
-		bne-	1b"
-	:"=&r" (old), "=&r" (tmp), "=m" (*ptep)
-	:"r" (bits), "r" (ptep), "m" (*ptep), "i" (H_PAGE_BUSY)
-	:"cc");
+	do {
+reload:
+		pte = READ_ONCE(*ptep);
+		old_pte = pte_val(pte);
+
+		/* If PTE busy, retry */
+		if (unlikely(old_pte & H_PAGE_BUSY))
+			goto reload;
+		/*
+		 * Try to lock the PTE, add ACCESSED and DIRTY if it was
+		 * a write access. Since this is 4K insert of 64K page size
+		 * also add _PAGE_COMBO
+		 */
+		new_pte = old_pte | bits;
+
+	} while (cpu_to_be64(old_pte) != __cmpxchg_u64((unsigned long *)ptep,
+						       cpu_to_be64(old_pte),
+						       cpu_to_be64(new_pte)));
 }
 
 static inline int hlpgd_bad(pgd_t pgd)

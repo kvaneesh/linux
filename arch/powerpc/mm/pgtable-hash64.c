@@ -279,34 +279,31 @@ unsigned long hlpmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 				  pmd_t *pmdp, unsigned long clr,
 				  unsigned long set)
 {
-
-	unsigned long old, tmp;
+	pmd_t pmd;
+	unsigned long old_pmd, new_pmd;
 
 #ifdef CONFIG_DEBUG_VM
 	WARN_ON(!hlpmd_trans_huge(*pmdp));
 	assert_spin_locked(&mm->page_table_lock);
 #endif
 
-#ifdef PTE_ATOMIC_UPDATES
-	__asm__ __volatile__(
-	"1:	ldarx	%0,0,%3\n\
-		andi.	%1,%0,%6\n\
-		bne-	1b \n\
-		andc	%1,%0,%4 \n\
-		or	%1,%1,%7\n\
-		stdcx.	%1,0,%3 \n\
-		bne-	1b"
-	: "=&r" (old), "=&r" (tmp), "=m" (*pmdp)
-	: "r" (pmdp), "r" (clr), "m" (*pmdp), "i" (H_PAGE_BUSY), "r" (set)
-	: "cc" );
-#else
-	old = pmd_val(*pmdp);
-	*pmdp = __pmd((old & ~clr) | set);
-#endif
-	trace_hugepage_update(addr, old, clr, set);
-	if (old & H_PAGE_HASHPTE)
-		hpte_do_hugepage_flush(mm, addr, pmdp, old);
-	return old;
+	do {
+reload:
+		pmd = READ_ONCE(*pmdp);
+		old_pmd = pmd_val(pmd);
+
+		/* If PTE busy, retry */
+		if (unlikely(old_pmd & H_PAGE_BUSY))
+			goto reload;
+		new_pmd = (old_pmd | set) & ~clr;
+
+	} while (cpu_to_be64(old_pmd) != __cmpxchg_u64((unsigned long *)pmdp,
+						       cpu_to_be64(old_pmd),
+						       cpu_to_be64(new_pmd)));
+	trace_hugepage_update(addr, old_pmd, clr, set);
+	if (old_pmd & H_PAGE_HASHPTE)
+		hpte_do_hugepage_flush(mm, addr, pmdp, old_pmd);
+	return old_pmd;
 }
 
 pmd_t hlpmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
@@ -369,7 +366,8 @@ int hlpmdp_test_and_clear_young(struct vm_area_struct *vma,
 void hlpmdp_splitting_flush(struct vm_area_struct *vma,
 			    unsigned long address, pmd_t *pmdp)
 {
-	unsigned long old, tmp;
+	pmd_t pmd;
+	unsigned long old_pmd, new_pmd;
 
 	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
 
@@ -377,32 +375,28 @@ void hlpmdp_splitting_flush(struct vm_area_struct *vma,
 	WARN_ON(!hlpmd_trans_huge(*pmdp));
 	assert_spin_locked(&vma->vm_mm->page_table_lock);
 #endif
+	do {
+reload:
+		pmd = READ_ONCE(*pmdp);
+		old_pmd = pmd_val(pmd);
 
-#ifdef PTE_ATOMIC_UPDATES
+		/* If PTE busy, retry */
+		if (unlikely(old_pmd & H_PAGE_BUSY))
+			goto reload;
+		new_pmd = old_pmd | H_PAGE_SPLITTING;
 
-	__asm__ __volatile__(
-	"1:	ldarx	%0,0,%3\n\
-		andi.	%1,%0,%6\n\
-		bne-	1b \n\
-		oris	%1,%0,%4@h \n\
-		stdcx.	%1,0,%3 \n\
-		bne-	1b"
-	: "=&r" (old), "=&r" (tmp), "=m" (*pmdp)
-	: "r" (pmdp), "i" (H_PAGE_SPLITTING), "m" (*pmdp), "i" (H_PAGE_BUSY)
-	: "cc" );
-#else
-	old = pmd_val(*pmdp);
-	*pmdp = __pmd(old | H_PAGE_SPLITTING);
-#endif
+	} while (cpu_to_be64(old_pmd) != __cmpxchg_u64((unsigned long *)pmdp,
+						       cpu_to_be64(old_pmd),
+						       cpu_to_be64(new_pmd)));
 	/*
 	 * If we didn't had the splitting flag set, go and flush the
 	 * HPTE entries.
 	 */
-	trace_hugepage_splitting(address, old);
-	if (!(old & H_PAGE_SPLITTING)) {
+	trace_hugepage_splitting(address, old_pmd);
+	if (!(old_pmd & H_PAGE_SPLITTING)) {
 		/* We need to flush the hpte */
-		if (old & H_PAGE_HASHPTE)
-			hpte_do_hugepage_flush(vma->vm_mm, address, pmdp, old);
+		if (old_pmd & H_PAGE_HASHPTE)
+			hpte_do_hugepage_flush(vma->vm_mm, address, pmdp, old_pmd);
 	}
 	/*
 	 * This ensures that generic code that rely on IRQ disabling

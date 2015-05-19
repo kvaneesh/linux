@@ -52,8 +52,9 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 		new_pmd = old_pmd | H_PAGE_BUSY | H_PAGE_ACCESSED | H_PAGE_HASHPTE;
 		if (access & H_PAGE_RW)
 			new_pmd |= H_PAGE_DIRTY;
-	} while (old_pmd != __cmpxchg_u64((unsigned long *)pmdp,
-					  old_pmd, new_pmd));
+	} while (cpu_to_be64(old_pmd) != __cmpxchg_u64((unsigned long *)pmdp,
+						       cpu_to_be64(old_pmd),
+						       cpu_to_be64(new_pmd)));
 	rflags = htab_convert_pte_flags(new_pmd);
 
 #if 0
