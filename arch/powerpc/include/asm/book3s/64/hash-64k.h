@@ -1,15 +1,14 @@
 #ifndef _ASM_POWERPC_BOOK3S_64_HASH_64K_H
 #define _ASM_POWERPC_BOOK3S_64_HASH_64K_H
 
-#include <asm-generic/pgtable-nopud.h>
-
 #define PTE_INDEX_SIZE  8
-#define PMD_INDEX_SIZE  10
-#define PUD_INDEX_SIZE	0
+#define PMD_INDEX_SIZE  5
+#define PUD_INDEX_SIZE	5
 #define PGD_INDEX_SIZE  12
 
 #define PTRS_PER_PTE	(1 << PTE_INDEX_SIZE)
 #define PTRS_PER_PMD	(1 << PMD_INDEX_SIZE)
+#define PTRS_PER_PUD	(1 << PUD_INDEX_SIZE)
 #define PTRS_PER_PGD	(1 << PGD_INDEX_SIZE)
 
 /* With 4k base page size, hugepage PTEs go at the PMD level */
@@ -20,8 +19,13 @@
 #define PMD_SIZE	(1UL << PMD_SHIFT)
 #define PMD_MASK	(~(PMD_SIZE-1))
 
+/* PUD_SHIFT determines what a third-level page table entry can map */
+#define PUD_SHIFT	(PMD_SHIFT + PMD_INDEX_SIZE)
+#define PUD_SIZE	(1UL << PUD_SHIFT)
+#define PUD_MASK	(~(PUD_SIZE-1))
+
 /* PGDIR_SHIFT determines what a third-level page table entry can map */
-#define PGDIR_SHIFT	(PMD_SHIFT + PMD_INDEX_SIZE)
+#define PGDIR_SHIFT	(PUD_SHIFT + PUD_INDEX_SIZE)
 #define PGDIR_SIZE	(1UL << PGDIR_SHIFT)
 #define PGDIR_MASK	(~(PGDIR_SIZE-1))
 
@@ -61,6 +65,8 @@
 #define PMD_MASKED_BITS		(PTE_FRAG_SIZE - 1)
 /* Bits to mask out from a PGD/PUD to get to the PMD page */
 #define PUD_MASKED_BITS		0x1ff
+/* FIXME!! check this */
+#define PGD_MASKED_BITS		0
 
 #ifndef __ASSEMBLY__
 
@@ -130,10 +136,8 @@ extern bool __rpte_sub_valid(real_pte_t rpte, unsigned long index);
 #else
 #define PMD_TABLE_SIZE	(sizeof(pmd_t) << PMD_INDEX_SIZE)
 #endif
+#define PUD_TABLE_SIZE	(sizeof(pud_t) << PUD_INDEX_SIZE)
 #define PGD_TABLE_SIZE	(sizeof(pgd_t) << PGD_INDEX_SIZE)
-
-#define pgd_pte(pgd)	(pud_pte(((pud_t){ pgd })))
-#define pte_pgd(pte)	((pgd_t)pte_pud(pte))
 
 #ifdef CONFIG_HUGETLB_PAGE
 /*
