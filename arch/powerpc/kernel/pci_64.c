@@ -38,13 +38,14 @@
  * ISA drivers use hard coded offsets.  If no ISA bus exists nothing
  * is mapped on the first 64K of IO space
  */
-unsigned long pci_io_base = ISA_IO_BASE;
+unsigned long pci_io_base;
 EXPORT_SYMBOL(pci_io_base);
 
 static int __init pcibios_init(void)
 {
 	struct pci_controller *hose, *tmp;
 
+	pci_io_base =  ISA_IO_BASE;
 	printk(KERN_INFO "PCI: Probing PCI hardware\n");
 
 	/* For now, override phys_mem_access_prot. If we need it,g

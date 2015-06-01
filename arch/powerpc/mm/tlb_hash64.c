@@ -218,7 +218,7 @@ void __flush_hash_table_range(struct mm_struct *mm, unsigned long start,
 		pte = pte_val(*ptep);
 		if (is_thp)
 			trace_hugepage_invalidate(start, pte);
-		if (!(pte & _PAGE_HASHPTE))
+		if (!(pte & H_PAGE_HASHPTE))
 			continue;
 		if (unlikely(is_thp))
 			hpte_do_hugepage_flush(mm, start, (pmd_t *)ptep, pte);
@@ -235,7 +235,7 @@ void flush_tlb_pmd_range(struct mm_struct *mm, pmd_t *pmd, unsigned long addr)
 	pte_t *start_pte;
 	unsigned long flags;
 
-	addr = _ALIGN_DOWN(addr, PMD_SIZE);
+	addr = _ALIGN_DOWN(addr, H_PMD_SIZE);
 	/* Note: Normally, we should only ever use a batch within a
 	 * PTE locked section. This violates the rule, but will work
 	 * since we don't actually modify the PTEs, we just flush the
@@ -246,9 +246,9 @@ void flush_tlb_pmd_range(struct mm_struct *mm, pmd_t *pmd, unsigned long addr)
 	local_irq_save(flags);
 	arch_enter_lazy_mmu_mode();
 	start_pte = pte_offset_map(pmd, addr);
-	for (pte = start_pte; pte < start_pte + PTRS_PER_PTE; pte++) {
+	for (pte = start_pte; pte < start_pte + H_PTRS_PER_PTE; pte++) {
 		unsigned long pteval = pte_val(*pte);
-		if (pteval & _PAGE_HASHPTE)
+		if (pteval & H_PAGE_HASHPTE)
 			hpte_need_flush(mm, addr, pte, pteval, 0);
 		addr += PAGE_SIZE;
 	}

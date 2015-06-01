@@ -116,9 +116,9 @@ static void destroy_pagetable_page(struct mm_struct *mm)
 
 	page = virt_to_page(pte_frag);
 	/* drop all the pending references */
-	count = ((unsigned long)pte_frag & ~PAGE_MASK) >> PTE_FRAG_SIZE_SHIFT;
+	count = ((unsigned long)pte_frag & ~PAGE_MASK) >> H_PTE_FRAG_SIZE_SHIFT;
 	/* We allow PTE_FRAG_NR fragments from a PTE page */
-	count = atomic_sub_return(PTE_FRAG_NR - count, &page->_count);
+	count = atomic_sub_return(H_PTE_FRAG_NR - count, &page->_count);
 	if (!count) {
 		pgtable_page_dtor(page);
 		free_hot_cold_page(page, 0);

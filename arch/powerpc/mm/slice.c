@@ -37,7 +37,7 @@
 #include <asm/hugetlb.h>
 
 /* some sanity checks */
-#if (PGTABLE_RANGE >> 43) > SLICE_MASK_SIZE
+#if (H_PGTABLE_RANGE >> 43) > SLICE_MASK_SIZE
 #error PGTABLE_RANGE exceeds slice_mask high_slices size
 #endif
 

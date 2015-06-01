@@ -59,16 +59,16 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 	do {
 		old_pte = pte_val(*ptep);
 		/* If PTE busy, retry the access */
-		if (unlikely(old_pte & _PAGE_BUSY))
+		if (unlikely(old_pte & H_PAGE_BUSY))
 			return 0;
 		/* If PTE permissions don't match, take page fault */
 		if (unlikely(access & ~old_pte))
 			return 1;
 		/* Try to lock the PTE, add ACCESSED and DIRTY if it was
 		 * a write access */
-		new_pte = old_pte | _PAGE_BUSY | _PAGE_ACCESSED | _PAGE_HASHPTE;
-		if (access & _PAGE_RW)
-			new_pte |= _PAGE_DIRTY;
+		new_pte = old_pte | H_PAGE_BUSY | H_PAGE_ACCESSED | H_PAGE_HASHPTE;
+		if (access & H_PAGE_RW)
+			new_pte |= H_PAGE_DIRTY;
 	} while(old_pte != __cmpxchg_u64((unsigned long *)ptep,
 					 old_pte, new_pte));
 	rflags = htab_convert_pte_flags(new_pte);
@@ -80,28 +80,28 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 		rflags = hash_page_do_lazy_icache(rflags, __pte(old_pte), trap);
 
 	/* Check if pte already has an hpte (case 2) */
-	if (unlikely(old_pte & _PAGE_HASHPTE)) {
+	if (unlikely(old_pte & H_PAGE_HASHPTE)) {
 		/* There MIGHT be an HPTE for this pte */
 		unsigned long hash, slot;
 
 		hash = hpt_hash(vpn, shift, ssize);
-		if (old_pte & _PAGE_F_SECOND)
+		if (old_pte & H_PAGE_F_SECOND)
 			hash = ~hash;
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-		slot += (old_pte & _PAGE_F_GIX) >> 12;
+		slot += (old_pte & H_PAGE_F_GIX) >> 12;
 
 		if (ppc_md.hpte_updatepp(slot, rflags, vpn, mmu_psize,
 					 mmu_psize, ssize, flags) == -1)
-			old_pte &= ~_PAGE_HPTEFLAGS;
+			old_pte &= ~H_PAGE_HPTEFLAGS;
 	}
 
-	if (likely(!(old_pte & _PAGE_HASHPTE))) {
+	if (likely(!(old_pte & H_PAGE_HASHPTE))) {
 		unsigned long hash = hpt_hash(vpn, shift, ssize);
 
 		pa = pte_pfn(__pte(old_pte)) << PAGE_SHIFT;
 
 		/* clear HPTE slot informations in new PTE */
-		new_pte = (new_pte & ~_PAGE_HPTEFLAGS) | _PAGE_HASHPTE;
+		new_pte = (new_pte & ~H_PAGE_HPTEFLAGS) | H_PAGE_HASHPTE;
 
 		slot = hpte_insert_repeating(hash, vpn, pa, rflags, 0,
 					     mmu_psize, ssize);
@@ -117,13 +117,13 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 			return -1;
 		}
 
-		new_pte |= (slot << 12) & (_PAGE_F_SECOND | _PAGE_F_GIX);
+		new_pte |= (slot << 12) & (H_PAGE_F_SECOND | H_PAGE_F_GIX);
 	}
 
 	/*
 	 * No need to use ldarx/stdcx here
 	 */
-	*ptep = __pte(new_pte & ~_PAGE_BUSY);
+	*ptep = __pte(new_pte & ~H_PAGE_BUSY);
 	return 0;
 }
 
@@ -188,25 +188,25 @@ pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz
 	addr &= ~(sz-1);
 	pg = pgd_offset(mm, addr);
 
-	if (pshift == PGDIR_SHIFT)
+	if (pshift == H_PGDIR_SHIFT)
 		/* 16GB huge page */
 		return (pte_t *) pg;
-	else if (pshift > PUD_SHIFT)
+	else if (pshift > H_PUD_SHIFT)
 		/*
 		 * We need to use hugepd table
 		 */
 		hpdp = (hugepd_t *)pg;
 	else {
-		pdshift = PUD_SHIFT;
+		pdshift = H_PUD_SHIFT;
 		pu = pud_alloc(mm, pg, addr);
-		if (pshift == PUD_SHIFT)
+		if (pshift == H_PUD_SHIFT)
 			return (pte_t *)pu;
-		else if (pshift > PMD_SHIFT)
+		else if (pshift > H_PMD_SHIFT)
 			hpdp = (hugepd_t *)pu;
 		else {
-			pdshift = PMD_SHIFT;
+			pdshift = H_PMD_SHIFT;
 			pm = pmd_alloc(mm, pu, addr);
-			if (pshift == PMD_SHIFT)
+			if (pshift == H_PMD_SHIFT)
 				/* 16MB hugepage */
 				return (pte_t *)pm;
 			else
@@ -272,7 +272,7 @@ static void hugetlb_free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
 			WARN_ON(!pmd_none_or_clear_bad(pmd));
 			continue;
 		}
-		free_hugepd_range(tlb, (hugepd_t *)pmd, PMD_SHIFT,
+		free_hugepd_range(tlb, (hugepd_t *)pmd, H_PMD_SHIFT,
 				  addr, next, floor, ceiling);
 	} while (addr = next, addr != end);
 
@@ -311,7 +311,7 @@ static void hugetlb_free_pud_range(struct mmu_gather *tlb, pgd_t *pgd,
 			hugetlb_free_pmd_range(tlb, pud, addr, next, floor,
 					       ceiling);
 		} else {
-			free_hugepd_range(tlb, (hugepd_t *)pud, PUD_SHIFT,
+			free_hugepd_range(tlb, (hugepd_t *)pud, H_PUD_SHIFT,
 					  addr, next, floor, ceiling);
 		}
 	} while (addr = next, addr != end);
@@ -320,7 +320,7 @@ static void hugetlb_free_pud_range(struct mmu_gather *tlb, pgd_t *pgd,
 	if (start < floor)
 		return;
 	if (ceiling) {
-		ceiling &= PGDIR_MASK;
+		ceiling &= H_PGDIR_MASK;
 		if (!ceiling)
 			return;
 	}
@@ -367,7 +367,7 @@ void hugetlb_free_pgd_range(struct mmu_gather *tlb,
 				continue;
 			hugetlb_free_pud_range(tlb, pgd, addr, next, floor, ceiling);
 		} else {
-			free_hugepd_range(tlb, (hugepd_t *)pgd, PGDIR_SHIFT,
+			free_hugepd_range(tlb, (hugepd_t *)pgd, H_PGDIR_SHIFT,
 					  addr, next, floor, ceiling);
 		}
 	} while (addr = next, addr != end);

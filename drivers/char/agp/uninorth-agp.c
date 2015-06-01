@@ -419,7 +419,14 @@ static int uninorth_create_gatt_table(struct agp_bridge_data *bridge)
 	/* Need to clear out any dirty data still sitting in caches */
 	flush_dcache_range((unsigned long)table,
 			   (unsigned long)table_end + 1);
-	bridge->gatt_table = vmap(uninorth_priv.pages_arr, (1 << page_order), 0, PAGE_KERNEL_NCG);
+#ifdef CONFIG_PPC_BOOK3S_64
+	bridge->gatt_table = vmap(uninorth_priv.pages_arr,
+				  (1 << page_order), 0, H_PAGE_KERNEL_NCG);
+#else
+	bridge->gatt_table = vmap(uninorth_priv.pages_arr,
+				  (1 << page_order), 0, PAGE_KERNEL_NCG);
+#endif
+
 
 	if (bridge->gatt_table == NULL)
 		goto enomem;

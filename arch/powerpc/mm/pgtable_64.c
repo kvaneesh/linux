@@ -64,7 +64,59 @@
 #endif
 #endif
 
-unsigned long ioremap_bot = IOREMAP_BASE;
+#ifdef CONFIG_PPC_BOOK3S_64
+/*
+ * There are #defines that get defined in pgtable-book3s-64.h and are used
+ * by code outside ppc64 core mm code. We try to strike a balance between
+ * conditional code that switch between two different constants or a variable
+ * for as below.
+ */
+pgprot_t __kernel_page_prot;
+EXPORT_SYMBOL(__kernel_page_prot);
+pgprot_t __page_none;
+EXPORT_SYMBOL(__page_none);
+pgprot_t __page_kernel_exec;
+EXPORT_SYMBOL(__page_kernel_exec);
+unsigned long __page_no_cache;
+EXPORT_SYMBOL(__page_no_cache);
+unsigned long __page_guarded;
+EXPORT_SYMBOL(__page_guarded);
+unsigned long __page_user;
+EXPORT_SYMBOL(__page_user);
+unsigned long __page_coherent;
+EXPORT_SYMBOL(__page_coherent);
+unsigned long __page_present;
+EXPORT_SYMBOL(__page_present);
+unsigned long __page_rw;
+EXPORT_SYMBOL(__page_rw);
+unsigned long __page_dirty;
+EXPORT_SYMBOL(__page_dirty);
+unsigned long __page_exec;
+EXPORT_SYMBOL(__page_exec);
+
+/* kernel constants */
+unsigned long __ptrs_per_pte;
+EXPORT_SYMBOL(__ptrs_per_pte);
+unsigned long __ptrs_per_pmd;
+EXPORT_SYMBOL(__ptrs_per_pmd);
+unsigned long __pmd_shift;
+EXPORT_SYMBOL(__pmd_shift);
+unsigned long __pud_shift;
+EXPORT_SYMBOL(__pud_shift);
+unsigned long __pgdir_shift;
+EXPORT_SYMBOL(__pgdir_shift);
+unsigned long __kernel_virt_start;
+EXPORT_SYMBOL(__kernel_virt_start);
+unsigned long __kernel_virt_size;
+EXPORT_SYMBOL(__kernel_virt_size);
+unsigned long __vmalloc_start;
+EXPORT_SYMBOL(__vmalloc_start);
+unsigned long __vmalloc_end;
+EXPORT_SYMBOL(__vmalloc_end);
+struct page *vmemmap;
+EXPORT_SYMBOL(vmemmap);
+#endif
+unsigned long ioremap_bot;
 
 /**
  * __ioremap_at - Low level function to establish the page tables
@@ -84,7 +136,7 @@ void __iomem * __ioremap_at(phys_addr_t pa, void *ea, unsigned long size,
 		flags &= ~_PAGE_COHERENT;
 
 	/* We don't support the 4K PFN hack with ioremap */
-	if (flags & _PAGE_4K_PFN)
+	if (flags & H_PAGE_4K_PFN)
 		return NULL;
 
 	WARN_ON(pa & ~PAGE_MASK);
@@ -283,7 +335,7 @@ static pte_t *get_from_cache(struct mm_struct *mm)
 	spin_lock(&mm->page_table_lock);
 	ret = mm->context.pte_frag;
 	if (ret) {
-		pte_frag = ret + PTE_FRAG_SIZE;
+		pte_frag = ret + H_PTE_FRAG_SIZE;
 		/*
 		 * If we have taken up all the fragments mark PTE page NULL
 		 */
@@ -315,8 +367,8 @@ static pte_t *__alloc_for_cache(struct mm_struct *mm, int kernel)
 	 * count.
 	 */
 	if (likely(!mm->context.pte_frag)) {
-		atomic_set(&page->_count, PTE_FRAG_NR);
-		mm->context.pte_frag = ret + PTE_FRAG_SIZE;
+		atomic_set(&page->_count, H_PTE_FRAG_NR);
+		mm->context.pte_frag = ret + H_PTE_FRAG_SIZE;
 	}
 	spin_unlock(&mm->page_table_lock);
 
@@ -444,14 +496,14 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 		stdcx.	%1,0,%3 \n\
 		bne-	1b"
 	: "=&r" (old), "=&r" (tmp), "=m" (*pmdp)
-	: "r" (pmdp), "r" (clr), "m" (*pmdp), "i" (_PAGE_BUSY), "r" (set)
+	: "r" (pmdp), "r" (clr), "m" (*pmdp), "i" (H_PAGE_BUSY), "r" (set)
 	: "cc" );
 #else
 	old = pmd_val(*pmdp);
 	*pmdp = __pmd((old & ~clr) | set);
 #endif
 	trace_hugepage_update(addr, old, clr, set);
-	if (old & _PAGE_HASHPTE)
+	if (old & H_PAGE_HASHPTE)
 		hpte_do_hugepage_flush(mm, addr, pmdp, old);
 	return old;
 }
@@ -527,7 +579,7 @@ void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 	/*
 	 * we store the pgtable in the second half of PMD
 	 */
-	pgtable_slot = (pgtable_t *)pmdp + PTRS_PER_PMD;
+	pgtable_slot = (pgtable_t *)pmdp + H_PTRS_PER_PMD;
 	*pgtable_slot = pgtable;
 	/*
 	 * expose the deposited pgtable to other cpus.
@@ -544,7 +596,7 @@ pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
 	pgtable_t *pgtable_slot;
 
 	assert_spin_locked(&mm->page_table_lock);
-	pgtable_slot = (pgtable_t *)pmdp + PTRS_PER_PMD;
+	pgtable_slot = (pgtable_t *)pmdp + H_PTRS_PER_PMD;
 	pgtable = *pgtable_slot;
 	/*
 	 * Once we withdraw, mark the entry NULL.
@@ -554,7 +606,7 @@ pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
 	 * We store HPTE information in the deposited PTE fragment.
 	 * zero out the content on withdraw.
 	 */
-	memset(pgtable, 0, PTE_FRAG_SIZE);
+	memset(pgtable, 0, H_PTE_FRAG_SIZE);
 	return pgtable;
 }
 
@@ -564,7 +616,7 @@ void pmdp_huge_split_prepare(struct vm_area_struct *vma,
 	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
 
 #ifdef CONFIG_DEBUG_VM
-	BUG_ON(REGION_ID(address) != USER_REGION_ID);
+	BUG_ON(REGION_ID(address) != H_USER_REGION_ID);
 #endif
 	/*
 	 * We can't mark the pmd none here, because that will cause a race
@@ -578,7 +630,7 @@ void pmdp_huge_split_prepare(struct vm_area_struct *vma,
 	 * the translation is still valid, because we will withdraw
 	 * pgtable_t after this.
 	 */
-	pmd_hugepage_update(vma->vm_mm, address, pmdp, _PAGE_USER, 0);
+	pmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_USER, 0);
 }
 
 
@@ -590,8 +642,8 @@ void set_pmd_at(struct mm_struct *mm, unsigned long addr,
 		pmd_t *pmdp, pmd_t pmd)
 {
 #ifdef CONFIG_DEBUG_VM
-	WARN_ON((pmd_val(*pmdp) & (_PAGE_PRESENT | _PAGE_USER)) ==
-		(_PAGE_PRESENT | _PAGE_USER));
+	WARN_ON((pmd_val(*pmdp) & (H_PAGE_PRESENT | H_PAGE_USER)) ==
+		(H_PAGE_PRESENT | H_PAGE_USER));
 	assert_spin_locked(&mm->page_table_lock);
 	WARN_ON(!pmd_trans_huge(pmd));
 #endif
@@ -606,7 +658,7 @@ void set_pmd_at(struct mm_struct *mm, unsigned long addr,
 void pmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
 		     pmd_t *pmdp)
 {
-	pmd_hugepage_update(vma->vm_mm, address, pmdp, _PAGE_PRESENT, 0);
+	pmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_PRESENT, 0);
 	/*
 	 * This ensures that generic code that rely on IRQ disabling
 	 * to prevent a parallel THP split work as expected.
@@ -632,7 +684,7 @@ void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 	psize = get_slice_psize(mm, addr);
 	BUG_ON(psize == MMU_PAGE_16M);
 #endif
-	if (old_pmd & _PAGE_COMBO)
+	if (old_pmd & H_PAGE_COMBO)
 		psize = MMU_PAGE_4K;
 	else
 		psize = MMU_PAGE_64K;
@@ -662,7 +714,7 @@ pmd_t pfn_pmd(unsigned long pfn, pgprot_t pgprot)
 {
 	unsigned long pmdv;
 
-	pmdv = pfn << PTE_RPN_SHIFT;
+	pmdv = pfn << H_PTE_RPN_SHIFT;
 	return pmd_set_protbits(__pmd(pmdv), pgprot);
 }
 
@@ -676,7 +728,7 @@ pmd_t pmd_modify(pmd_t pmd, pgprot_t newprot)
 	unsigned long pmdv;
 
 	pmdv = pmd_val(pmd);
-	pmdv &= _HPAGE_CHG_MASK;
+	pmdv &= H_HPAGE_CHG_MASK;
 	return pmd_set_protbits(__pmd(pmdv), newprot);
 }
 
@@ -707,13 +759,13 @@ pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
 	 * So we can safely go and clear the pgtable hash
 	 * index info.
 	 */
-	pgtable_slot = (pgtable_t *)pmdp + PTRS_PER_PMD;
+	pgtable_slot = (pgtable_t *)pmdp + H_PTRS_PER_PMD;
 	pgtable = *pgtable_slot;
 	/*
 	 * Let's zero out old valid and hash index details
 	 * hash fault look at them.
 	 */
-	memset(pgtable, 0, PTE_FRAG_SIZE);
+	memset(pgtable, 0, H_PTE_FRAG_SIZE);
 	/*
 	 * Serialize against find_linux_pte_or_hugepte which does lock-less
 	 * lookup in page tables with local interrupts disabled. For huge pages
@@ -731,10 +783,10 @@ pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
 int has_transparent_hugepage(void)
 {
 
-	BUILD_BUG_ON_MSG((PMD_SHIFT - PAGE_SHIFT) >= MAX_ORDER,
+	BUILD_BUG_ON_MSG((H_PMD_SHIFT - PAGE_SHIFT) >= MAX_ORDER,
 		"hugepages can't be allocated by the buddy allocator");
 
-	BUILD_BUG_ON_MSG((PMD_SHIFT - PAGE_SHIFT) < 2,
+	BUILD_BUG_ON_MSG((H_PMD_SHIFT - PAGE_SHIFT) < 2,
 			 "We need more than 2 pages to do deferred thp split");
 
 	if (!mmu_has_feature(MMU_FTR_16M_PAGE))
@@ -742,7 +794,7 @@ int has_transparent_hugepage(void)
 	/*
 	 * We support THP only if PMD_SIZE is 16MB.
 	 */
-	if (mmu_psize_defs[MMU_PAGE_16M].shift != PMD_SHIFT)
+	if (mmu_psize_defs[MMU_PAGE_16M].shift != H_PMD_SHIFT)
 		return 0;
 	/*
 	 * We need to make sure that we support 16MB hugepage in a segement
