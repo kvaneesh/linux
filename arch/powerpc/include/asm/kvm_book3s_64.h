@@ -309,12 +309,12 @@ static inline pte_t kvmppc_read_update_linux_pte(pte_t *ptep, int writing)
 		/*
 		 * wait until _PAGE_BUSY is clear then set it atomically
 		 */
-		if (unlikely(pte_val(old_pte) & _PAGE_BUSY)) {
+		if (unlikely(pte_val(old_pte) & H_PAGE_BUSY)) {
 			cpu_relax();
 			continue;
 		}
 		/* If pte is not present return None */
-		if (unlikely(!(pte_val(old_pte) & _PAGE_PRESENT)))
+		if (unlikely(!(pte_val(old_pte) & H_PAGE_PRESENT)))
 			return __pte(0);
 
 		new_pte = pte_mkyoung(old_pte);
@@ -334,11 +334,11 @@ static inline pte_t kvmppc_read_update_linux_pte(pte_t *ptep, int writing)
 /* Return HPTE cache control bits corresponding to Linux pte bits */
 static inline unsigned long hpte_cache_bits(unsigned long pte_val)
 {
-#if _PAGE_NO_CACHE == HPTE_R_I && _PAGE_WRITETHRU == HPTE_R_W
+#if H_PAGE_NO_CACHE == HPTE_R_I && H_PAGE_WRITETHRU == HPTE_R_W
 	return pte_val & (HPTE_R_W | HPTE_R_I);
 #else
-	return ((pte_val & _PAGE_NO_CACHE) ? HPTE_R_I : 0) +
-		((pte_val & _PAGE_WRITETHRU) ? HPTE_R_W : 0);
+	return ((pte_val & H_PAGE_NO_CACHE) ? HPTE_R_I : 0) +
+		((pte_val & H_PAGE_WRITETHRU) ? HPTE_R_W : 0);
 #endif
 }
 

@@ -164,7 +164,7 @@ unsigned long htab_convert_pte_flags(unsigned long pteflags)
 	unsigned long rflags = 0;
 
 	/* _PAGE_EXEC -> NOEXEC */
-	if ((pteflags & _PAGE_EXEC) == 0)
+	if ((pteflags & H_PAGE_EXEC) == 0)
 		rflags |= HPTE_R_N;
 	/*
 	 * PP bits:
@@ -174,9 +174,9 @@ unsigned long htab_convert_pte_flags(unsigned long pteflags)
 	 * User area mapped by 0x2 and read only use by
 	 * 0x3.
 	 */
-	if (pteflags & _PAGE_USER) {
+	if (pteflags & H_PAGE_USER) {
 		rflags |= 0x2;
-		if (!((pteflags & _PAGE_RW) && (pteflags & _PAGE_DIRTY)))
+		if (!((pteflags & H_PAGE_RW) && (pteflags & H_PAGE_DIRTY)))
 			rflags |= 0x1;
 	}
 	/*
@@ -186,11 +186,11 @@ unsigned long htab_convert_pte_flags(unsigned long pteflags)
 	/*
 	 * Add in WIG bits
 	 */
-	if (pteflags & _PAGE_WRITETHRU)
+	if (pteflags & H_PAGE_WRITETHRU)
 		rflags |= HPTE_R_W;
-	if (pteflags & _PAGE_NO_CACHE)
+	if (pteflags & H_PAGE_NO_CACHE)
 		rflags |= HPTE_R_I;
-	if (pteflags & _PAGE_GUARDED)
+	if (pteflags & H_PAGE_GUARDED)
 		rflags |= HPTE_R_G;
 
 	return rflags;
@@ -635,7 +635,7 @@ static unsigned long __init htab_get_table_size(void)
 int create_section_mapping(unsigned long start, unsigned long end)
 {
 	return htab_bolt_mapping(start, end, __pa(start),
-				 pgprot_val(PAGE_KERNEL), mmu_linear_psize,
+				 pgprot_val(H_PAGE_KERNEL), mmu_linear_psize,
 				 mmu_kernel_ssize);
 }
 
@@ -718,7 +718,7 @@ static void __init htab_initialize(void)
 		mtspr(SPRN_SDR1, _SDR1);
 	}
 
-	prot = pgprot_val(PAGE_KERNEL);
+	prot = pgprot_val(H_PAGE_KERNEL);
 
 #ifdef CONFIG_DEBUG_PAGEALLOC
 	linear_map_hash_count = memblock_end_of_DRAM() >> PAGE_SHIFT;
@@ -800,6 +800,31 @@ static void __init htab_initialize(void)
 
 void __init early_init_mmu(void)
 {
+	/*
+	 * initialize global variables
+	 */
+	__kernel_page_prot = H_PAGE_KERNEL;
+	__page_none = H_PAGE_NONE;
+	__ptrs_per_pte = H_PTRS_PER_PTE;
+	__ptrs_per_pmd = H_PTRS_PER_PMD;
+	__pmd_shift    = H_PMD_SHIFT;
+#ifndef __PAGETABLE_PUD_FOLDED
+	__pud_shift    = H_PUD_SHIFT;
+#endif
+	__pgdir_shift  = H_PGDIR_SHIFT;
+	__kernel_virt_start = H_KERN_VIRT_START;
+	__kernel_virt_size = H_KERN_VIRT_SIZE;
+	vmemmap = (struct page *)H_VMEMMAP_BASE;
+	__vmalloc_start = H_VMALLOC_START;
+	__vmalloc_end = H_VMALLOC_END;
+	__page_no_cache = H_PAGE_NO_CACHE;
+	__page_guarded = H_PAGE_GUARDED;
+	__page_user = H_PAGE_USER;
+	__page_coherent = H_PAGE_COHERENT;
+	__page_present = H_PAGE_PRESENT;
+	__page_kernel_exec = H_PAGE_KERNEL_EXEC;
+	ioremap_bot = IOREMAP_BASE;
+
 	/* Initialize the MMU Hash table and create the linear mapping
 	 * of memory. Has to be done before SLB initialization as this is
 	 * currently where the page size encoding is obtained.
@@ -920,8 +945,8 @@ static int subpage_protection(struct mm_struct *mm, unsigned long ea)
 	/* extract 2-bit bitfield for this 4k subpage */
 	spp >>= 30 - 2 * ((ea >> 12) & 0xf);
 
-	/* turn 0,1,2,3 into combination of _PAGE_USER and _PAGE_RW */
-	spp = ((spp & 2) ? _PAGE_USER : 0) | ((spp & 1) ? _PAGE_RW : 0);
+	/* turn 0,1,2,3 into combination of H_PAGE_USER and H_PAGE_RW */
+	spp = ((spp & 2) ? H_PAGE_USER : 0) | ((spp & 1) ? H_PAGE_RW : 0);
 	return spp;
 }
 
@@ -986,7 +1011,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 
 	/* Get region & vsid */
  	switch (REGION_ID(ea)) {
-	case USER_REGION_ID:
+	case H_USER_REGION_ID:
 		user_region = 1;
 		if (! mm) {
 			DBG_LOW(" user region with no mm !\n");
@@ -997,7 +1022,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 		ssize = user_segment_size(ea);
 		vsid = get_vsid(mm->context.id, ea, ssize);
 		break;
-	case VMALLOC_REGION_ID:
+	case H_VMALLOC_REGION_ID:
 		vsid = get_kernel_vsid(ea, mmu_kernel_ssize);
 		if (ea < VMALLOC_END)
 			psize = mmu_vmalloc_psize;
@@ -1053,7 +1078,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 	}
 
 	/* Add _PAGE_PRESENT to the required access perm */
-	access |= _PAGE_PRESENT;
+	access |= H_PAGE_PRESENT;
 
 	/* Pre-check access permissions (will be re-checked atomically
 	 * in __hash_page_XX but this pre-check is a fast path
@@ -1097,7 +1122,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 	/* Do actual hashing */
 #ifdef CONFIG_PPC_64K_PAGES
 	/* If _PAGE_4K_PFN is set, make sure this is a 4k segment */
-	if ((pte_val(*ptep) & _PAGE_4K_PFN) && psize == MMU_PAGE_64K) {
+	if ((pte_val(*ptep) & H_PAGE_4K_PFN) && psize == MMU_PAGE_64K) {
 		demote_segment_4k(mm, ea);
 		psize = MMU_PAGE_4K;
 	}
@@ -1106,7 +1131,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 	 * using non cacheable large pages, then we switch to 4k
 	 */
 	if (mmu_ci_restrictions && psize == MMU_PAGE_64K &&
-	    (pte_val(*ptep) & _PAGE_NO_CACHE)) {
+	    (pte_val(*ptep) & H_PAGE_NO_CACHE)) {
 		if (user_region) {
 			demote_segment_4k(mm, ea);
 			psize = MMU_PAGE_4K;
@@ -1170,7 +1195,7 @@ int hash_page(unsigned long ea, unsigned long access, unsigned long trap,
 	unsigned long flags = 0;
 	struct mm_struct *mm = current->mm;
 
-	if (REGION_ID(ea) == VMALLOC_REGION_ID)
+	if (REGION_ID(ea) == H_VMALLOC_REGION_ID)
 		mm = &init_mm;
 
 	if (dsisr & DSISR_NOHPTE)
@@ -1183,28 +1208,28 @@ EXPORT_SYMBOL_GPL(hash_page);
 int __hash_page(unsigned long ea, unsigned long msr, unsigned long trap,
 		unsigned long dsisr)
 {
-	unsigned long access = _PAGE_PRESENT;
+	unsigned long access = H_PAGE_PRESENT;
 	unsigned long flags = 0;
 	struct mm_struct *mm = current->mm;
 
-	if (REGION_ID(ea) == VMALLOC_REGION_ID)
+	if (REGION_ID(ea) == H_VMALLOC_REGION_ID)
 		mm = &init_mm;
 
 	if (dsisr & DSISR_NOHPTE)
 		flags |= HPTE_NOHPTE_UPDATE;
 
 	if (dsisr & DSISR_ISSTORE)
-		access |= _PAGE_RW;
+		access |= H_PAGE_RW;
 	/*
 	 * We need to set the _PAGE_USER bit if MSR_PR is set or if we are
 	 * accessing a userspace segment (even from the kernel). We assume
 	 * kernel addresses always have the high bit set.
 	 */
-	if ((msr & MSR_PR) || (REGION_ID(ea) == USER_REGION_ID))
-		access |= _PAGE_USER;
+	if ((msr & MSR_PR) || (REGION_ID(ea) == H_USER_REGION_ID))
+		access |= H_PAGE_USER;
 
 	if (trap == 0x400)
-		access |= _PAGE_EXEC;
+		access |= H_PAGE_EXEC;
 
 	return hash_page_mm(mm, ea, access, trap, flags);
 }
@@ -1219,7 +1244,7 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 	unsigned long flags;
 	int rc, ssize, update_flags = 0;
 
-	BUG_ON(REGION_ID(ea) != USER_REGION_ID);
+	BUG_ON(REGION_ID(ea) != H_USER_REGION_ID);
 
 #ifdef CONFIG_PPC_MM_SLICES
 	/* We only prefault standard pages for now */
@@ -1262,7 +1287,7 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 	 * That way we don't have to duplicate all of the logic for segment
 	 * page size demotion here
 	 */
-	if (pte_val(*ptep) & (_PAGE_4K_PFN | _PAGE_NO_CACHE))
+	if (pte_val(*ptep) & (H_PAGE_4K_PFN | H_PAGE_NO_CACHE))
 		goto out_exit;
 #endif /* CONFIG_PPC_64K_PAGES */
 
@@ -1305,10 +1330,10 @@ void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
 	pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
 		hash = hpt_hash(vpn, shift, ssize);
 		hidx = __rpte_to_hidx(pte, index);
-		if (hidx & _PTEIDX_SECONDARY)
+		if (hidx & H_PTEIDX_SECONDARY)
 			hash = ~hash;
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-		slot += hidx & _PTEIDX_GROUP_IX;
+		slot += hidx & H_PTEIDX_GROUP_IX;
 		DBG_LOW(" sub %ld: hash=%lx, hidx=%lx\n", index, slot, hidx);
 		/*
 		 * We use same base page size and actual psize, because we don't
@@ -1379,11 +1404,11 @@ void flush_hash_hugepage(unsigned long vsid, unsigned long addr,
 		addr = s_addr + (i * (1ul << shift));
 		vpn = hpt_vpn(addr, vsid, ssize);
 		hash = hpt_hash(vpn, shift, ssize);
-		if (hidx & _PTEIDX_SECONDARY)
+		if (hidx & H_PTEIDX_SECONDARY)
 			hash = ~hash;
 
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-		slot += hidx & _PTEIDX_GROUP_IX;
+		slot += hidx & H_PTEIDX_GROUP_IX;
 		ppc_md.hpte_invalidate(slot, vpn, psize,
 				       MMU_PAGE_16M, ssize, local);
 	}
@@ -1516,10 +1541,10 @@ static void kernel_unmap_linear_page(unsigned long vaddr, unsigned long lmi)
 	hidx = linear_map_hash_slots[lmi] & 0x7f;
 	linear_map_hash_slots[lmi] = 0;
 	spin_unlock(&linear_map_hash_lock);
-	if (hidx & _PTEIDX_SECONDARY)
+	if (hidx & H_PTEIDX_SECONDARY)
 		hash = ~hash;
 	slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-	slot += hidx & _PTEIDX_GROUP_IX;
+	slot += hidx & H_PTEIDX_GROUP_IX;
 	ppc_md.hpte_invalidate(slot, vpn, mmu_linear_psize, mmu_linear_psize,
 			       mmu_kernel_ssize, 0);
 }
@@ -1565,9 +1590,9 @@ void setup_initial_memory_limit(phys_addr_t first_memblock_base,
 }
 
 static pgprot_t hash_protection_map[16] = {
-	__P000, __P001, __P010, __P011, __P100,
-	__P101, __P110, __P111, __S000, __S001,
-	__S010, __S011, __S100, __S101, __S110, __S111
+	__HP000, __HP001, __HP010, __HP011, __HP100,
+	__HP101, __HP110, __HP111, __HS000, __HS001,
+	__HS010, __HS011, __HS100, __HS101, __HS110, __HS111
 };
 
 pgprot_t vm_get_page_prot(unsigned long vm_flags)
@@ -1575,7 +1600,7 @@ pgprot_t vm_get_page_prot(unsigned long vm_flags)
 	pgprot_t prot_soa = __pgprot(0);
 
 	if (vm_flags & VM_SAO)
-		prot_soa = __pgprot(_PAGE_SAO);
+		prot_soa = __pgprot(H_PAGE_SAO);
 
 	return __pgprot(pgprot_val(hash_protection_map[vm_flags &
 				(VM_READ|VM_WRITE|VM_EXEC|VM_SHARED)]) |

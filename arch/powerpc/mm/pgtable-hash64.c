@@ -21,49 +21,49 @@
 
 #include "mmu_decl.h"
 
-#if PGTABLE_RANGE > USER_VSID_RANGE
+#if H_PGTABLE_RANGE > USER_VSID_RANGE
 #warning Limited user VSID range means pagetable space is wasted
 #endif
 
-#if (TASK_SIZE_USER64 < PGTABLE_RANGE) && (TASK_SIZE_USER64 < USER_VSID_RANGE)
+#if (TASK_SIZE_USER64 < H_PGTABLE_RANGE) && (TASK_SIZE_USER64 < USER_VSID_RANGE)
 #warning TASK_SIZE is smaller than it needs to be.
 #endif
 
-#if (TASK_SIZE_USER64 > PGTABLE_RANGE)
+#if (TASK_SIZE_USER64 > H_PGTABLE_RANGE)
 #warning TASK_SIZE is larger than page table range
 #endif
 
 static void pgd_ctor(void *addr)
 {
-	memset(addr, 0, PGD_TABLE_SIZE);
+	memset(addr, 0, H_PGD_TABLE_SIZE);
 }
 
 static void pud_ctor(void *addr)
 {
-	memset(addr, 0, PUD_TABLE_SIZE);
+	memset(addr, 0, H_PUD_TABLE_SIZE);
 }
 
 static void pmd_ctor(void *addr)
 {
-	memset(addr, 0, PMD_TABLE_SIZE);
+	memset(addr, 0, H_PMD_TABLE_SIZE);
 }
 
 
 void pgtable_cache_init(void)
 {
-	pgtable_cache_add(PGD_INDEX_SIZE, pgd_ctor);
-	pgtable_cache_add(PMD_CACHE_INDEX, pmd_ctor);
+	pgtable_cache_add(H_PGD_INDEX_SIZE, pgd_ctor);
+	pgtable_cache_add(H_PMD_CACHE_INDEX, pmd_ctor);
 	/*
 	 * In all current configs, when the PUD index exists it's the
 	 * same size as either the pgd or pmd index except with THP enabled
 	 * on book3s 64
 	 */
-	if (PUD_INDEX_SIZE && !PGT_CACHE(PUD_INDEX_SIZE))
-		pgtable_cache_add(PUD_INDEX_SIZE, pud_ctor);
+	if (H_PUD_INDEX_SIZE && !PGT_CACHE(H_PUD_INDEX_SIZE))
+		pgtable_cache_add(H_PUD_INDEX_SIZE, pud_ctor);
 
-	if (!PGT_CACHE(PGD_INDEX_SIZE) || !PGT_CACHE(PMD_CACHE_INDEX))
+	if (!PGT_CACHE(H_PGD_INDEX_SIZE) || !PGT_CACHE(H_PMD_CACHE_INDEX))
 		panic("Couldn't allocate pgtable caches");
-	if (PUD_INDEX_SIZE && !PGT_CACHE(PUD_INDEX_SIZE))
+	if (H_PUD_INDEX_SIZE && !PGT_CACHE(H_PUD_INDEX_SIZE))
 		panic("Couldn't allocate pud pgtable caches");
 }
 
@@ -77,7 +77,7 @@ void __meminit vmemmap_create_mapping(unsigned long start,
 				      unsigned long phys)
 {
 	int  mapped = htab_bolt_mapping(start, start + page_size, phys,
-					pgprot_val(PAGE_KERNEL),
+					pgprot_val(H_PAGE_KERNEL),
 					mmu_vmemmap_psize,
 					mmu_kernel_ssize);
 	BUG_ON(mapped < 0);
@@ -119,7 +119,7 @@ void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
 		return;
 	trap = TRAP(current->thread.regs);
 	if (trap == 0x400)
-		access |= _PAGE_EXEC;
+		access |= H_PAGE_EXEC;
 	else if (trap != 0x300)
 		return;
 	hash_preload(vma->vm_mm, address, access, trap);
@@ -177,9 +177,9 @@ int map_kernel_page(unsigned long ea, unsigned long pa, int flags)
  */
 static inline int pte_looks_normal(pte_t pte)
 {
-	return (pte_val(pte) &
-	    (_PAGE_PRESENT | _PAGE_SPECIAL | _PAGE_NO_CACHE | _PAGE_USER)) ==
-	    (_PAGE_PRESENT | _PAGE_USER);
+	return (pte_val(pte) & (H_PAGE_PRESENT | H_PAGE_SPECIAL |
+					H_PAGE_NO_CACHE | H_PAGE_USER)) ==
+		(H_PAGE_PRESENT | H_PAGE_USER);
 }
 
 static struct page *maybe_pte_to_page(pte_t pte)
@@ -202,7 +202,7 @@ static struct page *maybe_pte_to_page(pte_t pte)
  */
 static pte_t set_pte_filter(pte_t pte)
 {
-	pte = __pte(pte_val(pte) & ~_PAGE_HPTEFLAGS);
+	pte = __pte(pte_val(pte) & ~H_PAGE_HPTEFLAGS);
 	if (pte_looks_normal(pte) && !(cpu_has_feature(CPU_FTR_COHERENT_ICACHE) ||
 				       cpu_has_feature(CPU_FTR_NOEXECUTE))) {
 		struct page *pg = maybe_pte_to_page(pte);
@@ -227,13 +227,13 @@ void set_pte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 	 * _PAGE_PRESENT, but we can be sure that it is not in hpte.
 	 * Hence we can use set_pte_at for them.
 	 */
-	VM_WARN_ON((pte_val(*ptep) & (_PAGE_PRESENT | _PAGE_USER)) ==
-		(_PAGE_PRESENT | _PAGE_USER));
+	VM_WARN_ON((pte_val(*ptep) & (H_PAGE_PRESENT | H_PAGE_USER)) ==
+		   (H_PAGE_PRESENT | H_PAGE_USER));
 
 	/*
 	 * Add the pte bit when tryint set a pte
 	 */
-	pte = __pte(pte_val(pte) | _PAGE_PTE);
+	pte = __pte(pte_val(pte) | H_PAGE_PTE);
 
 	/* Note: mm->context.id might not yet have been assigned as
 	 * this context might not have been activated yet when this

@@ -428,8 +428,15 @@ int main(void)
 #ifdef CONFIG_BUG
 	DEFINE(BUG_ENTRY_SIZE, sizeof(struct bug_entry));
 #endif
-
+	/*
+	 * Also make sure H_PGD_TABLE is largest pgd of all supported
+	 * We use that as swapper pgdir
+	 */
+#ifdef CONFIG_PPC_BOOK3S_64
+	DEFINE(PGD_TABLE_SIZE, H_PGD_TABLE_SIZE);
+#else
 	DEFINE(PGD_TABLE_SIZE, PGD_TABLE_SIZE);
+#endif
 	DEFINE(PTE_SIZE, sizeof(pte_t));
 
 #ifdef CONFIG_KVM

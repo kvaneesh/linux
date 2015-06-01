@@ -1,72 +1,71 @@
 #ifndef _ASM_POWERPC_BOOK3S_64_HASH_64K_H
 #define _ASM_POWERPC_BOOK3S_64_HASH_64K_H
 
-#define PTE_INDEX_SIZE  8
-#define PMD_INDEX_SIZE  5
-#define PUD_INDEX_SIZE	5
-#define PGD_INDEX_SIZE  12
+#define H_PTE_INDEX_SIZE  8
+#define H_PMD_INDEX_SIZE  5
+#define H_PUD_INDEX_SIZE  5
+#define H_PGD_INDEX_SIZE  12
 
-#define PTRS_PER_PTE	(1 << PTE_INDEX_SIZE)
-#define PTRS_PER_PMD	(1 << PMD_INDEX_SIZE)
-#define PTRS_PER_PUD	(1 << PUD_INDEX_SIZE)
-#define PTRS_PER_PGD	(1 << PGD_INDEX_SIZE)
+#define H_PTRS_PER_PTE	(1 << H_PTE_INDEX_SIZE)
+#define H_PTRS_PER_PMD	(1 << H_PMD_INDEX_SIZE)
+#define H_PTRS_PER_PUD	(1 << H_PUD_INDEX_SIZE)
+#define H_PTRS_PER_PGD	(1 << H_PGD_INDEX_SIZE)
 
 /* With 4k base page size, hugepage PTEs go at the PMD level */
 #define MIN_HUGEPTE_SHIFT	PAGE_SHIFT
 
 /* PMD_SHIFT determines what a second-level page table entry can map */
-#define PMD_SHIFT	(PAGE_SHIFT + PTE_INDEX_SIZE)
-#define PMD_SIZE	(1UL << PMD_SHIFT)
-#define PMD_MASK	(~(PMD_SIZE-1))
+#define H_PMD_SHIFT	(PAGE_SHIFT + H_PTE_INDEX_SIZE)
+#define H_PMD_SIZE	(1UL << H_PMD_SHIFT)
+#define H_PMD_MASK	(~(H_PMD_SIZE-1))
 
 /* PUD_SHIFT determines what a third-level page table entry can map */
-#define PUD_SHIFT	(PMD_SHIFT + PMD_INDEX_SIZE)
-#define PUD_SIZE	(1UL << PUD_SHIFT)
-#define PUD_MASK	(~(PUD_SIZE-1))
+#define H_PUD_SHIFT	(H_PMD_SHIFT + H_PMD_INDEX_SIZE)
+#define H_PUD_SIZE	(1UL << H_PUD_SHIFT)
+#define H_PUD_MASK	(~(H_PUD_SIZE-1))
 
 /* PGDIR_SHIFT determines what a third-level page table entry can map */
-#define PGDIR_SHIFT	(PUD_SHIFT + PUD_INDEX_SIZE)
-#define PGDIR_SIZE	(1UL << PGDIR_SHIFT)
-#define PGDIR_MASK	(~(PGDIR_SIZE-1))
+#define H_PGDIR_SHIFT	(H_PUD_SHIFT + H_PUD_INDEX_SIZE)
+#define H_PGDIR_SIZE	(1UL << H_PGDIR_SHIFT)
+#define H_PGDIR_MASK	(~(H_PGDIR_SIZE-1))
 
-#define _PAGE_COMBO	0x00020000 /* this is a combo 4k page */
-#define _PAGE_4K_PFN	0x00040000 /* PFN is for a single 4k page */
+#define H_PAGE_COMBO	0x00020000 /* this is a combo 4k page */
+#define H_PAGE_4K_PFN	0x00040000 /* PFN is for a single 4k page */
 /*
  * Used to track subpage group valid if _PAGE_COMBO is set
  * This overloads _PAGE_F_GIX and _PAGE_F_SECOND
  */
-#define _PAGE_COMBO_VALID	(_PAGE_F_GIX | _PAGE_F_SECOND)
+#define H_PAGE_COMBO_VALID	(H_PAGE_F_GIX | H_PAGE_F_SECOND)
 
 /* PTE flags to conserve for HPTE identification */
-#define _PAGE_HPTEFLAGS (_PAGE_BUSY | _PAGE_F_SECOND | \
-			 _PAGE_F_GIX | _PAGE_HASHPTE | _PAGE_COMBO)
+#define H_PAGE_HPTEFLAGS (H_PAGE_BUSY | H_PAGE_F_SECOND | \
+			  H_PAGE_F_GIX | H_PAGE_HASHPTE | H_PAGE_COMBO)
 
 /* Shift to put page number into pte.
  *
  * That gives us a max RPN of 34 bits, which means a max of 50 bits
  * of addressable physical space, or 46 bits for the special 4k PFNs.
  */
-#define PTE_RPN_SHIFT	(30)
+#define H_PTE_RPN_SHIFT	(30)
 /*
  * we support 16 fragments per PTE page of 64K size.
  */
-#define PTE_FRAG_NR	16
+#define H_PTE_FRAG_NR	16
 /*
  * We use a 2K PTE page fragment and another 2K for storing
  * real_pte_t hash index
  */
-#define PTE_FRAG_SIZE_SHIFT  12
-#define PTE_FRAG_SIZE (1UL << PTE_FRAG_SIZE_SHIFT)
-
+#define H_PTE_FRAG_SIZE_SHIFT  12
+#define H_PTE_FRAG_SIZE (1UL << H_PTE_FRAG_SIZE_SHIFT)
 /*
  * Bits to mask out from a PMD to get to the PTE page
  * PMDs point to PTE table fragments which are PTE_FRAG_SIZE aligned.
  */
-#define PMD_MASKED_BITS		(PTE_FRAG_SIZE - 1)
+#define H_PMD_MASKED_BITS		(H_PTE_FRAG_SIZE - 1)
 /* Bits to mask out from a PGD/PUD to get to the PMD page */
-#define PUD_MASKED_BITS		0x1ff
+#define H_PUD_MASKED_BITS		0x1ff
 /* FIXME!! check this */
-#define PGD_MASKED_BITS		0
+#define H_PGD_MASKED_BITS		0
 
 #ifndef __ASSEMBLY__
 
@@ -84,13 +83,13 @@ static inline real_pte_t __real_pte(pte_t pte, pte_t *ptep)
 
 	rpte.pte = pte;
 	rpte.hidx = 0;
-	if (pte_val(pte) & _PAGE_COMBO) {
+	if (pte_val(pte) & H_PAGE_COMBO) {
 		/*
 		 * Make sure we order the hidx load against the _PAGE_COMBO
 		 * check. The store side ordering is done in __hash_page_4K
 		 */
 		smp_rmb();
-		hidxp = (unsigned long *)(ptep + PTRS_PER_PTE);
+		hidxp = (unsigned long *)(ptep + H_PTRS_PER_PTE);
 		rpte.hidx = *hidxp;
 	}
 	return rpte;
@@ -98,9 +97,9 @@ static inline real_pte_t __real_pte(pte_t pte, pte_t *ptep)
 
 static inline unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long index)
 {
-	if ((pte_val(rpte.pte) & _PAGE_COMBO))
+	if ((pte_val(rpte.pte) & H_PAGE_COMBO))
 		return (rpte.hidx >> (index<<2)) & 0xf;
-	return (pte_val(rpte.pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
+	return (pte_val(rpte.pte) >> H_PAGE_F_GIX_SHIFT) & 0xf;
 }
 
 #define __rpte_to_pte(r)	((r).pte)
@@ -123,21 +122,21 @@ extern bool __rpte_sub_valid(real_pte_t rpte, unsigned long index);
 #define pte_iterate_hashed_end() } while(0); } } while(0)
 
 #define pte_pagesize_index(mm, addr, pte)	\
-	(((pte) & _PAGE_COMBO)? MMU_PAGE_4K: MMU_PAGE_64K)
+	(((pte) & H_PAGE_COMBO)? MMU_PAGE_4K: MMU_PAGE_64K)
 
 #define remap_4k_pfn(vma, addr, pfn, prot)				\
-	(WARN_ON(((pfn) >= (1UL << (64 - PTE_RPN_SHIFT)))) ? -EINVAL :	\
+	(WARN_ON(((pfn) >= (1UL << (64 - H_PTE_RPN_SHIFT)))) ? -EINVAL :	\
 		remap_pfn_range((vma), (addr), (pfn), PAGE_SIZE,	\
-			__pgprot(pgprot_val((prot)) | _PAGE_4K_PFN)))
+			__pgprot(pgprot_val((prot)) | H_PAGE_4K_PFN)))
 
-#define PTE_TABLE_SIZE	PTE_FRAG_SIZE
+#define H_PTE_TABLE_SIZE	H_PTE_FRAG_SIZE
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-#define PMD_TABLE_SIZE	((sizeof(pmd_t) << PMD_INDEX_SIZE) + (sizeof(unsigned long) << PMD_INDEX_SIZE))
+#define H_PMD_TABLE_SIZE	((sizeof(pmd_t) << H_PMD_INDEX_SIZE) + (sizeof(unsigned long) << H_PMD_INDEX_SIZE))
 #else
-#define PMD_TABLE_SIZE	(sizeof(pmd_t) << PMD_INDEX_SIZE)
+#define H_PMD_TABLE_SIZE	(sizeof(pmd_t) <<H_PMD_INDEX_SIZE)
 #endif
-#define PUD_TABLE_SIZE	(sizeof(pud_t) << PUD_INDEX_SIZE)
-#define PGD_TABLE_SIZE	(sizeof(pgd_t) << PGD_INDEX_SIZE)
+#define H_PUD_TABLE_SIZE	(sizeof(pud_t) << H_PUD_INDEX_SIZE)
+#define H_PGD_TABLE_SIZE	(sizeof(pgd_t) << H_PGD_INDEX_SIZE)
 
 #ifdef CONFIG_HUGETLB_PAGE
 /*
@@ -152,7 +151,7 @@ static inline int pmd_huge(pmd_t pmd)
 	/*
 	 * leaf pte for huge page
 	 */
-	return !!(pmd_val(pmd) & _PAGE_PTE);
+	return !!(pmd_val(pmd) & H_PAGE_PTE);
 }
 
 static inline int pud_huge(pud_t pud)
@@ -160,7 +159,7 @@ static inline int pud_huge(pud_t pud)
 	/*
 	 * leaf pte for huge page
 	 */
-	return !!(pud_val(pud) & _PAGE_PTE);
+	return !!(pud_val(pud) & H_PAGE_PTE);
 }
 
 static inline int pgd_huge(pgd_t pgd)
@@ -168,7 +167,7 @@ static inline int pgd_huge(pgd_t pgd)
 	/*
 	 * leaf pte for huge page
 	 */
-	return !!(pgd_val(pgd) & _PAGE_PTE);
+	return !!(pgd_val(pgd) & H_PAGE_PTE);
 }
 #define pgd_huge pgd_huge
 
@@ -205,7 +204,7 @@ static inline char *get_hpte_slot_array(pmd_t *pmdp)
 	 * Order this load with the test for pmd_trans_huge in the caller
 	 */
 	smp_rmb();
-	return *(char **)(pmdp + PTRS_PER_PMD);
+	return *(char **)(pmdp + H_PTRS_PER_PMD);
 
 
 }
@@ -256,36 +255,36 @@ static inline void mark_hpte_slot_valid(unsigned char *hpte_slot_array,
  */
 static inline int pmd_trans_huge(pmd_t pmd)
 {
-	return !!((pmd_val(pmd) & (_PAGE_PTE | _PAGE_THP_HUGE)) ==
-		  (_PAGE_PTE | _PAGE_THP_HUGE));
+	return !!((pmd_val(pmd) & (H_PAGE_PTE | H_PAGE_THP_HUGE)) ==
+		  (H_PAGE_PTE | H_PAGE_THP_HUGE));
 }
 
 static inline int pmd_trans_splitting(pmd_t pmd)
 {
 	if (pmd_trans_huge(pmd))
-		return pmd_val(pmd) & _PAGE_SPLITTING;
+		return pmd_val(pmd) & H_PAGE_SPLITTING;
 	return 0;
 }
 
 static inline int pmd_large(pmd_t pmd)
 {
-	return !!(pmd_val(pmd) & _PAGE_PTE);
+	return !!(pmd_val(pmd) & H_PAGE_PTE);
 }
 
 static inline pmd_t pmd_mknotpresent(pmd_t pmd)
 {
-	return __pmd(pmd_val(pmd) & ~_PAGE_PRESENT);
+	return __pmd(pmd_val(pmd) & ~H_PAGE_PRESENT);
 }
 
 static inline pmd_t pmd_mksplitting(pmd_t pmd)
 {
-	return __pmd(pmd_val(pmd) | _PAGE_SPLITTING);
+	return __pmd(pmd_val(pmd) | H_PAGE_SPLITTING);
 }
 
 #define __HAVE_ARCH_PMD_SAME
 static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
 {
-	return (((pmd_val(pmd_a) ^ pmd_val(pmd_b)) & ~_PAGE_HPTEFLAGS) == 0);
+	return (((pmd_val(pmd_a) ^ pmd_val(pmd_b)) & ~H_PAGE_HPTEFLAGS) == 0);
 }
 
 static inline int __pmdp_test_and_clear_young(struct mm_struct *mm,
@@ -293,10 +292,10 @@ static inline int __pmdp_test_and_clear_young(struct mm_struct *mm,
 {
 	unsigned long old;
 
-	if ((pmd_val(*pmdp) & (_PAGE_ACCESSED | _PAGE_HASHPTE)) == 0)
+	if ((pmd_val(*pmdp) & (H_PAGE_ACCESSED | H_PAGE_HASHPTE)) == 0)
 		return 0;
-	old = pmd_hugepage_update(mm, addr, pmdp, _PAGE_ACCESSED, 0);
-	return ((old & _PAGE_ACCESSED) != 0);
+	old = pmd_hugepage_update(mm, addr, pmdp, H_PAGE_ACCESSED, 0);
+	return ((old & H_PAGE_ACCESSED) != 0);
 }
 
 #define __HAVE_ARCH_PMDP_SET_WRPROTECT
@@ -304,10 +303,10 @@ static inline void pmdp_set_wrprotect(struct mm_struct *mm, unsigned long addr,
 				      pmd_t *pmdp)
 {
 
-	if ((pmd_val(*pmdp) & _PAGE_RW) == 0)
+	if ((pmd_val(*pmdp) & H_PAGE_RW) == 0)
 		return;
 
-	pmd_hugepage_update(mm, addr, pmdp, _PAGE_RW, 0);
+	pmd_hugepage_update(mm, addr, pmdp, H_PAGE_RW, 0);
 }
 
 #endif /*  CONFIG_TRANSPARENT_HUGEPAGE */

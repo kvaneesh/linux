@@ -153,7 +153,7 @@ static long pSeries_lpar_hpte_insert(unsigned long hpte_group,
 	flags = 0;
 
 	/* Make pHyp happy */
-	if ((rflags & _PAGE_NO_CACHE) && !(rflags & _PAGE_WRITETHRU))
+	if ((rflags & H_PAGE_NO_CACHE) && !(rflags & H_PAGE_WRITETHRU))
 		hpte_r &= ~HPTE_R_M;
 
 	if (firmware_has_feature(FW_FEATURE_XCMO) && !(hpte_r & HPTE_R_N))
@@ -459,7 +459,7 @@ static void pSeries_lpar_hugepage_invalidate(unsigned long vsid,
 	unsigned long shift, hidx, vpn = 0, hash, slot;
 
 	shift = mmu_psize_defs[psize].shift;
-	max_hpte_count = 1U << (PMD_SHIFT - shift);
+	max_hpte_count = 1U << (H_PMD_SHIFT - shift);
 
 	for (i = 0; i < max_hpte_count; i++) {
 		valid = hpte_valid(hpte_slot_array, i);
@@ -471,11 +471,11 @@ static void pSeries_lpar_hugepage_invalidate(unsigned long vsid,
 		addr = s_addr + (i * (1ul << shift));
 		vpn = hpt_vpn(addr, vsid, ssize);
 		hash = hpt_hash(vpn, shift, ssize);
-		if (hidx & _PTEIDX_SECONDARY)
+		if (hidx & H_PTEIDX_SECONDARY)
 			hash = ~hash;
 
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-		slot += hidx & _PTEIDX_GROUP_IX;
+		slot += hidx & H_PTEIDX_GROUP_IX;
 
 		slot_array[index] = slot;
 		vpn_array[index] = vpn;
@@ -550,10 +550,10 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 		pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
 			hidx = __rpte_to_hidx(pte, index);
-			if (hidx & _PTEIDX_SECONDARY)
+			if (hidx & H_PTEIDX_SECONDARY)
 				hash = ~hash;
 			slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
-			slot += hidx & _PTEIDX_GROUP_IX;
+			slot += hidx & H_PTEIDX_GROUP_IX;
 			if (!firmware_has_feature(FW_FEATURE_BULK_REMOVE)) {
 				/*
 				 * lpar doesn't use the passed actual page size

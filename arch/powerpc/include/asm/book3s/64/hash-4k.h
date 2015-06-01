@@ -5,56 +5,56 @@
  * for each page table entry.  The PMD and PGD level use a 32b record for
  * each entry by assuming that each entry is page aligned.
  */
-#define PTE_INDEX_SIZE  9
-#define PMD_INDEX_SIZE  7
-#define PUD_INDEX_SIZE  9
-#define PGD_INDEX_SIZE  9
+#define H_PTE_INDEX_SIZE  9
+#define H_PMD_INDEX_SIZE  7
+#define H_PUD_INDEX_SIZE  9
+#define H_PGD_INDEX_SIZE  9
 
 #ifndef __ASSEMBLY__
-#define PTE_TABLE_SIZE	(sizeof(pte_t) << PTE_INDEX_SIZE)
-#define PMD_TABLE_SIZE	(sizeof(pmd_t) << PMD_INDEX_SIZE)
-#define PUD_TABLE_SIZE	(sizeof(pud_t) << PUD_INDEX_SIZE)
-#define PGD_TABLE_SIZE	(sizeof(pgd_t) << PGD_INDEX_SIZE)
+#define H_PTE_TABLE_SIZE	(sizeof(pte_t) << H_PTE_INDEX_SIZE)
+#define H_PMD_TABLE_SIZE	(sizeof(pmd_t) << H_PMD_INDEX_SIZE)
+#define H_PUD_TABLE_SIZE	(sizeof(pud_t) << H_PUD_INDEX_SIZE)
+#define H_PGD_TABLE_SIZE	(sizeof(pgd_t) << H_PGD_INDEX_SIZE)
 #endif	/* __ASSEMBLY__ */
 
-#define PTRS_PER_PTE	(1 << PTE_INDEX_SIZE)
-#define PTRS_PER_PMD	(1 << PMD_INDEX_SIZE)
-#define PTRS_PER_PUD	(1 << PUD_INDEX_SIZE)
-#define PTRS_PER_PGD	(1 << PGD_INDEX_SIZE)
+#define H_PTRS_PER_PTE	(1 << H_PTE_INDEX_SIZE)
+#define H_PTRS_PER_PMD	(1 << H_PMD_INDEX_SIZE)
+#define H_PTRS_PER_PUD	(1 << H_PUD_INDEX_SIZE)
+#define H_PTRS_PER_PGD	(1 << H_PGD_INDEX_SIZE)
 
 /* PMD_SHIFT determines what a second-level page table entry can map */
-#define PMD_SHIFT	(PAGE_SHIFT + PTE_INDEX_SIZE)
-#define PMD_SIZE	(1UL << PMD_SHIFT)
-#define PMD_MASK	(~(PMD_SIZE-1))
+#define H_PMD_SHIFT	(PAGE_SHIFT + H_PTE_INDEX_SIZE)
+#define H_PMD_SIZE	(1UL << H_PMD_SHIFT)
+#define H_PMD_MASK	(~(H_PMD_SIZE-1))
 
 /* With 4k base page size, hugepage PTEs go at the PMD level */
-#define MIN_HUGEPTE_SHIFT	PMD_SHIFT
+#define MIN_HUGEPTE_SHIFT	H_PMD_SHIFT
 
 /* PUD_SHIFT determines what a third-level page table entry can map */
-#define PUD_SHIFT	(PMD_SHIFT + PMD_INDEX_SIZE)
-#define PUD_SIZE	(1UL << PUD_SHIFT)
-#define PUD_MASK	(~(PUD_SIZE-1))
+#define H_PUD_SHIFT	(H_PMD_SHIFT + H_PMD_INDEX_SIZE)
+#define H_PUD_SIZE	(1UL << H_PUD_SHIFT)
+#define H_PUD_MASK	(~(H_PUD_SIZE-1))
 
 /* PGDIR_SHIFT determines what a fourth-level page table entry can map */
-#define PGDIR_SHIFT	(PUD_SHIFT + PUD_INDEX_SIZE)
-#define PGDIR_SIZE	(1UL << PGDIR_SHIFT)
-#define PGDIR_MASK	(~(PGDIR_SIZE-1))
+#define H_PGDIR_SHIFT	(H_PUD_SHIFT + H_PUD_INDEX_SIZE)
+#define H_PGDIR_SIZE	(1UL << H_PGDIR_SHIFT)
+#define H_PGDIR_MASK	(~(H_PGDIR_SIZE-1))
 
 /* Bits to mask out from a PMD to get to the PTE page */
-#define PMD_MASKED_BITS		0
+#define H_PMD_MASKED_BITS		0
 /* Bits to mask out from a PUD to get to the PMD page */
-#define PUD_MASKED_BITS		0
+#define H_PUD_MASKED_BITS		0
 /* Bits to mask out from a PGD to get to the PUD page */
-#define PGD_MASKED_BITS		0
+#define H_PGD_MASKED_BITS		0
 
 /* PTE flags to conserve for HPTE identification */
-#define _PAGE_HPTEFLAGS (_PAGE_BUSY | _PAGE_HASHPTE | \
-			 _PAGE_F_SECOND | _PAGE_F_GIX)
+#define H_PAGE_HPTEFLAGS (H_PAGE_BUSY | H_PAGE_HASHPTE | \
+			  H_PAGE_F_SECOND | H_PAGE_F_GIX)
 
 /* shift to put page number into pte */
-#define PTE_RPN_SHIFT	(17)
+#define H_PTE_RPN_SHIFT	(17)
 
-#define _PAGE_4K_PFN		0
+#define H_PAGE_4K_PFN		0
 #ifndef __ASSEMBLY__
 /*
  * On all 4K setups, remap_4k_pfn() equates to remap_pfn_range()
@@ -88,7 +88,7 @@ static inline int hugepd_ok(hugepd_t hpd)
 	 * if it is not a pte and have hugepd shift mask
 	 * set, then it is a hugepd directory pointer
 	 */
-	if (!(hpd.pd & _PAGE_PTE) &&
+	if (!(hpd.pd & H_PAGE_PTE) &&
 	    ((hpd.pd & HUGEPD_SHIFT_MASK) != 0))
 		return true;
 	return false;

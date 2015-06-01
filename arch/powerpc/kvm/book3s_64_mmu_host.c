@@ -189,7 +189,7 @@ map_again:
 
 		/* The ppc_md code may give us a secondary entry even though we
 		   asked for a primary. Fix up. */
-		if ((ret & _PTEIDX_SECONDARY) && !(vflags & HPTE_V_SECONDARY)) {
+		if ((ret & H_PTEIDX_SECONDARY) && !(vflags & HPTE_V_SECONDARY)) {
 			hash = ~hash;
 			hpteg = ((hash & htab_hash_mask) * HPTES_PER_GROUP);
 		}
