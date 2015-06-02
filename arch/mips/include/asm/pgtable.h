@@ -468,6 +468,10 @@ static inline int io_remap_pfn_range(struct vm_area_struct *vma,
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 
+#if HPAGE_PMD_ORDER >= MAX_ORDER
+#error "hugepages can't be allocated by the buddy allocator"
+#endif
+
 extern int has_transparent_hugepage(void);
 
 static inline int pmd_trans_huge(pmd_t pmd)

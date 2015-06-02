@@ -289,6 +289,10 @@ static inline void set_pmd_at(struct mm_struct *mm, unsigned long addr,
 	flush_pmd_entry(pmdp);
 }
 
+#if HPAGE_PMD_ORDER >= MAX_ORDER
+#error "hugepages can't be allocated by the buddy allocator"
+#endif
+
 static inline int has_transparent_hugepage(void)
 {
 	return 1;

@@ -175,6 +175,10 @@ static inline int pmd_trans_huge(pmd_t pmd)
 	return pmd_val(pmd) & _PAGE_PSE;
 }
 
+#if HPAGE_PMD_ORDER >= MAX_ORDER
+#error "hugepages can't be allocated by the buddy allocator"
+#endif
+
 static inline int has_transparent_hugepage(void)
 {
 	return cpu_has_pse;

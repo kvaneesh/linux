@@ -688,6 +688,10 @@ static inline unsigned long pmd_trans_splitting(pmd_t pmd)
 	return pmd_trans_huge(pmd) && pte_special(pte);
 }
 
+#if HPAGE_PMD_ORDER >= MAX_ORDER
+#error "hugepages can't be allocated by the buddy allocator"
+#endif
+
 #define has_transparent_hugepage() 1
 
 static inline pmd_t pmd_mkold(pmd_t pmd)
