@@ -174,6 +174,36 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 		add_hash_page(mm->context.id, ea, pmd_val(*pmd));
 }
 
+void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
+                      pte_t *ptep)
+{
+        /*
+         * We don't need to worry about _PAGE_PRESENT here because we are
+         * called with either mm->page_table_lock held or ptl lock held
+         */
+        unsigned long access = 0, trap;
+
+        /* We only want HPTEs for linux PTEs that have _PAGE_ACCESSED set */
+        if (!pte_young(*ptep) || address >= TASK_SIZE)
+                return;
+
+        /* We try to figure out if we are coming from an instruction
+         * access fault and pass that down to __hash_page so we avoid
+         * double-faulting on execution of fresh text. We have to test
+         * for regs NULL since init will get here first thing at boot
+         *
+         * We also avoid filling the hash if not coming from a fault
+         */
+        if (current->thread.regs == NULL)
+                return;
+        trap = TRAP(current->thread.regs);
+        if (trap == 0x400)
+                access |= _PAGE_EXEC;
+        else if (trap != 0x300)
+                return;
+        hash_preload(vma->vm_mm, address, access, trap);
+}
+
 /*
  * Initialize the hash table and patch the instructions in hashtable.S.
  */

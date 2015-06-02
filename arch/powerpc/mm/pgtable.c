@@ -31,6 +31,8 @@
 #include <asm/tlbflush.h>
 #include <asm/tlb.h>
 
+#ifndef CONFIG_PPC_BOOK3S_64
+/* We have alternate definition for the below in pgtable-hash64.c */
 static inline int is_exec_fault(void)
 {
 	return current->thread.regs && TRAP(current->thread.regs) == 0x400;
@@ -193,6 +195,13 @@ void set_pte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 	/* Perform the setting of the PTE */
 	__set_pte_at(mm, addr, ptep, pte, 0);
 }
+#else
+static pte_t set_access_flags_filter(pte_t pte, struct vm_area_struct *vma,
+                                     int dirty)
+{
+        return pte;
+}
+#endif /* !CONFIG_PPC_BOOK3S_64 */
 
 /*
  * This is called when relaxing access to a PTE. It's also called in the page
