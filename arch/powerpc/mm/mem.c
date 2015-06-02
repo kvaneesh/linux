@@ -476,6 +476,7 @@ void flush_icache_user_range(struct vm_area_struct *vma, struct page *page,
 }
 EXPORT_SYMBOL(flush_icache_user_range);
 
+#ifndef CONFIG_PPC_STD_MMU
 /*
  * This is called at the end of handling a user page fault, when the
  * fault has been handled by updating a PTE in the linux page tables.
@@ -487,39 +488,13 @@ EXPORT_SYMBOL(flush_icache_user_range);
 void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
 		      pte_t *ptep)
 {
-#ifdef CONFIG_PPC_STD_MMU
-	/*
-	 * We don't need to worry about _PAGE_PRESENT here because we are
-	 * called with either mm->page_table_lock held or ptl lock held
-	 */
-	unsigned long access = 0, trap;
-
-	/* We only want HPTEs for linux PTEs that have _PAGE_ACCESSED set */
-	if (!pte_young(*ptep) || address >= TASK_SIZE)
-		return;
-
-	/* We try to figure out if we are coming from an instruction
-	 * access fault and pass that down to __hash_page so we avoid
-	 * double-faulting on execution of fresh text. We have to test
-	 * for regs NULL since init will get here first thing at boot
-	 *
-	 * We also avoid filling the hash if not coming from a fault
-	 */
-	if (current->thread.regs == NULL)
-		return;
-	trap = TRAP(current->thread.regs);
-	if (trap == 0x400)
-		access |= _PAGE_EXEC;
-	else if (trap != 0x300)
-		return;
-	hash_preload(vma->vm_mm, address, access, trap);
-#endif /* CONFIG_PPC_STD_MMU */
 #if (defined(CONFIG_PPC_BOOK3E_64) || defined(CONFIG_PPC_FSL_BOOK3E)) \
 	&& defined(CONFIG_HUGETLB_PAGE)
 	if (is_vm_hugetlb_page(vma))
 		book3e_hugetlb_preload(vma, address, *ptep);
 #endif
 }
+#endif /* !CONFIG_PPC_STD_MMU */
 
 /*
  * System memory should not be in /proc/iomem but various tools expect it
