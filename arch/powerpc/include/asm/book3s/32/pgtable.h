@@ -477,6 +477,11 @@ static inline pgprot_t pgprot_writecombine(pgprot_t prot)
 	return pgprot_noncached_wc(prot);
 }
 
+static inline unsigned long pte_io_cache_bits(void)
+{
+	return _PAGE_NO_CACHE | _PAGE_GUARDED;
+}
+
 #endif /* !__ASSEMBLY__ */
 
 #endif /*  _ASM_POWERPC_BOOK3S_32_PGTABLE_H */

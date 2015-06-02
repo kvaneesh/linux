@@ -223,6 +223,11 @@ extern pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
 				     unsigned long size, pgprot_t vma_prot);
 #define __HAVE_PHYS_MEM_ACCESS_PROT
 
+static inline unsigned long pte_io_cache_bits(void)
+{
+	return _PAGE_NO_CACHE | _PAGE_GUARDED;
+}
+
 #ifdef CONFIG_HUGETLB_PAGE
 static inline int hugepd_ok(hugepd_t hpd)
 {
