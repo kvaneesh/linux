@@ -549,6 +549,15 @@ static inline unsigned long pte_io_cache_bits(void)
 	return _PAGE_NO_CACHE | _PAGE_GUARDED;
 }
 
+static inline unsigned long gup_pte_filter(int write)
+{
+	unsigned long mask;
+	mask = _PAGE_PRESENT | _PAGE_USER;
+	if (write)
+		mask |= _PAGE_RW;
+	return mask;
+}
+
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 extern void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 				   pmd_t *pmdp, unsigned long old_pmd);

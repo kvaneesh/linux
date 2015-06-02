@@ -228,6 +228,15 @@ static inline unsigned long pte_io_cache_bits(void)
 	return _PAGE_NO_CACHE | _PAGE_GUARDED;
 }
 
+static inline unsigned long gup_pte_filter(int write)
+{
+	unsigned long mask;
+	mask = _PAGE_PRESENT | _PAGE_USER;
+	if (write)
+		mask |= _PAGE_RW;
+	return mask;
+}
+
 #ifdef CONFIG_HUGETLB_PAGE
 static inline int hugepd_ok(hugepd_t hpd)
 {
