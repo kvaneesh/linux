@@ -20,8 +20,12 @@ struct mmu_psize_def
 	unsigned long	sllp;	/* SLB L||LP (exact mask to use in slbmte) */
 };
 extern struct mmu_psize_def mmu_psize_defs[MMU_PAGE_COUNT];
+/*
+ * Add this for now. We will properly start detecting radix once we have
+ * all needed bits in place
+ */
+#define radix_enabled() mmu_has_feature(MMU_FTR_RADIX)
 
-#define radix_enabled() (0)
 #endif /* __ASSEMBLY__ */
 
 /* 64-bit classic hash table MMU */

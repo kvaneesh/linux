@@ -87,6 +87,10 @@
 /* 1T segments available
  */
 #define MMU_FTR_1T_SEGMENT		ASM_CONST(0x40000000)
+/*
+ * Radix page table available
+ */
+#define MMU_FTR_RADIX                  ASM_CONST(0x80000000)
 
 /* MMU feature bit sets for various CPUs */
 #define MMU_FTRS_DEFAULT_HPTE_ARCH_V2	\
