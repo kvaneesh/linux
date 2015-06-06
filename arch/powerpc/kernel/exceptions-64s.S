@@ -983,7 +983,13 @@ data_access_common:
 	ld	r3,PACA_EXGEN+EX_DAR(r13)
 	lwz	r4,PACA_EXGEN+EX_DSISR(r13)
 	li	r5,0x300
+	std	r3,_DAR(r1)
+	std	r4,_DSISR(r1)
+BEGIN_MMU_FTR_SECTION
 	b	do_hash_page		/* Try to handle as hpte fault */
+MMU_FTR_SECTION_ELSE
+	b	handle_page_fault
+ALT_MMU_FTR_SECTION_END_IFCLR(MMU_FTR_RADIX)
 
 	.align  7
 	.globl  h_data_storage_common
@@ -1008,7 +1014,13 @@ instruction_access_common:
 	ld	r3,_NIP(r1)
 	andis.	r4,r12,0x5820
 	li	r5,0x400
+	std	r3,_DAR(r1)
+	std	r4,_DSISR(r1)
+BEGIN_MMU_FTR_SECTION
 	b	do_hash_page		/* Try to handle as hpte fault */
+MMU_FTR_SECTION_ELSE
+	b	handle_page_fault
+ALT_MMU_FTR_SECTION_END_IFCLR(MMU_FTR_RADIX)
 
 	STD_EXCEPTION_COMMON(0xe20, h_instr_storage, unknown_exception)
 
@@ -1476,8 +1488,11 @@ slb_miss_realmode:
 	stw	r9,PACA_EXSLB+EX_CCR(r13)	/* save CR in exc. frame */
 	std	r10,PACA_EXSLB+EX_LR(r13)	/* save LR */
 
+#ifdef CONFIG_PPC_STD_MMU_64
+BEGIN_MMU_FTR_SECTION
 	bl	slb_allocate_realmode
-
+END_MMU_FTR_SECTION_IFCLR(MMU_FTR_RADIX)
+#endif
 	/* All done -- return from exception. */
 
 	ld	r10,PACA_EXSLB+EX_LR(r13)
@@ -1485,7 +1500,9 @@ slb_miss_realmode:
 	lwz	r9,PACA_EXSLB+EX_CCR(r13)	/* get saved CR */
 
 	mtlr	r10
-
+BEGIN_MMU_FTR_SECTION
+	b	2f
+END_MMU_FTR_SECTION_IFSET(MMU_FTR_RADIX)
 	andi.	r10,r12,MSR_RI	/* check for unrecoverable exception */
 	beq-	2f
 
@@ -1536,9 +1553,7 @@ power4_fixup_nap:
  */
 	.align	7
 do_hash_page:
-	std	r3,_DAR(r1)
-	std	r4,_DSISR(r1)
-
+#ifdef CONFIG_PPC_STD_MMU_64
 	andis.	r0,r4,0xa410		/* weird error? */
 	bne-	handle_page_fault	/* if not, try to insert a HPTE */
 	andis.  r0,r4,DSISR_DABRMATCH@h
@@ -1566,6 +1581,7 @@ do_hash_page:
 
 	/* Error */
 	blt-	13f
+#endif /* CONFIG_PPC_STD_MMU_64 */
 
 /* Here we have a page fault that hash_page can't handle. */
 handle_page_fault:
@@ -1592,6 +1608,7 @@ handle_dabr_fault:
 12:	b       ret_from_except_lite
 
 
+#ifdef CONFIG_PPC_STD_MMU_64
 /* We have a page fault that hash_page could handle but HV refused
  * the PTE insertion
  */
@@ -1601,6 +1618,7 @@ handle_dabr_fault:
 	ld	r4,_DAR(r1)
 	bl	low_hash_fault
 	b	ret_from_except
+#endif
 
 /*
  * We come here as a result of a DSI at a point where we don't want
