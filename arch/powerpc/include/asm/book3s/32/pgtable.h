@@ -490,6 +490,17 @@ static inline unsigned long gup_pte_filter(int write)
 		mask |= _PAGE_RW;
 	return mask;
 }
+
+static inline unsigned long ioremap_prot_flags(unsigned long flags)
+{
+	/* writeable implies dirty for kernel addresses */
+	if (flags & _PAGE_RW)
+		flags |= _PAGE_DIRTY;
+
+	/* we don't want to let _PAGE_USER and _PAGE_EXEC leak out */
+	flags &= ~(_PAGE_USER | _PAGE_EXEC);
+	return flags;
+}
 #endif /* !__ASSEMBLY__ */
 
 #endif /*  _ASM_POWERPC_BOOK3S_32_PGTABLE_H */
