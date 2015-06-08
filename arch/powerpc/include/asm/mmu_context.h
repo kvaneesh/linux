@@ -10,11 +10,6 @@
 #include <asm/cputable.h>
 #include <asm/cputhreads.h>
 
-/*
- * Most if the context management is out of line
- */
-extern int init_new_context(struct task_struct *tsk, struct mm_struct *mm);
-extern void destroy_context(struct mm_struct *mm);
 #ifdef CONFIG_SPAPR_TCE_IOMMU
 struct mm_iommu_table_group_mem_t;
 
@@ -33,16 +28,50 @@ extern long mm_iommu_ua_to_hpa(struct mm_iommu_table_group_mem_t *mem,
 extern long mm_iommu_mapped_inc(struct mm_iommu_table_group_mem_t *mem);
 extern void mm_iommu_mapped_dec(struct mm_iommu_table_group_mem_t *mem);
 #endif
-
-extern void switch_mmu_context(struct mm_struct *prev, struct mm_struct *next);
-extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
-extern void set_context(unsigned long id, pgd_t *pgd);
-
+/*
+ * Most of the context management is out of line
+ */
 #ifdef CONFIG_PPC_BOOK3S_64
-extern int __init_new_context(void);
-extern void __destroy_context(int context_id);
+extern int hlinit_new_context(struct task_struct *tsk, struct mm_struct *mm);
+static inline int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
+{
+	return hlinit_new_context(tsk, mm);
+}
+
+extern void hldestroy_context(struct mm_struct *mm);
+static inline void destroy_context(struct mm_struct *mm)
+{
+	return hldestroy_context(mm);
+}
+
+extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
+static inline void switch_mmu_context(struct mm_struct *prev,
+				      struct mm_struct *next,
+				      struct task_struct *tsk)
+{
+	return switch_slb(tsk, next);
+}
+
+extern void set_context(unsigned long id, pgd_t *pgd);
+extern int __hlinit_new_context(void);
+static inline int __init_new_context(void)
+{
+	return __hlinit_new_context();
+}
+extern void __hldestroy_context(int context_id);
+static inline void __destroy_context(int context_id)
+{
+	return __hldestroy_context(context_id);
+}
 static inline void mmu_context_init(void) { }
 #else
+extern int init_new_context(struct task_struct *tsk, struct mm_struct *mm);
+extern void destroy_context(struct mm_struct *mm);
+
+extern void switch_mmu_context(struct mm_struct *prev, struct mm_struct *next,
+			       struct task_struct *tsk);
+extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
+extern void set_context(unsigned long id, pgd_t *pgd);
 extern unsigned long __init_new_context(void);
 extern void __destroy_context(unsigned long context_id);
 extern void mmu_context_init(void);
@@ -88,17 +117,11 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
 	if (cpu_has_feature(CPU_FTR_ALTIVEC))
 		asm volatile ("dssall");
 #endif /* CONFIG_ALTIVEC */
-
-	/* The actual HW switching method differs between the various
-	 * sub architectures.
+	/*
+	 * The actual HW switching method differs between the various
+	 * sub architectures. Out of line for now
 	 */
-#ifdef CONFIG_PPC_STD_MMU_64
-	switch_slb(tsk, next);
-#else
-	/* Out of line for now */
-	switch_mmu_context(prev, next);
-#endif
-
+	switch_mmu_context(prev, next, tsk);
 }
 
 #define deactivate_mm(tsk,mm)	do { } while (0)

@@ -30,7 +30,7 @@
 static DEFINE_SPINLOCK(mmu_context_lock);
 static DEFINE_IDA(mmu_context_ida);
 
-int __init_new_context(void)
+int __hlinit_new_context(void)
 {
 	int index;
 	int err;
@@ -59,11 +59,11 @@ again:
 }
 EXPORT_SYMBOL_GPL(__init_new_context);
 
-int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
+int hlinit_new_context(struct task_struct *tsk, struct mm_struct *mm)
 {
 	int index;
 
-	index = __init_new_context();
+	index = __hlinit_new_context();
 	if (index < 0)
 		return index;
 
@@ -78,7 +78,7 @@ int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 #ifdef CONFIG_PPC_ICSWX
 	mm->context.cop_lockp = kmalloc(sizeof(spinlock_t), GFP_KERNEL);
 	if (!mm->context.cop_lockp) {
-		__destroy_context(index);
+		__hldestroy_context(index);
 		subpage_prot_free(mm);
 		mm->context.id = MMU_NO_CONTEXT;
 		return -ENOMEM;
@@ -95,13 +95,13 @@ int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 	return 0;
 }
 
-void __destroy_context(int context_id)
+void __hldestroy_context(int context_id)
 {
 	spin_lock(&mmu_context_lock);
 	ida_remove(&mmu_context_ida, context_id);
 	spin_unlock(&mmu_context_lock);
 }
-EXPORT_SYMBOL_GPL(__destroy_context);
+EXPORT_SYMBOL_GPL(__hldestroy_context);
 
 #ifdef CONFIG_PPC_64K_PAGES
 static void destroy_pagetable_page(struct mm_struct *mm)
@@ -133,7 +133,7 @@ static inline void destroy_pagetable_page(struct mm_struct *mm)
 #endif
 
 
-void destroy_context(struct mm_struct *mm)
+void hldestroy_context(struct mm_struct *mm)
 {
 #ifdef CONFIG_SPAPR_TCE_IOMMU
 	mm_iommu_cleanup(&mm->context);
@@ -146,7 +146,7 @@ void destroy_context(struct mm_struct *mm)
 #endif /* CONFIG_PPC_ICSWX */
 
 	destroy_pagetable_page(mm);
-	__destroy_context(mm->context.id);
+	__hldestroy_context(mm->context.id);
 	subpage_prot_free(mm);
 	mm->context.id = MMU_NO_CONTEXT;
 }
