@@ -70,9 +70,12 @@ extern void __setup_cpu_power7(unsigned long offset, struct cpu_spec* spec);
 extern void __restore_cpu_power7(void);
 extern void __setup_cpu_power8(unsigned long offset, struct cpu_spec* spec);
 extern void __restore_cpu_power8(void);
+extern void __setup_cpu_power9(unsigned long offset, struct cpu_spec* spec);
+extern void __restore_cpu_power9(void);
 extern void __restore_cpu_a2(void);
 extern void __flush_tlb_power7(unsigned int action);
 extern void __flush_tlb_power8(unsigned int action);
+extern void __flush_tlb_power9(unsigned int action);
 extern long __machine_check_early_realmode_p7(struct pt_regs *regs);
 extern long __machine_check_early_realmode_p8(struct pt_regs *regs);
 #endif /* CONFIG_PPC64 */
@@ -113,6 +116,8 @@ extern void __restore_cpu_e6500(void);
 				 PPC_FEATURE2_DSCR | \
 				 PPC_FEATURE2_ISEL | PPC_FEATURE2_TAR | \
 				 PPC_FEATURE2_VEC_CRYPTO)
+#define COMMON_USER_POWER9	COMMON_USER_POWER8
+#define COMMON_USER2_POWER9	COMMON_USER2_POWER8
 #define COMMON_USER_PA6T	(COMMON_USER_PPC64 | PPC_FEATURE_PA6T |\
 				 PPC_FEATURE_TRUE_LE | \
 				 PPC_FEATURE_HAS_ALTIVEC_COMP)
@@ -498,6 +503,26 @@ static struct cpu_spec __initdata cpu_specs[] = {
 		.flush_tlb		= __flush_tlb_power8,
 		.machine_check_early	= __machine_check_early_realmode_p8,
 		.platform		= "power8",
+	},
+	{	/*  Hacked up Power9 */
+		.pvr_mask		= 0xffff0000,
+		.pvr_value		= 0x004e0000,
+		.cpu_name		= "POWER9 (mambo/radix)",
+		.cpu_features		= CPU_FTRS_POWER9,
+		.cpu_user_features	= COMMON_USER_POWER9,
+		.cpu_user_features2	= COMMON_USER2_POWER9,
+		.mmu_features		= MMU_FTRS_POWER9,
+		.icache_bsize		= 128,
+		.dcache_bsize		= 128,
+		.num_pmcs		= 6,
+		.pmc_type		= PPC_PMC_IBM,
+		.oprofile_cpu_type	= "ppc64/power8",
+		.oprofile_type		= PPC_OPROFILE_INVALID,
+		.cpu_setup		= __setup_cpu_power9,
+		.cpu_restore		= __restore_cpu_power9,
+		.flush_tlb		= __flush_tlb_power9,
+		.machine_check_early	= __machine_check_early_realmode_p8,
+		.platform		= "power9",
 	},
 	{	/* Cell Broadband Engine */
 		.pvr_mask		= 0xffff0000,

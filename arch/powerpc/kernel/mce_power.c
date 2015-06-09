@@ -77,6 +77,18 @@ void __flush_tlb_power8(unsigned int action)
 	flush_tlb_206(POWER8_TLB_SETS, action);
 }
 
+/*
+ * With radix config we have 128 tlb set and with hash
+ * we have 256 tlb set
+ * FIXME!!, derive from device tree ?
+ */
+void __flush_tlb_power9(unsigned int action)
+{
+	if (radix_enabled())
+		flush_tlb_206(128, action);
+	else
+		flush_tlb_206(256, action);
+}
 /* flush SLBs and reload */
 #ifdef CONFIG_PPC_MMU_STD_64
 static void flush_and_reload_slb(void)
