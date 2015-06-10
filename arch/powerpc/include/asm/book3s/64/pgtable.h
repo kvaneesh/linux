@@ -605,11 +605,19 @@ static inline void pgtable_cache_init(void)
 	return hlpgtable_cache_init();
 }
 
+/*
+ * map_kernel_page currently only called by __ioremap
+ * map_kernel_page adds an entry to the ioremap page table
+ */
 static inline int map_kernel_page(unsigned long ea, unsigned long pa,
 				  unsigned long flags)
 {
 	if (radix_enabled()) {
 #if defined(CONFIG_PPC_RADIX_MMU) && defined(DEBUG_VM)
+		/*
+		 * Right now we map everything expect kernel linear mapping to be
+		 * PAGE_SIZE. We could do better with vmemmap. Will handle that later
+		 */
 		unsigned long page_size = 1 << mmu_psize_defs[mmu_io_psize].shift;
 		WARN((page_size != PAGE_SIZE), "I/O page size != PAGE_SIZE");
 #endif

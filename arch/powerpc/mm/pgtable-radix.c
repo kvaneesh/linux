@@ -140,11 +140,13 @@ static void __init radix_init_pgtable(void)
 
 	pr_info("Mapping linear mapping in radix tree...\n");
 
-	if (mmu_psize_defs[MMU_PAGE_1G].shift)
+	if (mmu_psize_defs[MMU_PAGE_1G].shift) {
 		linear_page_size = PUD_SIZE;
-	else if (mmu_psize_defs[MMU_PAGE_2M].shift)
+		mmu_linear_psize = MMU_PAGE_1G;
+	} else if (mmu_psize_defs[MMU_PAGE_2M].shift) {
 		linear_page_size = PMD_SIZE;
-	else
+		mmu_linear_psize = MMU_PAGE_2M;
+	} else
 		linear_page_size = PAGE_SIZE;
 
 	pr_info("Mapping kernel with page_size 0x%lx\n", linear_page_size);
@@ -210,7 +212,11 @@ void __init radix_init_native(void)
 
 void __init rearly_init_mmu(void)
 {
-	/* FIXME: Use a different layout ? Use huge pages ? */
+	/*
+	 * mmu_linear_psize get update to 1G or 2M if available
+	 * We are currently forcing everyting else to PAGE_SIZE.
+	 * We could do better with vmemmap_psize.
+	 */
 #ifdef CONFIG_PPC_64K_PAGES
 	mmu_linear_psize = MMU_PAGE_64K;
 	mmu_virtual_psize = MMU_PAGE_64K;
@@ -349,8 +355,7 @@ void __meminit rvmemmap_create_mapping(unsigned long start,
 	unsigned long flags = _RPAGE_PRESENT | _RPAGE_ACCESSED |
 				_RPAGE_KERNEL_RW;
 
-	/* FIXME!! Assume page_size == PAGE_SIZE for now */
-	BUG_ON(map_radix_kernel_page(start, phys, __pgprot(flags), PAGE_SIZE));
+	BUG_ON(map_radix_kernel_page(start, phys, __pgprot(flags), page_size));
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG

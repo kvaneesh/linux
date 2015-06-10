@@ -132,6 +132,9 @@ void __iomem * __ioremap_at(phys_addr_t pa, void *ea, unsigned long size,
 	WARN_ON(((unsigned long)ea) & ~PAGE_MASK);
 	WARN_ON(size & ~PAGE_MASK);
 
+	/*
+	 * What if iomap_psize is different from PAGE_SIZE
+	 */
 	for (i = 0; i < size; i += PAGE_SIZE)
 		if (map_kernel_page((unsigned long)ea+i, pa+i, flags))
 			return NULL;
