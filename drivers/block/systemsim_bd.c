@@ -136,12 +136,14 @@ static void do_systemsim_bd_request(struct request_queue *q)
 		switch (rq_data_dir(req)) {
 		case READ:
 			result = systemsim_disk_read(minor,
-						     req->buffer, blk_rq_pos(req),
+						     bio_data(req->bio),
+						     blk_rq_pos(req),
 						     blk_rq_cur_sectors(req));
 			break;
 		case WRITE:
 			result = systemsim_disk_write(minor,
-						      req->buffer, blk_rq_pos(req),
+						      bio_data(req->bio),
+						      blk_rq_pos(req),
 						      blk_rq_cur_sectors(req));
 		};
 
