@@ -109,7 +109,7 @@ static int systemsim_bd_init_disk(int devno)
 
 	sz = systemsim_disk_info(BD_INFO_DEVSZ, devno);
 
-	printk("Initializing disk %d with devsz %u\n", devno, sz);
+	pr_info("Initializing disk %d with devsz %u\n", devno, sz);
 
 	set_capacity(disk, sz << 1);
 
@@ -161,11 +161,11 @@ static void systemsim_bd_release(struct gendisk *disk, fmode_t mode)
 		return;
 
 	if (systemsim_disk_info(BD_INFO_SYNC, dev) < 0) {
-		printk(KERN_ALERT "systemsim_bd_release: unable to sync\n");
+		pr_alert("systemsim_bd_release: unable to sync\n");
 	}
 	lo = &systemsim_bd_dev[dev];
 	if (lo->refcnt <= 0)
-		printk(KERN_ALERT "systemsim_bd_release: refcount(%d) <= 0\n",
+		pr_alert("systemsim_bd_release: refcount(%d) <= 0\n",
 		       lo->refcnt);
 	lo->refcnt--;
 }
@@ -236,10 +236,8 @@ static int __init systemsim_bd_init(void)
 	int i;
 
 	systemsim = of_find_node_by_path("/systemsim");
-	if (systemsim == NULL) {
-		printk("systemsim_bd: /systemsim not found in device-tree");
+	if (systemsim == NULL)
 		return -1;
-	}
 	of_node_put(systemsim);
 
 	/*
@@ -273,10 +271,10 @@ static int __init systemsim_bd_init(void)
 		goto out;
 	}
 #ifdef MODULE
-	printk("systemsim bogus disk: registered device at major %d\n",
+	pr_info("systemsim bogus disk: registered device at major %d\n",
 	       MAJOR_NR);
 #else
-	printk("systemsim bogus disk: compiled in with kernel\n");
+	pr_info("systemsim bogus disk: compiled in with kernel\n");
 #endif
 
 	/*
