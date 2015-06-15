@@ -44,6 +44,8 @@
 #include <asm/prom.h>
 #include <asm/types.h>
 
+#define PART_BITS 4
+
 #define MAJOR_NR		42
 #define MAX_SYSTEMSIM_BD	4
 #define BD_SECT_SZ		512
@@ -116,27 +118,37 @@ static int systemsim_bd_init_disk(int devno)
 	return 1;
 }
 
+static int index_to_minor(int index)
+{
+	return index << PART_BITS;
+}
+
+static int minor_to_index(int minor)
+{
+	return minor >> PART_BITS;
+}
+
 static void do_systemsim_bd_request(struct request_queue *q)
 {
 	struct request *req;
 
 	req = blk_fetch_request(q);
 	while (req) {
-		int minor = req->rq_disk->first_minor;
+		int index = minor_to_index(req->rq_disk->first_minor);
 		int result = -EIO;
 
-		if (systemsim_bd_dev[minor].changed)
+		if (systemsim_bd_dev[index].changed)
 			goto done;
 
 		switch (rq_data_dir(req)) {
 		case READ:
-			result = systemsim_disk_read(minor,
+			result = systemsim_disk_read(index,
 						     bio_data(req->bio),
 						     blk_rq_pos(req),
 						     blk_rq_cur_sectors(req));
 			break;
 		case WRITE:
-			result = systemsim_disk_write(minor,
+			result = systemsim_disk_write(index,
 						      bio_data(req->bio),
 						      blk_rq_pos(req),
 						      blk_rq_cur_sectors(req));
@@ -151,71 +163,72 @@ done:
 static void systemsim_bd_release(struct gendisk *disk, fmode_t mode)
 {
 	struct systemsim_bd_device *lo;
-	int dev;
+	int index;
 
 	if (!disk)
 		return;
 
-	dev = disk->first_minor;
-	if (dev >= MAX_SYSTEMSIM_BD)
+	index = minor_to_index(disk->first_minor);
+	if (index >= MAX_SYSTEMSIM_BD)
 		return;
 
-	if (systemsim_disk_info(BD_INFO_SYNC, dev) < 0) {
+	if (systemsim_disk_info(BD_INFO_SYNC, index) < 0) {
 		pr_alert("systemsim_bd_release: unable to sync\n");
 	}
-	lo = &systemsim_bd_dev[dev];
+	lo = &systemsim_bd_dev[index];
 	if (lo->refcnt <= 0)
 		pr_alert("systemsim_bd_release: refcount(%d) <= 0\n",
 		       lo->refcnt);
+
 	lo->refcnt--;
 }
 
 static int systemsim_bd_revalidate(struct gendisk *disk)
 {
-	int devno = disk->first_minor;
+	int index = minor_to_index(disk->first_minor);
 
-	pr_debug("mambobd%d: revalidate\n", devno);
+	pr_debug("mambobd%d: revalidate\n", index);
 
-	systemsim_bd_init_disk(devno);
+	systemsim_bd_init_disk(index);
 
 	return 0;
 }
 
 static int systemsim_bd_media_changed(struct gendisk *disk)
 {
-	int devno = disk->first_minor;
+	int index = minor_to_index(disk->first_minor);
 	int rc;
 
-	rc = systemsim_disk_info(BD_INFO_CHANGE, devno);
+	rc = systemsim_disk_info(BD_INFO_CHANGE, index);
 	/* Disk not initialized ... no change */
-	pr_debug("mambobd%d: media_changed, rc = %d\n", devno, rc);
+	pr_debug("mambobd%d: media_changed, rc = %d\n", index, rc);
 
 	if (rc < 0)
 		return 0;
 	if (rc)
-		systemsim_bd_dev[devno].changed = 1;
+		systemsim_bd_dev[index].changed = 1;
 
-	return systemsim_bd_dev[devno].changed;
+	return systemsim_bd_dev[index].changed;
 }
 
 static int systemsim_bd_open(struct block_device *bdev, fmode_t mode)
 {
-	int dev;
+	int index;
 
 	if (!bdev)
 		return -EINVAL;
-	dev = bdev->bd_disk->first_minor;
-	if (dev >= MAX_SYSTEMSIM_BD)
+	index = minor_to_index(bdev->bd_disk->first_minor);
+	if (index >= MAX_SYSTEMSIM_BD)
 		return -ENODEV;
 
 	check_disk_change(bdev);
 
-	if (!systemsim_bd_dev[dev].initialized && !systemsim_bd_init_disk(dev))
+	if (!systemsim_bd_dev[index].initialized && !systemsim_bd_init_disk(index))
 		return -ENOMEDIUM;
-	if (systemsim_bd_dev[dev].changed)
+	if (systemsim_bd_dev[index].changed)
 		return -ENOMEDIUM;
 
-	systemsim_bd_dev[dev].refcnt++;
+	systemsim_bd_dev[index].refcnt++;
 	return 0;
 }
 
@@ -248,7 +261,7 @@ static int __init systemsim_bd_init(void)
 	 */
 
 	for (i = 0; i < MAX_SYSTEMSIM_BD; i++) {
-		struct gendisk *disk = alloc_disk(1);
+		struct gendisk *disk = alloc_disk(1 << PART_BITS);
 
 		if (!disk)
 			goto out;
@@ -290,7 +303,7 @@ static int __init systemsim_bd_init(void)
 		systemsim_bd_dev[i].flags = 0;
 		systemsim_bd_dev[i].changed = 0;
 		disk->major = MAJOR_NR;
-		disk->first_minor = i;
+		disk->first_minor = index_to_minor(i);
 		disk->fops = &systemsim_bd_fops;
 		disk->private_data = &systemsim_bd_dev[i];
 		disk->flags |= GENHD_FL_REMOVABLE;
