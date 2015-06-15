@@ -22,13 +22,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to:
- * Free Software Foundation
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02111-1301  USA
- *
  */
 
 #define DEBUG
@@ -44,12 +37,11 @@
 #include <linux/file.h>
 #include <linux/ioctl.h>
 #include <linux/blkdev.h>
+#include <linux/uaccess.h>
 #include <net/sock.h>
 #include <asm/prom.h>
 #include <asm/systemsim.h>
 #include <asm/prom.h>
-
-#include <asm/uaccess.h>
 #include <asm/types.h>
 
 #define MAJOR_NR		42
@@ -84,7 +76,8 @@ static struct systemsim_bd_device systemsim_bd_dev[MAX_SYSTEMSIM_BD];
 static inline int
 systemsim_disk_read(int devno, void *buf, ulong sect, ulong nrsect)
 {
-	memset(buf, 0, nrsect*BD_SECT_SZ);
+	memset(buf, 0, nrsect * BD_SECT_SZ);
+
 	return callthru3(BOGUS_DISK_READ, (unsigned long)buf,
 			 (unsigned long)sect,
 			 (unsigned long)((nrsect << 16) | devno));
@@ -128,7 +121,7 @@ static int systemsim_bd_init_disk(int devno)
 	return 1;
 }
 
-static void do_systemsim_bd_request(struct request_queue * q)
+static void do_systemsim_bd_request(struct request_queue *q)
 {
 	struct request *req;
 
@@ -151,7 +144,8 @@ static void do_systemsim_bd_request(struct request_queue * q)
 						      req->buffer, blk_rq_pos(req),
 						      blk_rq_cur_sectors(req));
 		};
-	done:
+
+done:
 		if (!__blk_end_request_cur(req, result ? -EIO : 0))
 			req = blk_fetch_request(q);
 	}
@@ -197,10 +191,12 @@ static int systemsim_bd_media_changed(struct gendisk *disk)
 	rc = systemsim_disk_info(BD_INFO_CHANGE, devno);
 	/* Disk not initialized ... no change */
 	pr_debug("mambobd%d: media_changed, rc = %d\n", devno, rc);
+
 	if (rc < 0)
 		return 0;
 	if (rc)
 		systemsim_bd_dev[devno].changed = 1;
+
 	return systemsim_bd_dev[devno].changed;
 }
 
@@ -225,7 +221,7 @@ static int systemsim_bd_open(struct block_device *bdev, fmode_t mode)
 	return 0;
 }
 
-static struct block_device_operations systemsim_bd_fops = {
+static const struct block_device_operations systemsim_bd_fops = {
       .owner		= THIS_MODULE,
       .open		= systemsim_bd_open,
       .release		= systemsim_bd_release,
@@ -257,6 +253,7 @@ static int __init systemsim_bd_init(void)
 
 	for (i = 0; i < MAX_SYSTEMSIM_BD; i++) {
 		struct gendisk *disk = alloc_disk(1);
+
 		if (!disk)
 			goto out;
 		systemsim_bd_dev[i].disk = disk;
@@ -287,11 +284,11 @@ static int __init systemsim_bd_init(void)
 	/*
 	 * left device name alone for now as too much depends on it
 	 * external to the kernel
-	 *
 	 */
 
 	for (i = 0; i < MAX_SYSTEMSIM_BD; i++) {	/* load defaults */
 		struct gendisk *disk = systemsim_bd_dev[i].disk;
+
 		systemsim_bd_dev[i].initialized = 0;
 		systemsim_bd_dev[i].refcnt = 0;
 		systemsim_bd_dev[i].flags = 0;
@@ -307,18 +304,19 @@ static int __init systemsim_bd_init(void)
 	}
 
 	return 0;
-      out:
+
+out:
 	while (i--) {
 		if (systemsim_bd_dev[i].disk->queue)
 			blk_cleanup_queue(systemsim_bd_dev[i].disk->queue);
 		put_disk(systemsim_bd_dev[i].disk);
 	}
+
 	return -EIO;
 }
 
 static void __exit systemsim_bd_cleanup(void)
 {
-
 	unregister_blkdev(MAJOR_NR, "systemsim_bd");
 }
 
