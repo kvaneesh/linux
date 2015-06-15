@@ -8,6 +8,10 @@
 #include <asm/book3s/64/hash.h>
 #include <asm/barrier.h>
 
+#ifndef __ASSEMBLY__
+#include <asm/tlbflush.h>
+#include <linux/mm_types.h>
+#endif
 /*
  * The second half of the kernel virtual space is used for IO mappings,
  * it's itself carved into the PIO region (ISA and PHB IO space) and
@@ -125,6 +129,40 @@ extern unsigned long ioremap_bot;
 #define pte_pagesize_index(mm, addr, pte)	MMU_PAGE_4K
 
 #endif /* __real_pte */
+
+#define __HAVE_ARCH_PTEP_TEST_AND_CLEAR_YOUNG
+static inline int ptep_test_and_clear_young(struct vm_area_struct *vma,
+					    unsigned long address,
+					    pte_t *ptep)
+{
+	return  __ptep_test_and_clear_young(vma->vm_mm, address, ptep);
+}
+
+#define __HAVE_ARCH_PTEP_CLEAR_YOUNG_FLUSH
+static inline int ptep_clear_flush_young(struct vm_area_struct *vma,
+					 unsigned long address, pte_t *ptep)
+{
+	int young;
+
+	young = __ptep_test_and_clear_young(vma->vm_mm, address, ptep);
+	if (young)
+		flush_tlb_page(vma, address);
+	return young;
+}
+
+#define __HAVE_ARCH_PTEP_GET_AND_CLEAR
+static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
+				       unsigned long addr, pte_t *ptep)
+{
+	unsigned long old = pte_update(mm, addr, ptep, ~0UL, 0, 0);
+	return __pte(old);
+}
+
+static inline void pte_clear(struct mm_struct *mm, unsigned long addr,
+			     pte_t * ptep)
+{
+	pte_update(mm, addr, ptep, ~0UL, 0, 0);
+}
 
 static inline void pmd_set(pmd_t *pmdp, unsigned long val)
 {
