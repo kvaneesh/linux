@@ -48,11 +48,6 @@
 #define MAX_SYSTEMSIM_BD	4
 #define BD_SECT_SZ		512
 
-#define SYSTEMSIM_BD_SET_BLKSIZE	_IO( 0xab, 1 )
-#define SYSTEMSIM_BD_SET_SIZE   	_IO( 0xab, 2 )
-#define SYSTEMSIM_BD_SET_SIZE_BLOCKS    _IO( 0xab, 7 )
-#define SYSTEMSIM_BD_DISCONNECT  	_IO( 0xab, 8 )
-
 struct systemsim_bd_device {
 	int initialized;
 	int changed;
