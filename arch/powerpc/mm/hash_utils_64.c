@@ -92,11 +92,13 @@ extern unsigned long dart_tablebase;
 #endif /* CONFIG_U3_DART */
 
 static unsigned long _SDR1;
+static unsigned long _PTCR;
 struct mmu_psize_def mmu_psize_defs[MMU_PAGE_COUNT];
 EXPORT_SYMBOL_GPL(mmu_psize_defs);
 
 struct hash_pte *htab_address;
 unsigned long htab_size_bytes;
+unsigned long partition_tab_size_bytes;
 unsigned long htab_hash_mask;
 EXPORT_SYMBOL_GPL(htab_hash_mask);
 int mmu_linear_psize = MMU_PAGE_4K;
@@ -648,11 +650,13 @@ int remove_section_mapping(unsigned long start, unsigned long end)
 
 static void __init htab_initialize(void)
 {
-	unsigned long table;
+	unsigned long hash_table;
+	unsigned long partition_table;
 	unsigned long pteg_count;
 	unsigned long prot;
 	unsigned long base = 0, size = 0, limit;
 	struct memblock_region *reg;
+	__be64 *patb;
 
 	DBG(" -> htab_initialize()\n");
 
@@ -701,21 +705,44 @@ static void __init htab_initialize(void)
 		else
 			limit = MEMBLOCK_ALLOC_ANYWHERE;
 
-		table = memblock_alloc_base(htab_size_bytes, htab_size_bytes, limit);
+		hash_table = memblock_alloc_base(htab_size_bytes, htab_size_bytes, limit);
 
-		DBG("Hash table allocated at %lx, size: %lx\n", table,
+		DBG("Hash table allocated at %lx, size: %lx\n", hash_table,
 		    htab_size_bytes);
 
-		htab_address = __va(table);
+		htab_address = __va(hash_table);
 
 		/* htab absolute addr + encoded htabsize */
-		_SDR1 = table + __ilog2(pteg_count) - 11;
+		_SDR1 = hash_table + __ilog2(pteg_count) - 11;
 
 		/* Initialize the HPT with no entries */
-		memset((void *)table, 0, htab_size_bytes);
+		memset((void *)hash_table, 0, htab_size_bytes);
 
-		/* Set SDR1 */
-		mtspr(SPRN_SDR1, _SDR1);
+		/* Set SDR1 on CPUs that don't support new PTE, e.g. anything other than P9 */
+		if (mmu_has_feature(MMU_FTR_RADIX)) {
+			/* CPUs supproting new PTE, e.g. P9, require partition table */
+			partition_tab_size_bytes = 65536; /* POWER9 requires PATS = 4 */
+
+			partition_table = memblock_alloc_base(partition_tab_size_bytes, partition_tab_size_bytes, limit);
+
+			/* Initialize the Partition Table with no entries */
+			memset((void *)partition_table, 0, partition_tab_size_bytes);
+
+			DBG("Partition table allocated at %lx, size: %lx\n", partition_table,
+			    partition_tab_size_bytes);
+
+			/* Write the first entry of Partition Table */
+			patb = (__be64 *)partition_table;
+			patb[0] = cpu_to_be64(_SDR1);
+			/* Don't use process table */
+			patb[1] = 0;
+
+			/* Calculate PTCR */
+			_PTCR = __pa(partition_table) | (__ilog2(partition_tab_size_bytes) - 12);
+			mtspr(SPRN_PTCR, _PTCR);
+		} else
+			/* Set SDR1 */
+			mtspr(SPRN_SDR1, _SDR1);
 	}
 
 	prot = pgprot_val(PAGE_KERNEL);
@@ -814,8 +841,13 @@ void __init early_init_mmu(void)
 void early_init_mmu_secondary(void)
 {
 	/* Initialize hash table for that CPU */
-	if (!firmware_has_feature(FW_FEATURE_LPAR))
-		mtspr(SPRN_SDR1, _SDR1);
+	if (!firmware_has_feature(FW_FEATURE_LPAR)) {
+		/* On P8 set SDR1, on P9 set PTCR */
+		if (mmu_has_feature(MMU_FTR_RADIX))
+			mtspr(SPRN_PTCR, _PTCR);
+		else
+			mtspr(SPRN_SDR1, _SDR1);
+	}
 
 	/* Initialize SLB */
 	slb_initialize();
