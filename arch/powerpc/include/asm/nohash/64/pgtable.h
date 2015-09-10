@@ -97,7 +97,7 @@
 /*
  * Include the PTE bits definitions
  */
-#include <asm/pte-book3e.h>
+#include <asm/nohash/pte-book3e.h>
 #include <asm/pte-common.h>
 
 #ifdef CONFIG_PPC_MM_SLICES
