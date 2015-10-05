@@ -216,6 +216,11 @@ void __init allocate_pacas(void)
 	 * the first segment.
 	 */
 	limit = min(0x10000000ULL, limit);
+	/*
+	 * Fix it properly. Radix hack
+	 */
+	if (limit == 0)
+		limit = 0x10000000;
 #endif
 
 	paca_size = PAGE_ALIGN(sizeof(struct paca_struct) * nr_cpu_ids);
