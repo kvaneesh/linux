@@ -71,7 +71,7 @@ static inline unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long index)
 {
 	if ((pte_val(rpte.pte) & _PAGE_COMBO))
 		return (unsigned long) rpte.hidx[index] >> 4;
-	return (pte_val(rpte.pte) >> 12) & 0xf;
+	return (pte_val(rpte.pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
 }
 
 static inline pte_t __rpte_to_pte(real_pte_t rpte)
