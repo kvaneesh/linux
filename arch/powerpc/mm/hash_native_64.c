@@ -659,12 +659,16 @@ static void native_flush_hash_range(unsigned long number, int local)
 	local_irq_save(flags);
 
 	for (i = 0; i < number; i++) {
+		bool valid_slot;
+
 		vpn = batch->vpn[i];
 		pte = batch->pte[i];
 
 		pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
-			hidx = __rpte_to_hidx(pte, index);
+			hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
+			if (!valid_slot)
+				continue;
 			if (hidx & _PTEIDX_SECONDARY)
 				hash = ~hash;
 			slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
@@ -690,6 +694,9 @@ static void native_flush_hash_range(unsigned long number, int local)
 
 			pte_iterate_hashed_subpages(pte, psize,
 						    vpn, index, shift) {
+				/*
+				 * We are not looking at subpage valid here
+				 */
 				__tlbiel(vpn, psize, psize, ssize);
 			} pte_iterate_hashed_end();
 		}
@@ -707,6 +714,9 @@ static void native_flush_hash_range(unsigned long number, int local)
 
 			pte_iterate_hashed_subpages(pte, psize,
 						    vpn, index, shift) {
+				/*
+				 * We are not looking at subpage valid here
+				 */
 				__tlbie(vpn, psize, psize, ssize);
 			} pte_iterate_hashed_end();
 		}
@@ -719,6 +729,42 @@ static void native_flush_hash_range(unsigned long number, int local)
 	local_irq_restore(flags);
 }
 
+/*
+ * return the slot (3 bits) details in a hash pte group. For secondary
+ * hash we also set the top bit.
+ */
+static long native_get_hpte_slot(unsigned long want_v, unsigned long hash)
+{
+	int i;
+	unsigned long slot;
+	unsigned long hpte_v;
+	struct hash_pte *hptep;
+
+	/*
+	 * try primary first
+	 */
+	slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
+	for (i = 0; i < HPTES_PER_GROUP; i++) {
+		hptep = htab_address + slot;
+		hpte_v = be64_to_cpu(hptep->v);
+		if (HPTE_V_COMPARE(hpte_v, want_v) && (hpte_v & HPTE_V_VALID))
+			return i;
+		++slot;
+	}
+
+	/* try secondary */
+	slot = (~hash & htab_hash_mask) * HPTES_PER_GROUP;
+	for (i = 0; i < HPTES_PER_GROUP; i++) {
+		hptep = htab_address + slot;
+		hpte_v = be64_to_cpu(hptep->v);
+		if (HPTE_V_COMPARE(hpte_v, want_v) && (hpte_v & HPTE_V_VALID))
+			/* Add secondary bit */
+			return i | (1 << 3);
+		++slot;
+	}
+	return -1;
+}
+
 void __init hpte_init_native(void)
 {
 	ppc_md.hpte_invalidate	= native_hpte_invalidate;
@@ -729,4 +775,5 @@ void __init hpte_init_native(void)
 	ppc_md.hpte_clear_all	= native_hpte_clear;
 	ppc_md.flush_hash_range = native_flush_hash_range;
 	ppc_md.hugepage_invalidate   = native_hugepage_invalidate;
+	ppc_md.get_hpte_slot	= native_get_hpte_slot;
 }

@@ -18,29 +18,40 @@
 
 real_pte_t __real_pte(unsigned long addr, pte_t pte, pte_t *ptep)
 {
-	int indx;
 	real_pte_t rpte;
-	pte_t *pte_headp;
 
 	rpte.pte = pte;
-	rpte.hidx = NULL;
-	if (pte_val(pte) & _PAGE_COMBO) {
-		indx = pte_index(addr);
-		pte_headp = ptep - indx;
-		/*
-		 * Make sure we order the hidx load against the _PAGE_COMBO
-		 * check. The store side ordering is done in __hash_page_4K
-		 */
-		smp_rmb();
-		rpte.hidx = (unsigned char *)(pte_headp + PTRS_PER_PTE) + (16 * indx);
-	}
 	return rpte;
+}
+
+unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
+			     unsigned long vpn, int ssize, bool *valid)
+{
+	long slot;
+	unsigned long want_v;
+
+	*valid = false;
+	if ((pte_val(rpte.pte) & _PAGE_COMBO)) {
+
+		want_v = hpte_encode_avpn(vpn, MMU_PAGE_4K, ssize);
+		slot = ppc_md.get_hpte_slot(want_v, hash);
+		if (slot < 0)
+			return 0;
+		*valid = true;
+		return slot;
+	}
+	if (pte_val(rpte.pte) & _PAGE_HASHPTE) {
+		*valid = true;
+		return (pte_val(rpte.pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
+	}
+	return 0;
 }
 
 int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 		   pte_t *ptep, unsigned long trap, unsigned long flags,
 		   int ssize, int subpg_prot)
 {
+	bool valid_slot;
 	real_pte_t rpte;
 	unsigned long hpte_group;
 	unsigned int subpg_index;
@@ -111,11 +122,11 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 	/*
 	 * Check for sub page valid and update
 	 */
-	if (__rpte_sub_valid(rpte, subpg_index)) {
+	hash = hpt_hash(vpn, shift, ssize);
+	hidx = __rpte_to_hidx(rpte, hash, vpn, ssize, &valid_slot);
+	if (valid_slot) {
 		int ret;
 
-		hash = hpt_hash(vpn, shift, ssize);
-		hidx = __rpte_to_hidx(rpte, subpg_index);
 		if (hidx & _PTEIDX_SECONDARY)
 			hash = ~hash;
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
@@ -191,7 +202,6 @@ repeat:
 	 * Since we have _PAGE_BUSY set on ptep, we can be sure
 	 * nobody is undating hidx.
 	 */
-	rpte.hidx[subpg_index] = (unsigned char)(slot << 4 | 0x1 << 3);
 	new_pte = (new_pte & ~_PAGE_HPTEFLAGS) | _PAGE_HASHPTE | _PAGE_COMBO;
 	/*
 	 * check __real_pte for details on matching smp_rmb()

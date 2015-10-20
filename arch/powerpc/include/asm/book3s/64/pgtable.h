@@ -50,7 +50,16 @@
 #define __real_pte(a,e,p)	(e)
 #define __rpte_to_pte(r)	(__pte(r))
 #endif
-#define __rpte_to_hidx(r,index)	(pte_val(__rpte_to_pte(r)) >>_PAGE_F_GIX_SHIFT)
+static inline unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
+					   unsigned long vpn, int ssize, bool *valid)
+{
+	*valid = false;
+	if (pte_val(__rpte_to_pte(rpte)) & _PAGE_HASHPTE) {
+		*valid = true;
+		return (pte_val(__rpte_to_pte(rpte)) >> _PAGE_F_GIX_SHIFT) & 0xf;
+	}
+	return 0;
+}
 
 #define pte_iterate_hashed_subpages(rpte, psize, va, index, shift)       \
 	do {							         \

@@ -545,11 +545,15 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 	ssize = batch->ssize;
 	pix = 0;
 	for (i = 0; i < number; i++) {
+		bool valid_slot;
+
 		vpn = batch->vpn[i];
 		pte = batch->pte[i];
 		pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
-			hidx = __rpte_to_hidx(pte, index);
+			hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
+			if (!valid_slot)
+				continue;
 			if (hidx & _PTEIDX_SECONDARY)
 				hash = ~hash;
 			slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
@@ -588,6 +592,29 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 		spin_unlock_irqrestore(&pSeries_lpar_tlbie_lock, flags);
 }
 
+static long pSeries_lpar_get_hpte_slot(unsigned long want_v, unsigned long hash)
+{
+	long slot;
+	unsigned long hpte_group;
+
+	/*
+	 * try primary first
+	 */
+	hpte_group = (hash & htab_hash_mask) * HPTES_PER_GROUP;
+	slot = __pSeries_lpar_hpte_find(want_v, hpte_group);
+	if (slot >= 0)
+		return slot;
+
+	/* try secondary */
+	hpte_group = (~hash & htab_hash_mask) * HPTES_PER_GROUP;
+	slot = __pSeries_lpar_hpte_find(want_v, hpte_group);
+	if (slot >= 0)
+		return slot | (1 << 3);
+	return -1;
+}
+
+
+
 static int __init disable_bulk_remove(char *str)
 {
 	if (strcmp(str, "off") == 0 &&
@@ -611,6 +638,7 @@ void __init hpte_init_lpar(void)
 	ppc_md.flush_hash_range	= pSeries_lpar_flush_hash_range;
 	ppc_md.hpte_clear_all   = pSeries_lpar_hptab_clear;
 	ppc_md.hugepage_invalidate = pSeries_lpar_hugepage_invalidate;
+	ppc_md.get_hpte_slot	= pSeries_lpar_get_hpte_slot;
 }
 
 #ifdef CONFIG_PPC_SMLPAR

@@ -417,9 +417,11 @@ pte_t *page_table_alloc(struct mm_struct *mm, unsigned long vmaddr, int kernel)
 
 	pte = get_from_cache(mm);
 	if (pte)
-		return pte;
+		goto out;
 
-	return __alloc_for_cache(mm, kernel);
+	pte = __alloc_for_cache(mm, kernel);
+out:
+	return pte;
 }
 
 void page_table_free(struct mm_struct *mm, unsigned long *table, int kernel)

@@ -295,7 +295,7 @@ static inline pte_basic_t pte_val(pte_t x)
  * the "second half" part of the PTE for pseudo 64k pages
  */
 #if defined(CONFIG_PPC_64K_PAGES) && defined(CONFIG_PPC_STD_MMU_64)
-typedef struct { pte_t pte; unsigned char *hidx; } real_pte_t;
+typedef struct { pte_t pte; } real_pte_t;
 #else
 typedef struct { pte_t pte; } real_pte_t;
 #endif
@@ -347,7 +347,7 @@ static inline pte_basic_t pte_val(pte_t pte)
 }
 
 #if defined(CONFIG_PPC_64K_PAGES) && defined(CONFIG_PPC_STD_MMU_64)
-typedef struct { pte_t pte; unsigned char *hidx; } real_pte_t;
+typedef struct { pte_t pte; } real_pte_t;
 #else
 typedef pte_t real_pte_t;
 #endif
