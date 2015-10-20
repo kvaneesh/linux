@@ -10,14 +10,14 @@
 #define PGD_INDEX_SIZE  12
 
 /*
- * we support 8 fragments per PTE page of 64K size
+ * we support 32 fragments per PTE page of 64K size
  */
-#define PTE_FRAG_NR	8
+#define PTE_FRAG_NR	32
 /*
  * We use a 2K PTE page fragment and another 4K for storing
  * real_pte_t hash index. Rounding the entire thing to 8K
  */
-#define PTE_FRAG_SIZE_SHIFT  13
+#define PTE_FRAG_SIZE_SHIFT  11
 #define PTE_FRAG_SIZE (1UL << PTE_FRAG_SIZE_SHIFT)
 
 
