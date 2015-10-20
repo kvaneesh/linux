@@ -650,7 +650,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 	unsigned long hpte_v;
 	unsigned long want_v;
 	unsigned long flags;
-	real_pte_t pte;
+	pte_t pte;
 	struct ppc64_tlb_batch *batch = this_cpu_ptr(&ppc64_tlb_batch);
 	unsigned long psize = batch->psize;
 	int ssize = batch->ssize;
@@ -666,7 +666,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 
 		pte_iterate_hashed_subpages(vpn, psize, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
-			hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
+			hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 			if (!valid_slot)
 				continue;
 			if (hidx & _PTEIDX_SECONDARY)

@@ -43,8 +43,7 @@
  */
 #define PTE_FRAG_NR	32
 /*
- * We use a 2K PTE page fragment and another 4K for storing
- * real_pte_t hash index. Rounding the entire thing to 8K
+ * We use a 2K PTE page fragment
  */
 #define PTE_FRAG_SIZE_SHIFT  11
 #define PTE_FRAG_SIZE (1UL << PTE_FRAG_SIZE_SHIFT)
@@ -58,21 +57,15 @@
 #define PUD_MASKED_BITS		0x1ff
 
 #ifndef __ASSEMBLY__
-
 /*
  * With 64K pages on hash table, we have a special PTE format that
  * uses a second "half" of the page table to encode sub-page information
  * in order to deal with 64K made of 4K HW pages. Thus we override the
  * generic accessors and iterators here
  */
-#define __real_pte __real_pte
-extern real_pte_t __real_pte(unsigned long addr, pte_t pte, pte_t *ptep);
-extern unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
-				    unsigned long vpn, int ssize, bool *valid);
-static inline pte_t __rpte_to_pte(real_pte_t rpte)
-{
-	return rpte.pte;
-}
+#define pte_to_hidx pte_to_hidx
+extern unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
+				 unsigned long vpn, int ssize, bool *valid);
 /*
  * Trick: we set __end to va + 64k, which happens works for
  * a 16M page as well as we want only one iteration

@@ -95,8 +95,7 @@ struct kmem_cache *pgtable_cache[MAX_PGTABLE_INDEX_SIZE];
 /*
  * Create a kmem_cache() for pagetables.  This is not used for PTE
  * pages - they're linked to struct page, come from the normal free
- * pages pool and have a different entry size (see real_pte_t) to
- * everything else.  Caches created by this function are used for all
+ * pages pool. Caches created by this function are used for all
  * the higher level pagetables, and for hugepage pagetables.
  */
 void pgtable_cache_add(unsigned shift, void (*ctor)(void *))

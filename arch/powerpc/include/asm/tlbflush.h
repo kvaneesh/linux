@@ -94,7 +94,7 @@ struct ppc64_tlb_batch {
 	int			active;
 	unsigned long		index;
 	struct mm_struct	*mm;
-	real_pte_t		pte[PPC64_TLB_BATCH_NR];
+	pte_t			pte[PPC64_TLB_BATCH_NR];
 	unsigned long		vpn[PPC64_TLB_BATCH_NR];
 	unsigned int		psize;
 	int			ssize;
@@ -124,7 +124,7 @@ static inline void arch_leave_lazy_mmu_mode(void)
 #define arch_flush_lazy_mmu_mode()      do {} while (0)
 
 
-extern void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize,
+extern void flush_hash_page(unsigned long vpn, pte_t pte, int psize,
 			    int ssize, unsigned long flags);
 extern void flush_hash_range(unsigned long number, int local);
 extern void flush_hash_hugepage(unsigned long vsid, unsigned long addr,

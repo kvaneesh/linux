@@ -14,8 +14,7 @@
  */
 #define PTE_FRAG_NR	32
 /*
- * We use a 2K PTE page fragment and another 4K for storing
- * real_pte_t hash index. Rounding the entire thing to 8K
+ * We use a 2K PTE page fragment
  */
 #define PTE_FRAG_SIZE_SHIFT  11
 #define PTE_FRAG_SIZE (1UL << PTE_FRAG_SIZE_SHIFT)

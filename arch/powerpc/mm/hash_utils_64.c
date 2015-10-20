@@ -1294,7 +1294,7 @@ out_exit:
 /* WARNING: This is called from hash_low_64.S, if you change this prototype,
  *          do not forget to update the assembly call site !
  */
-void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
+void flush_hash_page(unsigned long vpn, pte_t pte, int psize, int ssize,
 		     unsigned long flags)
 {
 	bool valid_slot;
@@ -1304,7 +1304,7 @@ void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
 	DBG_LOW("flush_hash_page(vpn=%016lx)\n", vpn);
 	pte_iterate_hashed_subpages(vpn, psize, shift) {
 		hash = hpt_hash(vpn, shift, ssize);
-		hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
+		hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 		if (!valid_slot)
 			continue;
 		if (hidx & _PTEIDX_SECONDARY)

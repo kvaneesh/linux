@@ -535,7 +535,7 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 	int lock_tlbie = !mmu_has_feature(MMU_FTR_LOCKLESS_TLBIE);
 	unsigned long param[9];
 	unsigned long hash, shift, hidx, slot;
-	real_pte_t pte;
+	pte_t pte;
 	int psize, ssize;
 
 	if (lock_tlbie)
@@ -551,7 +551,7 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 		pte = batch->pte[i];
 		pte_iterate_hashed_subpages(vpn, psize, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
-			hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
+			hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 			if (!valid_slot)
 				continue;
 			if (hidx & _PTEIDX_SECONDARY)

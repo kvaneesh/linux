@@ -16,23 +16,14 @@
 #include <asm/machdep.h>
 #include <asm/mmu.h>
 
-real_pte_t __real_pte(unsigned long addr, pte_t pte, pte_t *ptep)
-{
-	real_pte_t rpte;
-
-	rpte.pte = pte;
-	return rpte;
-}
-
-unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
-			     unsigned long vpn, int ssize, bool *valid)
+unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
+			  unsigned long vpn, int ssize, bool *valid)
 {
 	long slot;
 	unsigned long want_v;
 
 	*valid = false;
-	if ((pte_val(rpte.pte) & _PAGE_COMBO)) {
-
+	if ((pte_val(pte) & _PAGE_COMBO)) {
 		want_v = hpte_encode_avpn(vpn, MMU_PAGE_4K, ssize);
 		slot = ppc_md.get_hpte_slot(want_v, hash);
 		if (slot < 0)
@@ -40,9 +31,9 @@ unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
 		*valid = true;
 		return slot;
 	}
-	if (pte_val(rpte.pte) & _PAGE_HASHPTE) {
+	if (pte_val(pte) & _PAGE_HASHPTE) {
 		*valid = true;
-		return (pte_val(rpte.pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
+		return (pte_val(pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
 	}
 	return 0;
 }
@@ -52,7 +43,6 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 		   int ssize, int subpg_prot)
 {
 	bool valid_slot;
-	real_pte_t rpte;
 	unsigned long hpte_group;
 	unsigned int subpg_index;
 	unsigned long rflags, pa, hidx;
@@ -101,10 +91,6 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 
 	subpg_index = (ea & (PAGE_SIZE - 1)) >> shift;
 	vpn  = hpt_vpn(ea, vsid, ssize);
-	if (!(old_pte & _PAGE_COMBO))
-		rpte = __real_pte(ea, __pte(old_pte | _PAGE_COMBO), ptep);
-	else
-		rpte = __real_pte(ea, __pte(old_pte), ptep);
 	/*
 	 *None of the sub 4k page is hashed
 	 */
@@ -115,7 +101,7 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 	 * as a 64k HW page, and invalidate the 64k HPTE if so.
 	 */
 	if (!(old_pte & _PAGE_COMBO)) {
-		flush_hash_page(vpn, rpte, MMU_PAGE_64K, ssize, flags);
+		flush_hash_page(vpn, __pte(old_pte), MMU_PAGE_64K, ssize, flags);
 		old_pte &= ~_PAGE_HASHPTE | _PAGE_F_GIX | _PAGE_F_SECOND;
 		goto htab_insert_hpte;
 	}
@@ -123,7 +109,7 @@ int __hash_page_4K(unsigned long ea, unsigned long access, unsigned long vsid,
 	 * Check for sub page valid and update
 	 */
 	hash = hpt_hash(vpn, shift, ssize);
-	hidx = __rpte_to_hidx(rpte, hash, vpn, ssize, &valid_slot);
+	hidx = pte_to_hidx(__pte(old_pte), hash, vpn, ssize, &valid_slot);
 	if (valid_slot) {
 		int ret;
 
@@ -205,6 +191,7 @@ repeat:
 	new_pte = (new_pte & ~_PAGE_HPTEFLAGS) | _PAGE_HASHPTE | _PAGE_COMBO;
 	/*
 	 * check __real_pte for details on matching smp_rmb()
+	 * FIXME!! We can possibly get rid of this ?
 	 */
 	smp_wmb();
 	*ptep = __pte(new_pte & ~_PAGE_BUSY);

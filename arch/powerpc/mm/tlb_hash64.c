@@ -41,14 +41,14 @@ DEFINE_PER_CPU(struct ppc64_tlb_batch, ppc64_tlb_batch);
  * batch on it.
  */
 void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
-		     pte_t *ptep, unsigned long pte, int huge)
+		     pte_t *ptep, unsigned long ptev, int huge)
 {
 	unsigned long vpn;
 	struct ppc64_tlb_batch *batch = &get_cpu_var(ppc64_tlb_batch);
 	unsigned long vsid;
 	unsigned int psize;
 	int ssize;
-	real_pte_t rpte;
+	pte_t pte;
 	int i;
 
 	i = batch->index;
@@ -67,10 +67,10 @@ void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 		addr &= ~((1UL << mmu_psize_defs[psize].shift) - 1);
 #else
 		BUG();
-		psize = pte_pagesize_index(mm, addr, pte); /* shutup gcc */
+		psize = pte_pagesize_index(mm, addr, ptev); /* shutup gcc */
 #endif
 	} else {
-		psize = pte_pagesize_index(mm, addr, pte);
+		psize = pte_pagesize_index(mm, addr, ptev);
 		/* Mask the address for the standard page size.  If we
 		 * have a 64k page kernel, but the hardware does not
 		 * support 64k pages, this might be different from the
@@ -89,8 +89,7 @@ void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 	}
 	WARN_ON(vsid == 0);
 	vpn = hpt_vpn(addr, vsid, ssize);
-	rpte = __real_pte(addr, __pte(pte), ptep);
-
+	pte = __pte(ptev);
 	/*
 	 * Check if we have an active batch on this CPU. If not, just
 	 * flush now and return. For now, we don global invalidates
@@ -98,7 +97,7 @@ void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 	 * and decide to use local invalidates instead...
 	 */
 	if (!batch->active) {
-		flush_hash_page(vpn, rpte, psize, ssize, 0);
+		flush_hash_page(vpn, pte, psize, ssize, 0);
 		put_cpu_var(ppc64_tlb_batch);
 		return;
 	}
@@ -123,7 +122,7 @@ void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 		batch->psize = psize;
 		batch->ssize = ssize;
 	}
-	batch->pte[i] = rpte;
+	batch->pte[i] = pte;
 	batch->vpn[i] = vpn;
 	batch->index = ++i;
 	if (i >= PPC64_TLB_BATCH_NR)

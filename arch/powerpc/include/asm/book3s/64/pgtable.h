@@ -35,45 +35,40 @@
 #define __HAVE_ARCH_PTE_SPECIAL
 
 #ifndef __ASSEMBLY__
-
 /*
  * This is the default implementation of various PTE accessors, it's
  * used in all cases except Book3S with 64K pages where we have a
  * concept of sub-pages
  */
-#ifndef __real_pte
-
-#ifdef CONFIG_STRICT_MM_TYPECHECKS
-#define __real_pte(a,e,p)	((real_pte_t){(e)})
-#define __rpte_to_pte(r)	((r).pte)
-#else
-#define __real_pte(a,e,p)	(e)
-#define __rpte_to_pte(r)	(__pte(r))
-#endif
-static inline unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
-					   unsigned long vpn, int ssize, bool *valid)
+#ifndef pte_to_hidx
+static inline unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
+					unsigned long vpn, int ssize, bool *valid)
 {
 	*valid = false;
-	if (pte_val(__rpte_to_pte(rpte)) & _PAGE_HASHPTE) {
+	if (pte_val(pte) & _PAGE_HASHPTE) {
 		*valid = true;
-		return (pte_val(__rpte_to_pte(rpte)) >> _PAGE_F_GIX_SHIFT) & 0xf;
+		return (pte_val(pte) >> _PAGE_F_GIX_SHIFT) & 0xf;
 	}
 	return 0;
 }
+#define pte_to_hidx pte_to_hidx
+#endif
 
-#define pte_iterate_hashed_subpages(vpn, psize, shift)		\
-	do {							\
-		shift = mmu_psize_defs[psize].shift;		\
+#ifndef pte_iterate_hashed_subpages
+#define pte_iterate_hashed_subpages(vpn, psize, shift)	\
+	do {						\
+		shift = mmu_psize_defs[psize].shift;	\
 
 #define pte_iterate_hashed_end() } while(0)
+#endif
 
 /*
  * We expect this to be called only for user addresses or kernel virtual
  * addresses other than the linear mapping.
  */
+#ifndef pte_pagesize_index
 #define pte_pagesize_index(mm, addr, pte)	MMU_PAGE_4K
-
-#endif /* __real_pte */
+#endif
 
 static inline void pmd_set(pmd_t *pmdp, unsigned long val)
 {
