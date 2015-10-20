@@ -645,7 +645,7 @@ static void native_hpte_clear(void)
 static void native_flush_hash_range(unsigned long number, int local)
 {
 	unsigned long vpn;
-	unsigned long hash, index, hidx, shift, slot;
+	unsigned long hash, hidx, shift, slot;
 	struct hash_pte *hptep;
 	unsigned long hpte_v;
 	unsigned long want_v;
@@ -664,7 +664,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 		vpn = batch->vpn[i];
 		pte = batch->pte[i];
 
-		pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
+		pte_iterate_hashed_subpages(vpn, psize, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
 			hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 			if (!valid_slot)
@@ -692,8 +692,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 			vpn = batch->vpn[i];
 			pte = batch->pte[i];
 
-			pte_iterate_hashed_subpages(pte, psize,
-						    vpn, index, shift) {
+			pte_iterate_hashed_subpages(vpn, psize, shift) {
 				/*
 				 * We are not looking at subpage valid here
 				 */
@@ -712,8 +711,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 			vpn = batch->vpn[i];
 			pte = batch->pte[i];
 
-			pte_iterate_hashed_subpages(pte, psize,
-						    vpn, index, shift) {
+			pte_iterate_hashed_subpages(vpn, psize, shift) {
 				/*
 				 * We are not looking at subpage valid here
 				 */

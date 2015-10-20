@@ -1298,11 +1298,11 @@ void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
 		     unsigned long flags)
 {
 	bool valid_slot;
-	unsigned long hash, index, shift, hidx, slot;
+	unsigned long hash, shift, hidx, slot;
 	int local = flags & HPTE_LOCAL_UPDATE;
 
 	DBG_LOW("flush_hash_page(vpn=%016lx)\n", vpn);
-	pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
+	pte_iterate_hashed_subpages(vpn, psize, shift) {
 		hash = hpt_hash(vpn, shift, ssize);
 		hidx = __rpte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 		if (!valid_slot)
@@ -1311,7 +1311,7 @@ void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
 			hash = ~hash;
 		slot = (hash & htab_hash_mask) * HPTES_PER_GROUP;
 		slot += hidx & _PTEIDX_GROUP_IX;
-		DBG_LOW(" sub %ld: hash=%lx, hidx=%lx\n", index, slot, hidx);
+		DBG_LOW(" hash=%lx, hidx=%lx\n", slot, hidx);
 		/*
 		 * We use same base page size and actual psize, because we don't
 		 * use these functions for hugepage

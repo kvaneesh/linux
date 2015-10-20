@@ -61,10 +61,9 @@ static inline unsigned long __rpte_to_hidx(real_pte_t rpte, unsigned long hash,
 	return 0;
 }
 
-#define pte_iterate_hashed_subpages(rpte, psize, va, index, shift)       \
-	do {							         \
-		index = 0;					         \
-		shift = mmu_psize_defs[psize].shift;		         \
+#define pte_iterate_hashed_subpages(vpn, psize, shift)		\
+	do {							\
+		shift = mmu_psize_defs[psize].shift;		\
 
 #define pte_iterate_hashed_end() } while(0)
 

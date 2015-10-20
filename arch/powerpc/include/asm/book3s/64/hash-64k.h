@@ -77,9 +77,10 @@ static inline pte_t __rpte_to_pte(real_pte_t rpte)
  * Trick: we set __end to va + 64k, which happens works for
  * a 16M page as well as we want only one iteration
  */
-#define pte_iterate_hashed_subpages(rpte, psize, vpn, index, shift)	\
+#define pte_iterate_hashed_subpages(vpn, psize, shift)			\
 	do {								\
-		unsigned long __end = vpn + (1UL << (PAGE_SHIFT - VPN_SHIFT));	\
+		unsigned long index;					\
+		unsigned long __end = vpn + (1UL << (PAGE_SHIFT - VPN_SHIFT)); \
 		shift = mmu_psize_defs[psize].shift;			\
 		for (index = 0; vpn < __end; index++,			\
 			     vpn += (1L << (shift - VPN_SHIFT))) {	\
