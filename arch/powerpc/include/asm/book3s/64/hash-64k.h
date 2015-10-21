@@ -27,6 +27,11 @@
 
 #define _PAGE_COMBO	0x00020000 /* this is a combo 4k page */
 #define _PAGE_4K_PFN	0x00040000 /* PFN is for a single 4k page */
+/*
+ * Used to track subpage group valid if _PAGE_COMBO is set
+ * This overloads _PAGE_F_GIX and _PAGE_F_SECOND
+ */
+#define _PAGE_COMBO_VALID	(_PAGE_F_GIX | _PAGE_F_SECOND)
 
 /* PTE flags to conserve for HPTE identification */
 #define _PAGE_HPTEFLAGS (_PAGE_BUSY | _PAGE_F_SECOND | \
@@ -66,17 +71,19 @@
 #define pte_to_hidx pte_to_hidx
 extern unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
 				 unsigned long vpn, int ssize, bool *valid);
+extern bool pte_or_subptegroup_valid(pte_t pte, unsigned long index);
 /*
  * Trick: we set __end to va + 64k, which happens works for
  * a 16M page as well as we want only one iteration
  */
-#define pte_iterate_hashed_subpages(vpn, psize, shift)			\
+#define pte_iterate_hashed_subpages(pte, vpn, psize, shift)		\
 	do {								\
 		unsigned long index;					\
 		unsigned long __end = vpn + (1UL << (PAGE_SHIFT - VPN_SHIFT)); \
 		shift = mmu_psize_defs[psize].shift;			\
 		for (index = 0; vpn < __end; index++,			\
 			     vpn += (1L << (shift - VPN_SHIFT))) {	\
+			if (pte_or_subptegroup_valid(pte, index))		\
 				do {
 
 #define pte_iterate_hashed_end() } while(0); } } while(0)

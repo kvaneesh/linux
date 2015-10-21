@@ -1302,7 +1302,7 @@ void flush_hash_page(unsigned long vpn, pte_t pte, int psize, int ssize,
 	int local = flags & HPTE_LOCAL_UPDATE;
 
 	DBG_LOW("flush_hash_page(vpn=%016lx)\n", vpn);
-	pte_iterate_hashed_subpages(vpn, psize, shift) {
+	pte_iterate_hashed_subpages(pte, vpn, psize, shift) {
 		hash = hpt_hash(vpn, shift, ssize);
 		hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 		if (!valid_slot)

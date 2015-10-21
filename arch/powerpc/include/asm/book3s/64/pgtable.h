@@ -55,9 +55,9 @@ static inline unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
 #endif
 
 #ifndef pte_iterate_hashed_subpages
-#define pte_iterate_hashed_subpages(vpn, psize, shift)	\
-	do {						\
-		shift = mmu_psize_defs[psize].shift;	\
+#define pte_iterate_hashed_subpages(pte, vpn, psize, shift)	\
+        do {                                                    \
+                shift = mmu_psize_defs[psize].shift;            \
 
 #define pte_iterate_hashed_end() } while(0)
 #endif

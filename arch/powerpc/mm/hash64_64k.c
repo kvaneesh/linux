@@ -16,6 +16,43 @@
 #include <asm/machdep.h>
 #include <asm/mmu.h>
 
+/*
+ * index from 0 - 15
+ */
+bool pte_or_subptegroup_valid(pte_t pte, unsigned long index)
+{
+	unsigned long ptev = pte_val(pte);
+
+	if (!(ptev & _PAGE_HASHPTE))
+		return false;
+	if (ptev & _PAGE_COMBO) {
+		unsigned long g_idx;
+
+		g_idx = (ptev & _PAGE_COMBO_VALID) >> _PAGE_F_GIX_SHIFT;
+		index = index >> 2;
+		if (g_idx & (0x1 << index))
+			return true;
+		else
+			return false;
+	}
+	return true;
+}
+
+/*
+ * index from 0 - 15
+ */
+static unsigned long mark_subptegroup_valid(unsigned long ptev, unsigned long index)
+{
+	unsigned long g_idx;
+
+	if (!(ptev & _PAGE_COMBO))
+		return ptev;
+	index = index >> 2;
+	g_idx = 0x1 << index;
+
+	return ptev | (g_idx << _PAGE_F_GIX_SHIFT);
+}
+
 unsigned long pte_to_hidx(pte_t pte, unsigned long hash,
 			  unsigned long vpn, int ssize, bool *valid)
 {
@@ -182,18 +219,8 @@ repeat:
 				   MMU_PAGE_4K, MMU_PAGE_4K, old_pte);
 		return -1;
 	}
-	/*
-	 * Insert slot number & secondary bit in PTE second half,
-	 * clear _PAGE_BUSY and set appropriate HPTE slot bit
-	 * Since we have _PAGE_BUSY set on ptep, we can be sure
-	 * nobody is undating hidx.
-	 */
-	new_pte = (new_pte & ~_PAGE_HPTEFLAGS) | _PAGE_HASHPTE | _PAGE_COMBO;
-	/*
-	 * check __real_pte for details on matching smp_rmb()
-	 * FIXME!! We can possibly get rid of this ?
-	 */
-	smp_wmb();
+	new_pte = mark_subptegroup_valid(new_pte, subpg_index);
+	new_pte |=  _PAGE_HASHPTE;
 	*ptep = __pte(new_pte & ~_PAGE_BUSY);
 	return 0;
 }

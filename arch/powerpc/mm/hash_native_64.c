@@ -664,7 +664,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 		vpn = batch->vpn[i];
 		pte = batch->pte[i];
 
-		pte_iterate_hashed_subpages(vpn, psize, shift) {
+		pte_iterate_hashed_subpages(pte, vpn, psize, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
 			hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 			if (!valid_slot)
@@ -692,10 +692,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 			vpn = batch->vpn[i];
 			pte = batch->pte[i];
 
-			pte_iterate_hashed_subpages(vpn, psize, shift) {
-				/*
-				 * We are not looking at subpage valid here
-				 */
+			pte_iterate_hashed_subpages(pte, vpn, psize, shift) {
 				__tlbiel(vpn, psize, psize, ssize);
 			} pte_iterate_hashed_end();
 		}
@@ -711,10 +708,7 @@ static void native_flush_hash_range(unsigned long number, int local)
 			vpn = batch->vpn[i];
 			pte = batch->pte[i];
 
-			pte_iterate_hashed_subpages(vpn, psize, shift) {
-				/*
-				 * We are not looking at subpage valid here
-				 */
+			pte_iterate_hashed_subpages(pte, vpn, psize, shift) {
 				__tlbie(vpn, psize, psize, ssize);
 			} pte_iterate_hashed_end();
 		}

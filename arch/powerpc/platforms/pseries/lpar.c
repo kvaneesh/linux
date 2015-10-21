@@ -549,7 +549,7 @@ static void pSeries_lpar_flush_hash_range(unsigned long number, int local)
 
 		vpn = batch->vpn[i];
 		pte = batch->pte[i];
-		pte_iterate_hashed_subpages(vpn, psize, shift) {
+		pte_iterate_hashed_subpages(pte, vpn, psize, shift) {
 			hash = hpt_hash(vpn, shift, ssize);
 			hidx = pte_to_hidx(pte, hash, vpn, ssize, &valid_slot);
 			if (!valid_slot)
