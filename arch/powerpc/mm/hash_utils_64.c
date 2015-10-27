@@ -860,7 +860,7 @@ unsigned int hash_page_do_lazy_icache(unsigned int pp, pte_t pte, int trap)
 {
 	struct page *page;
 
-	if (!pfn_valid(pte_pfn(pte)))
+	if (!pfn_valid(hlpte_pfn(pte)))
 		return pp;
 
 	page = pte_page(pte);
@@ -1602,7 +1602,7 @@ static pgprot_t hash_protection_map[16] = {
 	__HS010, __HS011, __HS100, __HS101, __HS110, __HS111
 };
 
-pgprot_t vm_get_page_prot(unsigned long vm_flags)
+pgprot_t hlvm_get_page_prot(unsigned long vm_flags)
 {
 	pgprot_t prot_soa = __pgprot(0);
 
@@ -1613,4 +1613,4 @@ pgprot_t vm_get_page_prot(unsigned long vm_flags)
 				(VM_READ|VM_WRITE|VM_EXEC|VM_SHARED)]) |
 			pgprot_val(prot_soa));
 }
-EXPORT_SYMBOL(vm_get_page_prot);
+EXPORT_SYMBOL(hlvm_get_page_prot);
