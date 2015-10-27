@@ -219,18 +219,18 @@
 #define H_PUD_BAD_BITS		(H_PMD_TABLE_SIZE-1)
 
 #ifndef __ASSEMBLY__
-#define	pmd_bad(pmd)		(!is_kernel_addr(pmd_val(pmd)) \
+#define	hlpmd_bad(pmd)		(!is_kernel_addr(pmd_val(pmd))		\
 				 || (pmd_val(pmd) & H_PMD_BAD_BITS))
-#define pmd_page_vaddr(pmd)	(pmd_val(pmd) & ~H_PMD_MASKED_BITS)
+#define hlpmd_page_vaddr(pmd)	(pmd_val(pmd) & ~H_PMD_MASKED_BITS)
 
-#define	pud_bad(pud)		(!is_kernel_addr(pud_val(pud)) \
+#define	hlpud_bad(pud)		(!is_kernel_addr(pud_val(pud))		\
 				 || (pud_val(pud) & H_PUD_BAD_BITS))
-#define pud_page_vaddr(pud)	(pud_val(pud) & ~H_PUD_MASKED_BITS)
+#define hlpud_page_vaddr(pud)	(pud_val(pud) & ~H_PUD_MASKED_BITS)
 
-#define pgd_index(address) (((address) >> (H_PGDIR_SHIFT)) & (H_PTRS_PER_PGD - 1))
-#define pud_index(address) (((address) >> (H_PUD_SHIFT)) & (H_PTRS_PER_PUD - 1))
-#define pmd_index(address) (((address) >> (H_PMD_SHIFT)) & (H_PTRS_PER_PMD - 1))
-#define pte_index(address) (((address) >> (PAGE_SHIFT)) & (H_PTRS_PER_PTE - 1))
+#define hlpgd_index(address) (((address) >> (H_PGDIR_SHIFT)) & (H_PTRS_PER_PGD - 1))
+#define hlpud_index(address) (((address) >> (H_PUD_SHIFT)) & (H_PTRS_PER_PUD - 1))
+#define hlpmd_index(address) (((address) >> (H_PMD_SHIFT)) & (H_PTRS_PER_PMD - 1))
+#define hlpte_index(address) (((address) >> (PAGE_SHIFT)) & (H_PTRS_PER_PTE - 1))
 
 /* Encode and de-code a swap entry */
 #define MAX_SWAPFILES_CHECK() do {					\
@@ -260,11 +260,11 @@ extern void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 			    pte_t *ptep, unsigned long pte, int huge);
 extern unsigned long htab_convert_pte_flags(unsigned long pteflags);
 /* Atomic PTE updates */
-static inline unsigned long pte_update(struct mm_struct *mm,
-				       unsigned long addr,
-				       pte_t *ptep, unsigned long clr,
-				       unsigned long set,
-				       int huge)
+static inline unsigned long hlpte_update(struct mm_struct *mm,
+					 unsigned long addr,
+					 pte_t *ptep, unsigned long clr,
+					 unsigned long set,
+					 int huge)
 {
 	unsigned long old, tmp;
 
@@ -297,42 +297,41 @@ static inline unsigned long pte_update(struct mm_struct *mm,
  * We should be more intelligent about this but for the moment we override
  * these functions and force a tlb flush unconditionally
  */
-static inline int __ptep_test_and_clear_young(struct mm_struct *mm,
+static inline int __hlptep_test_and_clear_young(struct mm_struct *mm,
 					      unsigned long addr, pte_t *ptep)
 {
 	unsigned long old;
 
 	if ((pte_val(*ptep) & (H_PAGE_ACCESSED | H_PAGE_HASHPTE)) == 0)
 		return 0;
-	old = pte_update(mm, addr, ptep, H_PAGE_ACCESSED, 0, 0);
+	old = hlpte_update(mm, addr, ptep, H_PAGE_ACCESSED, 0, 0);
 	return (old & H_PAGE_ACCESSED) != 0;
 }
 
-#define __HAVE_ARCH_PTEP_SET_WRPROTECT
-static inline void ptep_set_wrprotect(struct mm_struct *mm, unsigned long addr,
+static inline void hlptep_set_wrprotect(struct mm_struct *mm, unsigned long addr,
 				      pte_t *ptep)
 {
 
 	if ((pte_val(*ptep) & H_PAGE_RW) == 0)
 		return;
 
-	pte_update(mm, addr, ptep, H_PAGE_RW, 0, 0);
+	hlpte_update(mm, addr, ptep, H_PAGE_RW, 0, 0);
 }
 
-static inline void huge_ptep_set_wrprotect(struct mm_struct *mm,
+static inline void huge_hlptep_set_wrprotect(struct mm_struct *mm,
 					   unsigned long addr, pte_t *ptep)
 {
 	if ((pte_val(*ptep) & H_PAGE_RW) == 0)
 		return;
 
-	pte_update(mm, addr, ptep, H_PAGE_RW, 0, 1);
+	hlpte_update(mm, addr, ptep, H_PAGE_RW, 0, 1);
 }
 
 
 /* Set the dirty and/or accessed bits atomically in a linux PTE, this
  * function doesn't need to flush the hash entry
  */
-static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
+static inline void __hlptep_set_access_flags(pte_t *ptep, pte_t entry)
 {
 	unsigned long bits = pte_val(entry) &
 		(H_PAGE_DIRTY | H_PAGE_ACCESSED | H_PAGE_RW | H_PAGE_EXEC);
@@ -351,23 +350,46 @@ static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
 	:"cc");
 }
 
-static inline int pgd_bad(pgd_t pgd)
+static inline int hlpgd_bad(pgd_t pgd)
 {
 	return (pgd_val(pgd) == 0);
 }
 
 #define __HAVE_ARCH_PTE_SAME
-#define pte_same(A,B)	(((pte_val(A) ^ pte_val(B)) & ~H_PAGE_HPTEFLAGS) == 0)
-#define pgd_page_vaddr(pgd)	(pgd_val(pgd) & ~H_PGD_MASKED_BITS)
+#define hlpte_same(A,B)	(((pte_val(A) ^ pte_val(B)) & ~H_PAGE_HPTEFLAGS) == 0)
+#define hlpgd_page_vaddr(pgd)	(pgd_val(pgd) & ~H_PGD_MASKED_BITS)
 
 
 /* Generic accessors to PTE bits */
-static inline int pte_write(pte_t pte)		{ return !!(pte_val(pte) & H_PAGE_RW);}
-static inline int pte_dirty(pte_t pte)		{ return !!(pte_val(pte) & H_PAGE_DIRTY); }
-static inline int pte_young(pte_t pte)		{ return !!(pte_val(pte) & H_PAGE_ACCESSED); }
-static inline int pte_special(pte_t pte)	{ return !!(pte_val(pte) & H_PAGE_SPECIAL); }
-static inline int pte_none(pte_t pte)		{ return (pte_val(pte) & ~H_PTE_NONE_MASK) == 0; }
-static inline pgprot_t pte_pgprot(pte_t pte)	{ return __pgprot(pte_val(pte) & H_PAGE_PROT_BITS); }
+static inline int hlpte_write(pte_t pte)
+{
+	return !!(pte_val(pte) & H_PAGE_RW);
+}
+
+static inline int hlpte_dirty(pte_t pte)
+{
+	return !!(pte_val(pte) & H_PAGE_DIRTY);
+}
+
+static inline int hlpte_young(pte_t pte)
+{
+	return !!(pte_val(pte) & H_PAGE_ACCESSED);
+}
+
+static inline int hlpte_special(pte_t pte)
+{
+	return !!(pte_val(pte) & H_PAGE_SPECIAL);
+}
+
+static inline int hlpte_none(pte_t pte)
+{
+	return (pte_val(pte) & ~H_PTE_NONE_MASK) == 0;
+}
+
+static inline pgprot_t hlpte_pgprot(pte_t pte)
+{
+	return __pgprot(pte_val(pte) & H_PAGE_PROT_BITS);
+}
 
 #ifdef CONFIG_NUMA_BALANCING
 /*
@@ -375,14 +397,14 @@ static inline pgprot_t pte_pgprot(pte_t pte)	{ return __pgprot(pte_val(pte) & H_
  * comment in include/asm-generic/pgtable.h . On powerpc, this will only
  * work for user pages and always return true for kernel pages.
  */
-static inline int pte_protnone(pte_t pte)
+static inline int hlpte_protnone(pte_t pte)
 {
 	return (pte_val(pte) &
 		(H_PAGE_PRESENT | H_PAGE_USER)) == H_PAGE_PRESENT;
 }
 #endif /* CONFIG_NUMA_BALANCING */
 
-static inline int pte_present(pte_t pte)
+static inline int hlpte_present(pte_t pte)
 {
 	return pte_val(pte) & H_PAGE_PRESENT;
 }
@@ -393,59 +415,59 @@ static inline int pte_present(pte_t pte)
  * Even if PTEs can be unsigned long long, a PFN is always an unsigned
  * long for now.
  */
-static inline pte_t pfn_pte(unsigned long pfn, pgprot_t pgprot)
+static inline pte_t pfn_hlpte(unsigned long pfn, pgprot_t pgprot)
 {
 	return __pte(((pte_basic_t)(pfn) << H_PTE_RPN_SHIFT) |
 		     pgprot_val(pgprot));
 }
 
-static inline unsigned long pte_pfn(pte_t pte)
+static inline unsigned long hlpte_pfn(pte_t pte)
 {
 	return pte_val(pte) >> H_PTE_RPN_SHIFT;
 }
 
 /* Generic modifiers for PTE bits */
-static inline pte_t pte_wrprotect(pte_t pte)
+static inline pte_t hlpte_wrprotect(pte_t pte)
 {
 	return __pte(pte_val(pte) & ~H_PAGE_RW);
 }
 
-static inline pte_t pte_mkclean(pte_t pte)
+static inline pte_t hlpte_mkclean(pte_t pte)
 {
 	return __pte(pte_val(pte) & ~H_PAGE_DIRTY);
 }
 
-static inline pte_t pte_mkold(pte_t pte)
+static inline pte_t hlpte_mkold(pte_t pte)
 {
 	return __pte(pte_val(pte) & ~H_PAGE_ACCESSED);
 }
 
-static inline pte_t pte_mkwrite(pte_t pte)
+static inline pte_t hlpte_mkwrite(pte_t pte)
 {
 	return __pte(pte_val(pte) | H_PAGE_RW);
 }
 
-static inline pte_t pte_mkdirty(pte_t pte)
+static inline pte_t hlpte_mkdirty(pte_t pte)
 {
 	return __pte(pte_val(pte) | H_PAGE_DIRTY);
 }
 
-static inline pte_t pte_mkyoung(pte_t pte)
+static inline pte_t hlpte_mkyoung(pte_t pte)
 {
 	return __pte(pte_val(pte) | H_PAGE_ACCESSED);
 }
 
-static inline pte_t pte_mkspecial(pte_t pte)
+static inline pte_t hlpte_mkspecial(pte_t pte)
 {
 	return __pte(pte_val(pte) | H_PAGE_SPECIAL);
 }
 
-static inline pte_t pte_mkhuge(pte_t pte)
+static inline pte_t hlpte_mkhuge(pte_t pte)
 {
 	return pte;
 }
 
-static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
+static inline pte_t hlpte_modify(pte_t pte, pgprot_t newprot)
 {
 	return __pte((pte_val(pte) & H_PAGE_CHG_MASK) | pgprot_val(newprot));
 }
@@ -455,7 +477,7 @@ static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
  * an horrible mess that I'm not going to try to clean up now but
  * I'm keeping it in one place rather than spread around
  */
-static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
+static inline void __set_hlpte_at(struct mm_struct *mm, unsigned long addr,
 				pte_t *ptep, pte_t pte, int percpu)
 {
 	/*
@@ -472,55 +494,48 @@ static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
 #define H_PAGE_CACHE_CTL	(H_PAGE_COHERENT | H_PAGE_GUARDED | H_PAGE_NO_CACHE | \
 				 H_PAGE_WRITETHRU)
 
-#define pgprot_noncached pgprot_noncached
-static inline pgprot_t pgprot_noncached(pgprot_t prot)
+static inline pgprot_t hlpgprot_noncached(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~H_PAGE_CACHE_CTL) |
 			H_PAGE_NO_CACHE | H_PAGE_GUARDED);
 }
 
-#define pgprot_noncached_wc pgprot_noncached_wc
-static inline pgprot_t pgprot_noncached_wc(pgprot_t prot)
+static inline pgprot_t hlpgprot_noncached_wc(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~H_PAGE_CACHE_CTL) |
 			H_PAGE_NO_CACHE);
 }
 
-#define pgprot_cached pgprot_cached
-static inline pgprot_t pgprot_cached(pgprot_t prot)
+static inline pgprot_t hlpgprot_cached(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~H_PAGE_CACHE_CTL) |
 			H_PAGE_COHERENT);
 }
 
-#define pgprot_cached_wthru pgprot_cached_wthru
-static inline pgprot_t pgprot_cached_wthru(pgprot_t prot)
+static inline pgprot_t hlpgprot_cached_wthru(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~H_PAGE_CACHE_CTL) |
 			H_PAGE_COHERENT | H_PAGE_WRITETHRU);
 }
 
-#define pgprot_cached_noncoherent pgprot_cached_noncoherent
-static inline pgprot_t pgprot_cached_noncoherent(pgprot_t prot)
+static inline pgprot_t hlpgprot_cached_noncoherent(pgprot_t prot)
 {
 	return __pgprot(pgprot_val(prot) & ~H_PAGE_CACHE_CTL);
 }
 
-#define pgprot_writecombine pgprot_writecombine
-static inline pgprot_t pgprot_writecombine(pgprot_t prot)
+static inline pgprot_t hlpgprot_writecombine(pgprot_t prot)
 {
-	return pgprot_noncached_wc(prot);
+	return hlpgprot_noncached_wc(prot);
 }
 
-extern pgprot_t vm_get_page_prot(unsigned long vm_flags);
-#define vm_get_page_prot vm_get_page_prot
+extern pgprot_t hlvm_get_page_prot(unsigned long vm_flags);
 
-static inline unsigned long pte_io_cache_bits(void)
+static inline unsigned long hlpte_io_cache_bits(void)
 {
 	return H_PAGE_NO_CACHE | H_PAGE_GUARDED;
 }
 
-static inline unsigned long gup_pte_filter(int write)
+static inline unsigned long gup_hlpte_filter(int write)
 {
 	unsigned long mask;
 	mask = H_PAGE_PRESENT | H_PAGE_USER;

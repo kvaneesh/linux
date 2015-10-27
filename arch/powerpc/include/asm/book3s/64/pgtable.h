@@ -135,7 +135,7 @@ static inline int ptep_test_and_clear_young(struct vm_area_struct *vma,
 					    unsigned long address,
 					    pte_t *ptep)
 {
-	return  __ptep_test_and_clear_young(vma->vm_mm, address, ptep);
+	return  __hlptep_test_and_clear_young(vma->vm_mm, address, ptep);
 }
 
 #define __HAVE_ARCH_PTEP_CLEAR_YOUNG_FLUSH
@@ -144,7 +144,7 @@ static inline int ptep_clear_flush_young(struct vm_area_struct *vma,
 {
 	int young;
 
-	young = __ptep_test_and_clear_young(vma->vm_mm, address, ptep);
+	young = __hlptep_test_and_clear_young(vma->vm_mm, address, ptep);
 	if (young)
 		flush_tlb_page(vma, address);
 	return young;
@@ -154,14 +154,166 @@ static inline int ptep_clear_flush_young(struct vm_area_struct *vma,
 static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 				       unsigned long addr, pte_t *ptep)
 {
-	unsigned long old = pte_update(mm, addr, ptep, ~0UL, 0, 0);
+	unsigned long old = hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
 	return __pte(old);
 }
 
 static inline void pte_clear(struct mm_struct *mm, unsigned long addr,
 			     pte_t * ptep)
 {
-	pte_update(mm, addr, ptep, ~0UL, 0, 0);
+	hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
+}
+
+static inline int pte_index(unsigned long addr)
+{
+	return hlpte_index(addr);
+}
+
+static inline unsigned long pte_update(struct mm_struct *mm,
+				       unsigned long addr,
+				       pte_t *ptep, unsigned long clr,
+				       unsigned long set,
+				       int huge)
+{
+	return hlpte_update(mm, addr, ptep, clr, set, huge);
+}
+
+static inline int __ptep_test_and_clear_young(struct mm_struct *mm,
+					      unsigned long addr, pte_t *ptep)
+{
+	return __hlptep_test_and_clear_young(mm, addr, ptep);
+
+}
+
+#define __HAVE_ARCH_PTEP_SET_WRPROTECT
+static inline void ptep_set_wrprotect(struct mm_struct *mm, unsigned long addr,
+				      pte_t *ptep)
+{
+	return hlptep_set_wrprotect(mm, addr, ptep);
+}
+
+static inline void huge_ptep_set_wrprotect(struct mm_struct *mm,
+					   unsigned long addr, pte_t *ptep)
+{
+	return huge_hlptep_set_wrprotect(mm, addr, ptep);
+}
+
+
+/* Set the dirty and/or accessed bits atomically in a linux PTE, this
+ * function doesn't need to flush the hash entry
+ */
+static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
+{
+	return __hlptep_set_access_flags(ptep, entry);
+}
+
+#define __HAVE_ARCH_PTE_SAME
+static inline int pte_same(pte_t pte_a, pte_t pte_b)
+{
+	return hlpte_same(pte_a, pte_b);
+}
+
+static inline int pte_write(pte_t pte)
+{
+	return hlpte_write(pte);
+}
+
+static inline int pte_dirty(pte_t pte)
+{
+	return hlpte_dirty(pte);
+}
+
+static inline int pte_young(pte_t pte)
+{
+	return hlpte_young(pte);
+}
+
+static inline int pte_special(pte_t pte)
+{
+	return hlpte_special(pte);
+}
+
+static inline int pte_none(pte_t pte)
+{
+	return hlpte_none(pte);
+}
+
+static inline pgprot_t pte_pgprot(pte_t pte)
+{
+	return hlpte_pgprot(pte);
+}
+
+static inline pte_t pfn_pte(unsigned long pfn, pgprot_t pgprot)
+{
+	return pfn_hlpte(pfn, pgprot);
+}
+
+static inline unsigned long pte_pfn(pte_t pte)
+{
+	return hlpte_pfn(pte);
+}
+
+static inline pte_t pte_wrprotect(pte_t pte)
+{
+	return hlpte_wrprotect(pte);
+}
+
+static inline pte_t pte_mkclean(pte_t pte)
+{
+	return hlpte_mkclean(pte);
+}
+
+static inline pte_t pte_mkold(pte_t pte)
+{
+	return hlpte_mkold(pte);
+}
+
+static inline pte_t pte_mkwrite(pte_t pte)
+{
+	return hlpte_mkwrite(pte);
+}
+
+static inline pte_t pte_mkdirty(pte_t pte)
+{
+	return hlpte_mkdirty(pte);
+}
+
+static inline pte_t pte_mkyoung(pte_t pte)
+{
+	return hlpte_mkyoung(pte);
+}
+
+static inline pte_t pte_mkspecial(pte_t pte)
+{
+	return hlpte_mkspecial(pte);
+}
+
+static inline pte_t pte_mkhuge(pte_t pte)
+{
+	return hlpte_mkhuge(pte);
+}
+
+static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
+{
+	return hlpte_modify(pte, newprot);
+}
+
+static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
+				pte_t *ptep, pte_t pte, int percpu)
+{
+	return __set_hlpte_at(mm, addr, ptep, pte, percpu);
+}
+
+#ifdef CONFIG_NUMA_BALANCING
+static inline int pte_protnone(pte_t pte)
+{
+	return hlpte_protnone(pte);
+}
+#endif /* CONFIG_NUMA_BALANCING */
+
+static inline int pte_present(pte_t pte)
+{
+	return hlpte_present(pte);
 }
 
 static inline void pmd_set(pmd_t *pmdp, unsigned long val)
@@ -173,6 +325,22 @@ static inline void pmd_clear(pmd_t *pmdp)
 {
 	*pmdp = __pmd(0);
 }
+
+static inline int pmd_bad(pmd_t pmd)
+{
+	return hlpmd_bad(pmd);
+}
+
+static inline unsigned long pmd_page_vaddr(pmd_t pmd)
+{
+	return hlpmd_page_vaddr(pmd);
+}
+
+static inline int pmd_index(unsigned long addr)
+{
+	return hlpmd_index(addr);
+}
+
 
 #define pmd_none(pmd)		(!pmd_val(pmd))
 #define	pmd_present(pmd)	(!pmd_none(pmd))
@@ -201,6 +369,22 @@ static inline pud_t pte_pud(pte_t pte)
 {
 	return __pud(pte_val(pte));
 }
+
+static inline int pud_bad(pud_t pud)
+{
+	return hlpud_bad(pud);
+}
+
+static inline unsigned long pud_page_vaddr(pud_t pud)
+{
+	return hlpud_page_vaddr(pud);
+}
+
+static inline int pud_index(unsigned long addr)
+{
+	return hlpud_index(addr);
+}
+
 #define pud_write(pud)		pte_write(pud_pte(pud))
 #define pgd_write(pgd)		pte_write(pgd_pte(pgd))
 static inline void pgd_set(pgd_t *pgdp, unsigned long val)
@@ -224,6 +408,21 @@ static inline pte_t pgd_pte(pgd_t pgd)
 static inline pgd_t pte_pgd(pte_t pte)
 {
 	return __pgd(pte_val(pte));
+}
+
+static inline int pgd_bad(pgd_t pgd)
+{
+	return hlpgd_bad(pgd);
+}
+
+static inline unsigned long pgd_page_vaddr(pgd_t pgd)
+{
+	return hlpgd_page_vaddr(pgd);
+}
+
+static inline int pgd_index(unsigned long addr)
+{
+	return hlpgd_index(addr);
 }
 
 extern struct page *pgd_page(pgd_t pgd);
@@ -356,5 +555,59 @@ static inline int pmd_move_must_withdraw(struct spinlock *new_pmd_ptl,
 	 */
 	return true;
 }
+
+#define pgprot_noncached pgprot_noncached
+static inline pgprot_t pgprot_noncached(pgprot_t prot)
+{
+	return hlpgprot_noncached(prot);
+}
+
+#define pgprot_noncached_wc pgprot_noncached_wc
+static inline pgprot_t pgprot_noncached_wc(pgprot_t prot)
+{
+	return hlpgprot_noncached_wc(prot);
+}
+
+#define pgprot_cached pgprot_cached
+static inline pgprot_t pgprot_cached(pgprot_t prot)
+{
+	return hlpgprot_cached(prot);
+}
+
+#define pgprot_cached_wthru pgprot_cached_wthru
+static inline pgprot_t pgprot_cached_wthru(pgprot_t prot)
+{
+	return hlpgprot_cached_wthru(prot);
+}
+
+#define pgprot_cached_noncoherent pgprot_cached_noncoherent
+static inline pgprot_t pgprot_cached_noncoherent(pgprot_t prot)
+{
+	return hlpgprot_cached_noncoherent(prot);
+}
+
+#define pgprot_writecombine pgprot_writecombine
+static inline pgprot_t pgprot_writecombine(pgprot_t prot)
+{
+	return hlpgprot_writecombine(prot);
+}
+
+/* We want to override core implemntation of this for book3s 64 */
+#define vm_get_page_prot vm_get_page_prot
+static inline pgprot_t vm_get_page_prot(unsigned long vm_flags)
+{
+	return hlvm_get_page_prot(vm_flags);
+}
+
+static inline unsigned long pte_io_cache_bits(void)
+{
+	return hlpte_io_cache_bits();
+}
+
+static inline unsigned long gup_pte_filter(int write)
+{
+	return gup_hlpte_filter(write);
+}
+
 #endif /* __ASSEMBLY__ */
 #endif /* _ASM_POWERPC_BOOK3S_64_PGTABLE_H_ */
