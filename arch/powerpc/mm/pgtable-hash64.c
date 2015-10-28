@@ -258,17 +258,17 @@ void set_hlpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
  * handled those two for us, we additionally deal with missing execute
  * permission here on some processors
  */
-int pmdp_set_access_flags(struct vm_area_struct *vma, unsigned long address,
-			  pmd_t *pmdp, pmd_t entry, int dirty)
+int hlpmdp_set_access_flags(struct vm_area_struct *vma, unsigned long address,
+			    pmd_t *pmdp, pmd_t entry, int dirty)
 {
 	int changed;
 #ifdef CONFIG_DEBUG_VM
-	WARN_ON(!pmd_trans_huge(*pmdp));
+	WARN_ON(!hlpmd_trans_huge(*pmdp));
 	assert_spin_locked(&vma->vm_mm->page_table_lock);
 #endif
-	changed = !pmd_same(*(pmdp), entry);
+	changed = !hlpmd_same(*(pmdp), entry);
 	if (changed) {
-		__ptep_set_access_flags(pmdp_ptep(pmdp), pmd_pte(entry));
+		__hlptep_set_access_flags(pmdp_ptep(pmdp), pmd_pte(entry));
 		/*
 		 * Since we are not supporting SW TLB systems, we don't
 		 * have any thing similar to flush_tlb_page_nohash()
@@ -277,7 +277,7 @@ int pmdp_set_access_flags(struct vm_area_struct *vma, unsigned long address,
 	return changed;
 }
 
-unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
+unsigned long hlpmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 				  pmd_t *pmdp, unsigned long clr,
 				  unsigned long set)
 {
@@ -285,7 +285,7 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 	unsigned long old, tmp;
 
 #ifdef CONFIG_DEBUG_VM
-	WARN_ON(!pmd_trans_huge(*pmdp));
+	WARN_ON(!hlpmd_trans_huge(*pmdp));
 	assert_spin_locked(&mm->page_table_lock);
 #endif
 
@@ -311,13 +311,13 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 	return old;
 }
 
-pmd_t pmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
+pmd_t hlpmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
 			  pmd_t *pmdp)
 {
 	pmd_t pmd;
 
 	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
-	VM_BUG_ON(pmd_trans_huge(*pmdp));
+	VM_BUG_ON(hlpmd_trans_huge(*pmdp));
 
 	pmd = *pmdp;
 	pmd_clear(pmdp);
@@ -358,17 +358,17 @@ pmd_t pmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
  * We should be more intelligent about this but for the moment we override
  * these functions and force a tlb flush unconditionally
  */
-int pmdp_test_and_clear_young(struct vm_area_struct *vma,
+int hlpmdp_test_and_clear_young(struct vm_area_struct *vma,
 			      unsigned long address, pmd_t *pmdp)
 {
-	return __pmdp_test_and_clear_young(vma->vm_mm, address, pmdp);
+	return __hlpmdp_test_and_clear_young(vma->vm_mm, address, pmdp);
 }
 
 /*
  * We want to put the pgtable in pmd and use pgtable for tracking
  * the base page size hptes
  */
-void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+void hlpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 				pgtable_t pgtable)
 {
 	pgtable_t *pgtable_slot;
@@ -387,7 +387,7 @@ void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
 	smp_wmb();
 }
 
-pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
+pgtable_t hlpgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
 {
 	pgtable_t pgtable;
 	pgtable_t *pgtable_slot;
@@ -407,8 +407,8 @@ pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
 	return pgtable;
 }
 
-void pmdp_huge_split_prepare(struct vm_area_struct *vma,
-			     unsigned long address, pmd_t *pmdp)
+void hlpmdp_huge_split_prepare(struct vm_area_struct *vma,
+			       unsigned long address, pmd_t *pmdp)
 {
 	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
 
@@ -427,7 +427,7 @@ void pmdp_huge_split_prepare(struct vm_area_struct *vma,
 	 * the translation is still valid, because we will withdraw
 	 * pgtable_t after this.
 	 */
-	pmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_USER, 0);
+	hlpmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_USER, 0);
 }
 
 
@@ -435,27 +435,27 @@ void pmdp_huge_split_prepare(struct vm_area_struct *vma,
  * set a new huge pmd. We should not be called for updating
  * an existing pmd entry. That should go via pmd_hugepage_update.
  */
-void set_pmd_at(struct mm_struct *mm, unsigned long addr,
+void set_hlpmd_at(struct mm_struct *mm, unsigned long addr,
 		pmd_t *pmdp, pmd_t pmd)
 {
 #ifdef CONFIG_DEBUG_VM
 	WARN_ON((pmd_val(*pmdp) & (H_PAGE_PRESENT | H_PAGE_USER)) ==
 		(H_PAGE_PRESENT | H_PAGE_USER));
 	assert_spin_locked(&mm->page_table_lock);
-	WARN_ON(!pmd_trans_huge(pmd));
+	WARN_ON(!hlpmd_trans_huge(pmd));
 #endif
 	trace_hugepage_set_pmd(addr, pmd_val(pmd));
-	return set_pte_at(mm, addr, pmdp_ptep(pmdp), pmd_pte(pmd));
+	return set_hlpte_at(mm, addr, pmdp_ptep(pmdp), pmd_pte(pmd));
 }
 
 /*
  * We use this to invalidate a pmdp entry before switching from a
  * hugepte to regular pmd entry.
  */
-void pmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+void hlpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
 		     pmd_t *pmdp)
 {
-	pmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_PRESENT, 0);
+	hlpmd_hugepage_update(vma->vm_mm, address, pmdp, H_PAGE_PRESENT, 0);
 	/*
 	 * This ensures that generic code that rely on IRQ disabling
 	 * to prevent a parallel THP split work as expected.
@@ -502,31 +502,31 @@ void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 	return flush_hash_hugepage(vsid, addr, pmdp, psize, ssize, flags);
 }
 
-static pmd_t pmd_set_protbits(pmd_t pmd, pgprot_t pgprot)
+static pmd_t hlpmd_set_protbits(pmd_t pmd, pgprot_t pgprot)
 {
 	return __pmd(pmd_val(pmd) | pgprot_val(pgprot));
 }
 
-pmd_t pfn_pmd(unsigned long pfn, pgprot_t pgprot)
+pmd_t pfn_hlpmd(unsigned long pfn, pgprot_t pgprot)
 {
 	unsigned long pmdv;
 
 	pmdv = pfn << H_PTE_RPN_SHIFT;
-	return pmd_set_protbits(__pmd(pmdv), pgprot);
+	return hlpmd_set_protbits(__pmd(pmdv), pgprot);
 }
 
-pmd_t mk_pmd(struct page *page, pgprot_t pgprot)
+pmd_t mk_hlpmd(struct page *page, pgprot_t pgprot)
 {
-	return pfn_pmd(page_to_pfn(page), pgprot);
+	return pfn_hlpmd(page_to_pfn(page), pgprot);
 }
 
-pmd_t pmd_modify(pmd_t pmd, pgprot_t newprot)
+pmd_t hlpmd_modify(pmd_t pmd, pgprot_t newprot)
 {
 	unsigned long pmdv;
 
 	pmdv = pmd_val(pmd);
 	pmdv &= H_HPAGE_CHG_MASK;
-	return pmd_set_protbits(__pmd(pmdv), newprot);
+	return hlpmd_set_protbits(__pmd(pmdv), newprot);
 }
 
 /*
@@ -535,13 +535,13 @@ pmd_t pmd_modify(pmd_t pmd, pgprot_t newprot)
  * We use it to preload an HPTE into the hash table corresponding to
  * the updated linux HUGE PMD entry.
  */
-void update_mmu_cache_pmd(struct vm_area_struct *vma, unsigned long addr,
+void hlupdate_mmu_cache_pmd(struct vm_area_struct *vma, unsigned long addr,
 			  pmd_t *pmd)
 {
 	return;
 }
 
-pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
+pmd_t hlpmdp_huge_get_and_clear(struct mm_struct *mm,
 			      unsigned long addr, pmd_t *pmdp)
 {
 	pmd_t old_pmd;
@@ -549,7 +549,7 @@ pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
 	unsigned long old;
 	pgtable_t *pgtable_slot;
 
-	old = pmd_hugepage_update(mm, addr, pmdp, ~0UL, 0);
+	old = hlpmd_hugepage_update(mm, addr, pmdp, ~0UL, 0);
 	old_pmd = __pmd(old);
 	/*
 	 * We have pmd == none and we are holding page_table_lock.
@@ -577,7 +577,7 @@ pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
 	return old_pmd;
 }
 
-int has_transparent_hugepage(void)
+int hl_has_transparent_hugepage(void)
 {
 
 	BUILD_BUG_ON_MSG((H_PMD_SHIFT - PAGE_SHIFT) >= MAX_ORDER,
