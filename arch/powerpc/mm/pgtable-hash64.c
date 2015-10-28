@@ -52,7 +52,7 @@ static void pmd_ctor(void *addr)
 }
 
 
-void pgtable_cache_init(void)
+void hlpgtable_cache_init(void)
 {
 	pgtable_cache_add(H_PGD_INDEX_SIZE, pgd_ctor);
 	pgtable_cache_add(H_PMD_CACHE_INDEX, pmd_ctor);
@@ -75,9 +75,9 @@ void pgtable_cache_init(void)
  * On hash-based CPUs, the vmemmap is bolted in the hash table.
  *
  */
-void __meminit vmemmap_create_mapping(unsigned long start,
-				      unsigned long page_size,
-				      unsigned long phys)
+void __meminit hlvmemmap_create_mapping(unsigned long start,
+					unsigned long page_size,
+					unsigned long phys)
 {
 	int  mapped = htab_bolt_mapping(start, start + page_size, phys,
 					pgprot_val(H_PAGE_KERNEL),
@@ -87,8 +87,8 @@ void __meminit vmemmap_create_mapping(unsigned long start,
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG
-void vmemmap_remove_mapping(unsigned long start,
-			    unsigned long page_size)
+void hlvmemmap_remove_mapping(unsigned long start,
+			      unsigned long page_size)
 {
 	int mapped = htab_remove_mapping(start, start + page_size,
 					 mmu_vmemmap_psize,
@@ -98,8 +98,8 @@ void vmemmap_remove_mapping(unsigned long start,
 #endif
 #endif /* CONFIG_SPARSEMEM_VMEMMAP */
 
-void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
-		      pte_t *ptep)
+void hlupdate_mmu_cache(struct vm_area_struct *vma, unsigned long address,
+			pte_t *ptep)
 {
 	/*
 	 * We don't need to worry about _PAGE_PRESENT here because we are
@@ -133,7 +133,7 @@ void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
  * map_kernel_page adds an entry to the ioremap page table
  * and adds an entry to the HPT, possibly bolting it
  */
-int map_kernel_page(unsigned long ea, unsigned long pa, int flags)
+int hlmap_kernel_page(unsigned long ea, unsigned long pa, int flags)
 {
 	pgd_t *pgdp;
 	pud_t *pudp;
@@ -178,7 +178,7 @@ int map_kernel_page(unsigned long ea, unsigned long pa, int flags)
  * and we avoid _PAGE_SPECIAL and _PAGE_NO_CACHE. We also only do that
  * on userspace PTEs
  */
-static inline int pte_looks_normal(pte_t pte)
+static inline int hlpte_looks_normal(pte_t pte)
 {
 	return (pte_val(pte) & (H_PAGE_PRESENT | H_PAGE_SPECIAL |
 					H_PAGE_NO_CACHE | H_PAGE_USER)) ==
@@ -203,11 +203,11 @@ static struct page *maybe_pte_to_page(pte_t pte)
  * flush the cache for valid PTEs in set_pte. Embedded CPU without HW exec
  * support falls into the same category.
  */
-static pte_t set_pte_filter(pte_t pte)
+static pte_t set_hlpte_filter(pte_t pte)
 {
 	pte = __pte(pte_val(pte) & ~H_PAGE_HPTEFLAGS);
-	if (pte_looks_normal(pte) && !(cpu_has_feature(CPU_FTR_COHERENT_ICACHE) ||
-				       cpu_has_feature(CPU_FTR_NOEXECUTE))) {
+	if (hlpte_looks_normal(pte) && !(cpu_has_feature(CPU_FTR_COHERENT_ICACHE) ||
+					 cpu_has_feature(CPU_FTR_NOEXECUTE))) {
 		struct page *pg = maybe_pte_to_page(pte);
 		if (!pg)
 			return pte;
@@ -222,8 +222,8 @@ static pte_t set_pte_filter(pte_t pte)
 /*
  * set_pte stores a linux PTE into the linux page table.
  */
-void set_pte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
-		pte_t pte)
+void set_hlpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
+		  pte_t pte)
 {
 	/*
 	 * When handling numa faults, we already have the pte marked
@@ -242,10 +242,10 @@ void set_pte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 	 * this context might not have been activated yet when this
 	 * is called.
 	 */
-	pte = set_pte_filter(pte);
+	pte = set_hlpte_filter(pte);
 
 	/* Perform the setting of the PTE */
-	__set_pte_at(mm, addr, ptep, pte, 0);
+	__set_hlpte_at(mm, addr, ptep, pte, 0);
 }
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE

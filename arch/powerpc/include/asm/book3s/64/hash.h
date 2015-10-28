@@ -567,7 +567,17 @@ static inline void hpte_do_hugepage_flush(struct mm_struct *mm,
 }
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
-extern int map_kernel_page(unsigned long ea, unsigned long pa, int flags);
+extern int hlmap_kernel_page(unsigned long ea, unsigned long pa, int flags);
+extern void hlpgtable_cache_init(void);
+extern void __meminit hlvmemmap_create_mapping(unsigned long start,
+					       unsigned long page_size,
+					       unsigned long phys);
+extern void hlvmemmap_remove_mapping(unsigned long start,
+				     unsigned long page_size);
+extern void set_hlpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
+			 pte_t pte);
+extern void hlupdate_mmu_cache(struct vm_area_struct *vma, unsigned long address,
+			       pte_t *ptep);
 #endif /* !__ASSEMBLY__ */
 #endif /* __KERNEL__ */
 #endif /* _ASM_POWERPC_BOOK3S_64_HASH_H */
