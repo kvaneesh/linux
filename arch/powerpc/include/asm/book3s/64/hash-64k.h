@@ -190,11 +190,19 @@ static inline int hugepd_ok(hugepd_t hpd)
 #endif /* CONFIG_HUGETLB_PAGE */
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-extern unsigned long pmd_hugepage_update(struct mm_struct *mm,
-					 unsigned long addr,
-					 pmd_t *pmdp,
-					 unsigned long clr,
-					 unsigned long set);
+
+extern pmd_t pfn_hlpmd(unsigned long pfn, pgprot_t pgprot);
+extern pmd_t mk_hlpmd(struct page *page, pgprot_t pgprot);
+extern pmd_t hlpmd_modify(pmd_t pmd, pgprot_t newprot);
+extern int hl_has_transparent_hugepage(void);
+extern void set_hlpmd_at(struct mm_struct *mm, unsigned long addr,
+			 pmd_t *pmdp, pmd_t pmd);
+
+extern unsigned long hlpmd_hugepage_update(struct mm_struct *mm,
+					   unsigned long addr,
+					   pmd_t *pmdp,
+					   unsigned long clr,
+					   unsigned long set);
 static inline char *get_hpte_slot_array(pmd_t *pmdp)
 {
 	/*
@@ -253,63 +261,67 @@ static inline void mark_hpte_slot_valid(unsigned char *hpte_slot_array,
  * that for explicit huge pages.
  *
  */
-static inline int pmd_trans_huge(pmd_t pmd)
+static inline int hlpmd_trans_huge(pmd_t pmd)
 {
 	return !!((pmd_val(pmd) & (H_PAGE_PTE | H_PAGE_THP_HUGE)) ==
 		  (H_PAGE_PTE | H_PAGE_THP_HUGE));
 }
 
-static inline int pmd_trans_splitting(pmd_t pmd)
+static inline int hlpmd_trans_splitting(pmd_t pmd)
 {
-	if (pmd_trans_huge(pmd))
+	if (hlpmd_trans_huge(pmd))
 		return pmd_val(pmd) & H_PAGE_SPLITTING;
 	return 0;
 }
 
-static inline int pmd_large(pmd_t pmd)
+static inline int hlpmd_large(pmd_t pmd)
 {
 	return !!(pmd_val(pmd) & H_PAGE_PTE);
 }
 
-static inline pmd_t pmd_mknotpresent(pmd_t pmd)
+static inline pmd_t hlpmd_mknotpresent(pmd_t pmd)
 {
 	return __pmd(pmd_val(pmd) & ~H_PAGE_PRESENT);
 }
 
-static inline pmd_t pmd_mksplitting(pmd_t pmd)
+static inline pmd_t hlpmd_mksplitting(pmd_t pmd)
 {
 	return __pmd(pmd_val(pmd) | H_PAGE_SPLITTING);
 }
 
-#define __HAVE_ARCH_PMD_SAME
-static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
+static inline pmd_t hlpmd_mkhuge(pmd_t pmd)
+{
+	return __pmd(pmd_val(pmd) | (H_PAGE_PTE | H_PAGE_THP_HUGE));
+}
+
+static inline int hlpmd_same(pmd_t pmd_a, pmd_t pmd_b)
 {
 	return (((pmd_val(pmd_a) ^ pmd_val(pmd_b)) & ~H_PAGE_HPTEFLAGS) == 0);
 }
 
-static inline int __pmdp_test_and_clear_young(struct mm_struct *mm,
+static inline int __hlpmdp_test_and_clear_young(struct mm_struct *mm,
 					      unsigned long addr, pmd_t *pmdp)
 {
 	unsigned long old;
 
 	if ((pmd_val(*pmdp) & (H_PAGE_ACCESSED | H_PAGE_HASHPTE)) == 0)
 		return 0;
-	old = pmd_hugepage_update(mm, addr, pmdp, H_PAGE_ACCESSED, 0);
+	old = hlpmd_hugepage_update(mm, addr, pmdp, H_PAGE_ACCESSED, 0);
 	return ((old & H_PAGE_ACCESSED) != 0);
 }
 
-#define __HAVE_ARCH_PMDP_SET_WRPROTECT
-static inline void pmdp_set_wrprotect(struct mm_struct *mm, unsigned long addr,
+static inline void hlpmdp_set_wrprotect(struct mm_struct *mm, unsigned long addr,
 				      pmd_t *pmdp)
 {
 
 	if ((pmd_val(*pmdp) & H_PAGE_RW) == 0)
 		return;
 
-	pmd_hugepage_update(mm, addr, pmdp, H_PAGE_RW, 0);
+	hlpmd_hugepage_update(mm, addr, pmdp, H_PAGE_RW, 0);
 }
 
 #endif /*  CONFIG_TRANSPARENT_HUGEPAGE */
+
 #endif	/* __ASSEMBLY__ */
 
 #endif /* _ASM_POWERPC_BOOK3S_64_HASH_64K_H */

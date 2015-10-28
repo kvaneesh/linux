@@ -567,6 +567,22 @@ static inline void hpte_do_hugepage_flush(struct mm_struct *mm,
 }
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
+extern int hlpmdp_set_access_flags(struct vm_area_struct *vma,
+                                   unsigned long address, pmd_t *pmdp,
+                                   pmd_t entry, int dirty);
+extern int hlpmdp_test_and_clear_young(struct vm_area_struct *vma,
+                                       unsigned long address, pmd_t *pmdp);
+extern pmd_t hlpmdp_huge_get_and_clear(struct mm_struct *mm,
+                                       unsigned long addr, pmd_t *pmdp);
+extern void hlpmdp_splitting_flush(struct vm_area_struct *vma,
+                                   unsigned long address, pmd_t *pmdp);
+extern pmd_t hlpmdp_collapse_flush(struct vm_area_struct *vma,
+                                   unsigned long address, pmd_t *pmdp);
+extern void hlpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+                                         pgtable_t pgtable);
+extern pgtable_t hlpgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+extern void hlpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+                              pmd_t *pmdp);
 extern int hlmap_kernel_page(unsigned long ea, unsigned long pa, int flags);
 extern void hlpgtable_cache_init(void);
 extern void __meminit hlvmemmap_create_mapping(unsigned long start,

@@ -508,14 +508,108 @@ static inline void update_mmu_cache(struct vm_area_struct *vma, unsigned long ad
 struct page *realmode_pfn_to_page(unsigned long pfn);
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-extern pmd_t pfn_pmd(unsigned long pfn, pgprot_t pgprot);
-extern pmd_t mk_pmd(struct page *page, pgprot_t pgprot);
-extern pmd_t pmd_modify(pmd_t pmd, pgprot_t newprot);
-extern void set_pmd_at(struct mm_struct *mm, unsigned long addr,
-		       pmd_t *pmdp, pmd_t pmd);
-extern void update_mmu_cache_pmd(struct vm_area_struct *vma, unsigned long addr,
-				 pmd_t *pmd);
-extern int has_transparent_hugepage(void);
+/*
+ *
+ * For core kernel code by design pmd_trans_huge is never run on any hugetlbfs
+ * page. The hugetlbfs page table walking and mangling paths are totally
+ * separated form the core VM paths and they're differentiated by
+ *  VM_HUGETLB being set on vm_flags well before any pmd_trans_huge could run.
+ *
+ * pmd_trans_huge() is defined as false at build time if
+ * CONFIG_TRANSPARENT_HUGEPAGE=n to optimize away code blocks at build
+ * time in such case.
+ *
+ * For ppc64 we need to differntiate from explicit hugepages from THP, because
+ * for THP we also track the subpage details at the pmd level. We don't do
+ * that for explicit huge pages.
+ *
+ */
+static inline int pmd_trans_huge(pmd_t pmd)
+{
+	return hlpmd_trans_huge(pmd);
+}
+
+static inline int pmd_trans_splitting(pmd_t pmd)
+{
+	return hlpmd_trans_splitting(pmd);
+}
+
+static inline pmd_t pfn_pmd(unsigned long pfn, pgprot_t pgprot)
+{
+	return pfn_hlpmd(pfn, pgprot);
+}
+
+static inline pmd_t mk_pmd(struct page *page, pgprot_t pgprot)
+{
+	return mk_hlpmd(page, pgprot);
+}
+
+static inline pmd_t pmd_modify(pmd_t pmd, pgprot_t newprot)
+{
+	return hlpmd_modify(pmd, newprot);
+}
+/*
+ * This is called at the end of handling a user page fault, when the
+ * fault has been handled by updating a HUGE PMD entry in the linux page tables.
+ * We use it to preload an HPTE into the hash table corresponding to
+ * the updated linux HUGE PMD entry.
+ */
+static inline void update_mmu_cache_pmd(struct vm_area_struct *vma,
+					unsigned long addr, pmd_t *pmd)
+{
+	return;
+}
+
+static inline int has_transparent_hugepage(void)
+{
+	return hl_has_transparent_hugepage();
+}
+
+static inline void set_pmd_at(struct mm_struct *mm, unsigned long addr,
+			      pmd_t *pmdp, pmd_t pmd)
+{
+	return set_hlpmd_at(mm, addr, pmdp, pmd);
+}
+
+static inline int pmd_large(pmd_t pmd)
+{
+	return hlpmd_large(pmd);
+}
+
+static inline pmd_t pmd_mknotpresent(pmd_t pmd)
+{
+	return hlpmd_mknotpresent(pmd);
+}
+
+static inline pmd_t pmd_mksplitting(pmd_t pmd)
+{
+	return hlpmd_mksplitting(pmd);
+}
+
+static inline pmd_t pmd_mkhuge(pmd_t pmd)
+{
+	return hlpmd_mkhuge(pmd);
+}
+
+#define __HAVE_ARCH_PMD_SAME
+static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
+{
+	return hlpmd_same(pmd_a, pmd_b);
+}
+
+static inline int __pmdp_test_and_clear_young(struct mm_struct *mm,
+					      unsigned long addr, pmd_t *pmdp)
+{
+	return __hlpmdp_test_and_clear_young(mm, addr, pmdp);
+}
+
+#define __HAVE_ARCH_PMDP_SET_WRPROTECT
+static inline void pmdp_set_wrprotect(struct mm_struct *mm, unsigned long addr,
+				      pmd_t *pmdp)
+{
+	return hlpmdp_set_wrprotect(mm, addr, pmdp);
+}
+
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
 
@@ -552,41 +646,62 @@ static inline int pmd_protnone(pmd_t pmd)
 #define __HAVE_ARCH_PMD_WRITE
 #define pmd_write(pmd)		pte_write(pmd_pte(pmd))
 
-static inline pmd_t pmd_mkhuge(pmd_t pmd)
+#define __HAVE_ARCH_PMDP_SET_ACCESS_FLAGS
+static inline int pmdp_set_access_flags(struct vm_area_struct *vma,
+					unsigned long address, pmd_t *pmdp,
+					pmd_t entry, int dirty)
 {
-	return __pmd(pmd_val(pmd) | (H_PAGE_PTE | H_PAGE_THP_HUGE));
+	return hlpmdp_set_access_flags(vma, address, pmdp, entry, dirty);
 }
 
-#define __HAVE_ARCH_PMDP_SET_ACCESS_FLAGS
-extern int pmdp_set_access_flags(struct vm_area_struct *vma,
-				 unsigned long address, pmd_t *pmdp,
-				 pmd_t entry, int dirty);
-
 #define __HAVE_ARCH_PMDP_TEST_AND_CLEAR_YOUNG
-extern int pmdp_test_and_clear_young(struct vm_area_struct *vma,
-				     unsigned long address, pmd_t *pmdp);
+static inline int pmdp_test_and_clear_young(struct vm_area_struct *vma,
+					    unsigned long address, pmd_t *pmdp)
+{
+	return hlpmdp_test_and_clear_young(vma, address, pmdp);
+}
+
 
 #define __HAVE_ARCH_PMDP_HUGE_GET_AND_CLEAR
-extern pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
-				     unsigned long addr, pmd_t *pmdp);
+static inline pmd_t pmdp_huge_get_and_clear(struct mm_struct *mm,
+					    unsigned long addr, pmd_t *pmdp)
+{
+	return hlpmdp_huge_get_and_clear(mm, addr, pmdp);
+}
 
 #define __HAVE_ARCH_PMDP_SPLITTING_FLUSH
-extern void pmdp_splitting_flush(struct vm_area_struct *vma,
-				 unsigned long address, pmd_t *pmdp);
+static inline void pmdp_splitting_flush(struct vm_area_struct *vma,
+					unsigned long address, pmd_t *pmdp)
+{
+	return hlpmdp_splitting_flush(vma, address, pmdp);
+}
 
-extern pmd_t pmdp_collapse_flush(struct vm_area_struct *vma,
-				 unsigned long address, pmd_t *pmdp);
+static inline pmd_t pmdp_collapse_flush(struct vm_area_struct *vma,
+					unsigned long address, pmd_t *pmdp)
+{
+	return hlpmdp_collapse_flush(vma, address, pmdp);
+}
 #define pmdp_collapse_flush pmdp_collapse_flush
 
 #define __HAVE_ARCH_PGTABLE_DEPOSIT
-extern void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
-				       pgtable_t pgtable);
+static inline void pgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+					      pgtable_t pgtable)
+{
+	return hlpgtable_trans_huge_deposit(mm, pmdp, pgtable);
+}
+
 #define __HAVE_ARCH_PGTABLE_WITHDRAW
-extern pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+static inline pgtable_t pgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
+{
+	return hlpgtable_trans_huge_withdraw(mm, pmdp);
+}
 
 #define __HAVE_ARCH_PMDP_INVALIDATE
-extern void pmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
-			    pmd_t *pmdp);
+static inline void pmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+				   pmd_t *pmdp)
+{
+	return hlpmdp_invalidate(vma, address, pmdp);
+}
 
 #define pmd_move_must_withdraw pmd_move_must_withdraw
 struct spinlock;
