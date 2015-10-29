@@ -14,6 +14,17 @@
 #include <asm/cacheflush.h>
 #include <asm/machdep.h>
 
+/*
+ * Tracks gpages after the device tree is scanned and before the
+ * huge_boot_pages list is ready.  On non-Freescale implementations, this is
+ * just used to track 16G pages and so is a single array.  FSL-based
+ * implementations may have more than one gpage size, so we need multiple
+ * arrays
+ */
+#define MAX_NUMBER_GPAGES	1024
+static u64 gpage_freearray[MAX_NUMBER_GPAGES];
+static unsigned nr_gpages;
+
 extern long hpte_insert_repeating(unsigned long hash, unsigned long vpn,
 				  unsigned long pa, unsigned long rlags,
 				  unsigned long vflags, int psize, int ssize);
@@ -132,3 +143,113 @@ int hugepd_ok(hugepd_t hpd)
 	return 0;
 }
 #endif
+
+static int __hugepte_alloc(struct mm_struct *mm, hugepd_t *hpdp,
+			   unsigned long address, unsigned pdshift, unsigned pshift)
+{
+	struct kmem_cache *cachep;
+	pte_t *new;
+
+	cachep = PGT_CACHE(pdshift - pshift);
+
+	new = kmem_cache_zalloc(cachep, GFP_KERNEL|__GFP_REPEAT);
+
+	BUG_ON(pshift > HUGEPD_SHIFT_MASK);
+	BUG_ON((unsigned long)new & HUGEPD_SHIFT_MASK);
+
+	if (! new)
+		return -ENOMEM;
+
+	spin_lock(&mm->page_table_lock);
+	if (!hugepd_none(*hpdp))
+		kmem_cache_free(cachep, new);
+	else {
+		hpdp->pd = (unsigned long)new |
+			    (shift_to_mmu_psize(pshift) << 2);
+	}
+	spin_unlock(&mm->page_table_lock);
+	return 0;
+}
+
+/*
+ * At this point we do the placement change only for BOOK3S 64. This would
+ * possibly work on other subarchs.
+ */
+pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz)
+{
+	pgd_t *pg;
+	pud_t *pu;
+	pmd_t *pm;
+	hugepd_t *hpdp = NULL;
+	unsigned pshift = __ffs(sz);
+	unsigned pdshift = PGDIR_SHIFT;
+
+	addr &= ~(sz-1);
+	pg = pgd_offset(mm, addr);
+
+	if (pshift == PGDIR_SHIFT)
+		/* 16GB huge page */
+		return (pte_t *) pg;
+	else if (pshift > PUD_SHIFT)
+		/*
+		 * We need to use hugepd table
+		 */
+		hpdp = (hugepd_t *)pg;
+	else {
+		pdshift = PUD_SHIFT;
+		pu = pud_alloc(mm, pg, addr);
+		if (pshift == PUD_SHIFT)
+			return (pte_t *)pu;
+		else if (pshift > PMD_SHIFT)
+			hpdp = (hugepd_t *)pu;
+		else {
+			pdshift = PMD_SHIFT;
+			pm = pmd_alloc(mm, pu, addr);
+			if (pshift == PMD_SHIFT)
+				/* 16MB hugepage */
+				return (pte_t *)pm;
+			else
+				hpdp = (hugepd_t *)pm;
+		}
+	}
+	if (!hpdp)
+		return NULL;
+
+	BUG_ON(!hugepd_none(*hpdp) && !hugepd_ok(*hpdp));
+
+	if (hugepd_none(*hpdp) && __hugepte_alloc(mm, hpdp, addr, pdshift, pshift))
+		return NULL;
+
+	return hugepte_offset(*hpdp, addr, pdshift);
+}
+
+
+/* Build list of addresses of gigantic pages.  This function is used in early
+ * boot before the buddy allocator is setup.
+ */
+void add_gpage(u64 addr, u64 page_size, unsigned long number_of_pages)
+{
+	if (!addr)
+		return;
+	while (number_of_pages > 0) {
+		gpage_freearray[nr_gpages] = addr;
+		nr_gpages++;
+		number_of_pages--;
+		addr += page_size;
+	}
+}
+
+/* Moves the gigantic page addresses from the temporary list to the
+ * huge_boot_pages list.
+ */
+int alloc_bootmem_huge_page(struct hstate *hstate)
+{
+	struct huge_bootmem_page *m;
+	if (nr_gpages == 0)
+		return 0;
+	m = phys_to_virt(gpage_freearray[--nr_gpages]);
+	gpage_freearray[nr_gpages] = 0;
+	list_add(&m->list, &huge_boot_pages);
+	m->hstate = hstate;
+	return 1;
+}
