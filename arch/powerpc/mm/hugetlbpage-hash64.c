@@ -13,6 +13,7 @@
 #include <asm/pgalloc.h>
 #include <asm/cacheflush.h>
 #include <asm/machdep.h>
+#include <asm/tlb.h>
 
 /*
  * Tracks gpages after the device tree is scanned and before the
@@ -221,6 +222,155 @@ pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz
 		return NULL;
 
 	return hugepte_offset(*hpdp, addr, pdshift);
+}
+
+static void free_hugepd_range(struct mmu_gather *tlb, hugepd_t *hpdp, int pdshift,
+			      unsigned long start, unsigned long end,
+			      unsigned long floor, unsigned long ceiling)
+{
+
+	int i;
+	pte_t *hugepte = hugepd_page(*hpdp);
+	unsigned long pdmask = ~((1UL << pdshift) - 1);
+	unsigned int num_hugepd = 1;
+	unsigned int shift = hugepd_shift(*hpdp);
+
+	start &= pdmask;
+	if (start < floor)
+		return;
+	if (ceiling) {
+		ceiling &= pdmask;
+		if (! ceiling)
+			return;
+	}
+	if (end - 1 > ceiling - 1)
+		return;
+
+	for (i = 0; i < num_hugepd; i++, hpdp++)
+		hpdp->pd = 0;
+
+	pgtable_free_tlb(tlb, hugepte, pdshift - shift);
+}
+
+static void hugetlb_free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
+				   unsigned long addr, unsigned long end,
+				   unsigned long floor, unsigned long ceiling)
+{
+	pmd_t *pmd;
+	unsigned long next;
+	unsigned long start;
+
+	start = addr;
+	do {
+		pmd = pmd_offset(pud, addr);
+		next = pmd_addr_end(addr, end);
+		if (!is_hugepd(__hugepd(pmd_val(*pmd)))) {
+			/*
+			 * if it is not hugepd pointer, we should already find
+			 * it cleared.
+			 */
+			WARN_ON(!pmd_none_or_clear_bad(pmd));
+			continue;
+		}
+		free_hugepd_range(tlb, (hugepd_t *)pmd, PMD_SHIFT,
+				  addr, next, floor, ceiling);
+	} while (addr = next, addr != end);
+
+	start &= PUD_MASK;
+	if (start < floor)
+		return;
+	if (ceiling) {
+		ceiling &= PUD_MASK;
+		if (!ceiling)
+			return;
+	}
+	if (end - 1 > ceiling - 1)
+		return;
+
+	pmd = pmd_offset(pud, start);
+	pud_clear(pud);
+	pmd_free_tlb(tlb, pmd, start);
+	mm_dec_nr_pmds(tlb->mm);
+}
+
+static void hugetlb_free_pud_range(struct mmu_gather *tlb, pgd_t *pgd,
+				   unsigned long addr, unsigned long end,
+				   unsigned long floor, unsigned long ceiling)
+{
+	pud_t *pud;
+	unsigned long next;
+	unsigned long start;
+
+	start = addr;
+	do {
+		pud = pud_offset(pgd, addr);
+		next = pud_addr_end(addr, end);
+		if (!is_hugepd(__hugepd(pud_val(*pud)))) {
+			if (pud_none_or_clear_bad(pud))
+				continue;
+			hugetlb_free_pmd_range(tlb, pud, addr, next, floor,
+					       ceiling);
+		} else {
+			free_hugepd_range(tlb, (hugepd_t *)pud, PUD_SHIFT,
+					  addr, next, floor, ceiling);
+		}
+	} while (addr = next, addr != end);
+
+	start &= PGDIR_MASK;
+	if (start < floor)
+		return;
+	if (ceiling) {
+		ceiling &= PGDIR_MASK;
+		if (!ceiling)
+			return;
+	}
+	if (end - 1 > ceiling - 1)
+		return;
+
+	pud = pud_offset(pgd, start);
+	pgd_clear(pgd);
+	pud_free_tlb(tlb, pud, start);
+}
+
+/*
+ * This function frees user-level page tables of a process.
+ */
+void hugetlb_free_pgd_range(struct mmu_gather *tlb,
+			    unsigned long addr, unsigned long end,
+			    unsigned long floor, unsigned long ceiling)
+{
+	pgd_t *pgd;
+	unsigned long next;
+
+	/*
+	 * Because there are a number of different possible pagetable
+	 * layouts for hugepage ranges, we limit knowledge of how
+	 * things should be laid out to the allocation path
+	 * (huge_pte_alloc(), above).  Everything else works out the
+	 * structure as it goes from information in the hugepd
+	 * pointers.  That means that we can't here use the
+	 * optimization used in the normal page free_pgd_range(), of
+	 * checking whether we're actually covering a large enough
+	 * range to have to do anything at the top level of the walk
+	 * instead of at the bottom.
+	 *
+	 * To make sense of this, you should probably go read the big
+	 * block comment at the top of the normal free_pgd_range(),
+	 * too.
+	 */
+
+	do {
+		next = pgd_addr_end(addr, end);
+		pgd = pgd_offset(tlb->mm, addr);
+		if (!is_hugepd(__hugepd(pgd_val(*pgd)))) {
+			if (pgd_none_or_clear_bad(pgd))
+				continue;
+			hugetlb_free_pud_range(tlb, pgd, addr, next, floor, ceiling);
+		} else {
+			free_hugepd_range(tlb, (hugepd_t *)pgd, PGDIR_SHIFT,
+					  addr, next, floor, ceiling);
+		}
+	} while (addr = next, addr != end);
 }
 
 
