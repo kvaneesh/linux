@@ -13,46 +13,62 @@
 #include <asm/book3s/64/pgalloc-hash-4k.h>
 #endif
 
-static inline pgd_t *pgd_alloc(struct mm_struct *mm)
+static inline pgd_t *hlpgd_alloc(struct mm_struct *mm)
 {
 	return kmem_cache_alloc(PGT_CACHE(H_PGD_INDEX_SIZE), GFP_KERNEL);
 }
 
-static inline void pgd_free(struct mm_struct *mm, pgd_t *pgd)
+static inline void hlpgd_populate(struct mm_struct *mm, pgd_t *pgd, pud_t *pud)
+{
+	*pgd = __pgd((unsigned long)pud);
+}
+
+static inline void hlpgd_free(struct mm_struct *mm, pgd_t *pgd)
 {
 	kmem_cache_free(PGT_CACHE(H_PGD_INDEX_SIZE), pgd);
 }
 
-static inline pud_t *pud_alloc_one(struct mm_struct *mm, unsigned long addr)
+static inline pud_t *hlpud_alloc_one(struct mm_struct *mm, unsigned long addr)
 {
 	return kmem_cache_alloc(PGT_CACHE(H_PUD_INDEX_SIZE),
 				GFP_KERNEL|__GFP_REPEAT);
 }
 
-static inline void pud_free(struct mm_struct *mm, pud_t *pud)
+static inline void hlpud_populate(struct mm_struct *mm, pud_t *pud, pmd_t *pmd)
+{
+	*pud = __pud((unsigned long)pmd);
+}
+
+static inline void hlpud_free(struct mm_struct *mm, pud_t *pud)
 {
 	kmem_cache_free(PGT_CACHE(H_PUD_INDEX_SIZE), pud);
 }
 
-static inline pmd_t *pmd_alloc_one(struct mm_struct *mm, unsigned long addr)
+static inline pmd_t *hlpmd_alloc_one(struct mm_struct *mm, unsigned long addr)
 {
 	return kmem_cache_alloc(PGT_CACHE(H_PMD_CACHE_INDEX),
 				GFP_KERNEL|__GFP_REPEAT);
 }
 
-static inline void pmd_free(struct mm_struct *mm, pmd_t *pmd)
+static inline void hlpmd_populate_kernel(struct mm_struct *mm, pmd_t *pmd,
+					 pte_t *pte)
+{
+	*pmd = __pmd((unsigned long)pte);
+}
+
+static inline void hlpmd_free(struct mm_struct *mm, pmd_t *pmd)
 {
 	kmem_cache_free(PGT_CACHE(H_PMD_CACHE_INDEX), pmd);
 }
 
-static inline void __pmd_free_tlb(struct mmu_gather *tlb, pmd_t *pmd,
-				unsigned long address)
+static inline void __hlpmd_free_tlb(struct mmu_gather *tlb, pmd_t *pmd,
+				    unsigned long address)
 {
 	return pgtable_free_tlb(tlb, pmd, H_PMD_CACHE_INDEX);
 }
 
-static inline void __pud_free_tlb(struct mmu_gather *tlb, pud_t *pud,
-				unsigned long address)
+static inline void __hlpud_free_tlb(struct mmu_gather *tlb, pud_t *pud,
+				    unsigned long address)
 {
 	pgtable_free_tlb(tlb, pud, H_PUD_INDEX_SIZE);
 }

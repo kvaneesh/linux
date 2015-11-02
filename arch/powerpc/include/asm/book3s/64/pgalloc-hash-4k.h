@@ -1,30 +1,30 @@
 #ifndef _ASM_POWERPC_BOOK3S_64_PGALLOC_HASH_4K_H
 #define _ASM_POWERPC_BOOK3S_64_PGALLOC_HASH_4K_H
 
-static inline void pmd_populate(struct mm_struct *mm, pmd_t *pmd,
+static inline void hlpmd_populate(struct mm_struct *mm, pmd_t *pmd,
 				pgtable_t pte_page)
 {
 	pmd_set(pmd, (unsigned long)page_address(pte_page));
 }
 
-static inline pgtable_t pmd_pgtable(pmd_t pmd)
+static inline pgtable_t hlpmd_pgtable(pmd_t pmd)
 {
 	return pmd_page(pmd);
 }
 
-static inline pte_t *pte_alloc_one_kernel(struct mm_struct *mm,
-					  unsigned long address)
+static inline pte_t *hlpte_alloc_one_kernel(struct mm_struct *mm,
+					    unsigned long address)
 {
 	return (pte_t *)__get_free_page(GFP_KERNEL | __GFP_REPEAT | __GFP_ZERO);
 }
 
-static inline pgtable_t pte_alloc_one(struct mm_struct *mm,
-				      unsigned long address)
+static inline pgtable_t hlpte_alloc_one(struct mm_struct *mm,
+					unsigned long address)
 {
 	struct page *page;
 	pte_t *pte;
 
-	pte = pte_alloc_one_kernel(mm, address);
+	pte = hlpte_alloc_one_kernel(mm, address);
 	if (!pte)
 		return NULL;
 	page = virt_to_page(pte);
@@ -35,12 +35,12 @@ static inline pgtable_t pte_alloc_one(struct mm_struct *mm,
 	return page;
 }
 
-static inline void pte_free_kernel(struct mm_struct *mm, pte_t *pte)
+static inline void hlpte_free_kernel(struct mm_struct *mm, pte_t *pte)
 {
 	free_page((unsigned long)pte);
 }
 
-static inline void pte_free(struct mm_struct *mm, pgtable_t ptepage)
+static inline void hlpte_free(struct mm_struct *mm, pgtable_t ptepage)
 {
 	pgtable_page_dtor(ptepage);
 	__free_page(ptepage);
@@ -58,7 +58,7 @@ static inline void pgtable_free(void *table, unsigned index_size)
 
 #ifdef CONFIG_SMP
 static inline void pgtable_free_tlb(struct mmu_gather *tlb,
-				    void *table, int shift)
+				      void *table, int shift)
 {
 	unsigned long pgf = (unsigned long)table;
 	BUG_ON(shift > MAX_PGTABLE_INDEX_SIZE);
@@ -75,14 +75,14 @@ static inline void __tlb_remove_table(void *_table)
 }
 #else /* !CONFIG_SMP */
 static inline void pgtable_free_tlb(struct mmu_gather *tlb,
-				    void *table, int shift)
+				      void *table, int shift)
 {
 	pgtable_free(table, shift);
 }
 #endif /* CONFIG_SMP */
 
-static inline void __pte_free_tlb(struct mmu_gather *tlb, pgtable_t table,
-				  unsigned long address)
+static inline void __hlpte_free_tlb(struct mmu_gather *tlb, pgtable_t table,
+				    unsigned long address)
 {
 	tlb_flush_pgtable(tlb, address);
 	pgtable_page_dtor(table);
