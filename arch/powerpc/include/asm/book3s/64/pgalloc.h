@@ -66,4 +66,13 @@ static inline void pmd_populate_kernel(struct mm_struct *mm, pmd_t *pmd,
 #include <asm/book3s/64/pgalloc-hash.h>
 #endif
 
+#ifdef CONFIG_HUGETLB_PAGE
+static inline void hugetlb_free_pgd_range(struct mmu_gather *tlb, unsigned long addr,
+					  unsigned long end, unsigned long floor,
+					  unsigned long ceiling)
+{
+	return hugetlb_free_hlpgd_range(tlb, addr, end, floor, ceiling);
+}
+#endif
+
 #endif /* __ASM_POWERPC_BOOK3S_64_PGALLOC_H */

@@ -20,4 +20,11 @@ static inline void tlb_flush_pgtable(struct mmu_gather *tlb,
 #else
 #include <asm/nohash/32/pgalloc.h>
 #endif
+
+#ifdef CONFIG_HUGETLB_PAGE
+void hugetlb_free_pgd_range(struct mmu_gather *tlb, unsigned long addr,
+			    unsigned long end, unsigned long floor,
+                            unsigned long ceiling);
+#endif
+
 #endif /* _ASM_POWERPC_NOHASH_PGALLOC_H */

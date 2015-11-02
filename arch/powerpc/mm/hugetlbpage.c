@@ -466,3 +466,19 @@ int gup_hugepte(pte_t *ptep, unsigned long sz, unsigned long addr,
 
 	return 1;
 }
+
+#ifdef CONFIG_PPC_BOOK3S_64
+/*
+ * Generic book3s code. We didn't want to create a seperate header just for this
+ * ideally we want this static inline. But that require larger changes
+ */
+pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz)
+{
+#ifdef CONFIG_HUGETLB_PAGE
+	return huge_hlpte_alloc(mm, addr, sz);
+#else
+	WARN(1, "%s called with HUGETLB disabled\n", __func__);
+	return NULL;
+#endif
+}
+#endif

@@ -716,6 +716,36 @@ static inline int pmd_move_must_withdraw(struct spinlock *new_pmd_ptl,
 	return true;
 }
 
+#ifdef CONFIG_HUGETLB_PAGE
+
+static inline int pmd_huge(pmd_t pmd)
+{
+	return hlpmd_huge(pmd);
+}
+
+static inline int pud_huge(pud_t pud)
+{
+	return hlpud_huge(pud);
+}
+
+static inline int pgd_huge(pgd_t pgd)
+{
+	return hlpgd_huge(pgd);
+}
+
+static inline bool hugepd_ok(hugepd_t hpd)
+{
+	return hlhugepd_ok(hpd);
+}
+
+static inline bool is_hugepd(hugepd_t hpd)
+{
+	return is_hlhugepd(hpd);
+}
+#define is_hugepd is_hugepd
+
+#endif /* CONFIG_HUGETLB_PAGE */
+
 #define pgprot_noncached pgprot_noncached
 static inline pgprot_t pgprot_noncached(pgprot_t prot)
 {
