@@ -146,7 +146,7 @@ extern bool __rpte_sub_valid(real_pte_t rpte, unsigned long index);
  * Defined in such a way that we can optimize away code block at build time
  * if CONFIG_HUGETLB_PAGE=n.
  */
-static inline int pmd_huge(pmd_t pmd)
+static inline int hlpmd_huge(pmd_t pmd)
 {
 	/*
 	 * leaf pte for huge page
@@ -154,7 +154,7 @@ static inline int pmd_huge(pmd_t pmd)
 	return !!(pmd_val(pmd) & H_PAGE_PTE);
 }
 
-static inline int pud_huge(pud_t pud)
+static inline int hlpud_huge(pud_t pud)
 {
 	/*
 	 * leaf pte for huge page
@@ -162,7 +162,7 @@ static inline int pud_huge(pud_t pud)
 	return !!(pud_val(pud) & H_PAGE_PTE);
 }
 
-static inline int pgd_huge(pgd_t pgd)
+static inline int hlpgd_huge(pgd_t pgd)
 {
 	/*
 	 * leaf pte for huge page
@@ -172,19 +172,19 @@ static inline int pgd_huge(pgd_t pgd)
 #define pgd_huge pgd_huge
 
 #ifdef CONFIG_DEBUG_VM
-extern int hugepd_ok(hugepd_t hpd);
-#define is_hugepd(hpd)               (hugepd_ok(hpd))
+extern int hlhugepd_ok(hugepd_t hpd);
+#define is_hlhugepd(hpd)               (hlhugepd_ok(hpd))
 #else
 /*
  * With 64k page size, we have hugepage ptes in the pgd and pmd entries. We don't
  * need to setup hugepage directory for them. Our pte and page directory format
  * enable us to have this enabled.
  */
-static inline int hugepd_ok(hugepd_t hpd)
+static inline int hlhugepd_ok(hugepd_t hpd)
 {
 	return 0;
 }
-#define is_hugepd(pdep)			0
+#define is_hlhugepd(pdep)			0
 #endif /* CONFIG_DEBUG_VM */
 
 #endif /* CONFIG_HUGETLB_PAGE */

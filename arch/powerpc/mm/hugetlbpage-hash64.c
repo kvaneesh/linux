@@ -132,7 +132,7 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
  * This enables us to catch the wrong page directory format
  * Moved here so that we can use WARN() in the call.
  */
-int hugepd_ok(hugepd_t hpd)
+int hlhugepd_ok(hugepd_t hpd)
 {
 	bool is_hugepd;
 
@@ -176,7 +176,7 @@ static int __hugepte_alloc(struct mm_struct *mm, hugepd_t *hpdp,
  * At this point we do the placement change only for BOOK3S 64. This would
  * possibly work on other subarchs.
  */
-pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz)
+pte_t *huge_hlpte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz)
 {
 	pgd_t *pg;
 	pud_t *pu;
@@ -335,9 +335,9 @@ static void hugetlb_free_pud_range(struct mmu_gather *tlb, pgd_t *pgd,
 /*
  * This function frees user-level page tables of a process.
  */
-void hugetlb_free_pgd_range(struct mmu_gather *tlb,
-			    unsigned long addr, unsigned long end,
-			    unsigned long floor, unsigned long ceiling)
+void hugetlb_free_hlpgd_range(struct mmu_gather *tlb,
+			      unsigned long addr, unsigned long end,
+			      unsigned long floor, unsigned long ceiling)
 {
 	pgd_t *pgd;
 	unsigned long next;
@@ -372,7 +372,6 @@ void hugetlb_free_pgd_range(struct mmu_gather *tlb,
 		}
 	} while (addr = next, addr != end);
 }
-
 
 /* Build list of addresses of gigantic pages.  This function is used in early
  * boot before the buddy allocator is setup.
