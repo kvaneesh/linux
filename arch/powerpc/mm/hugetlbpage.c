@@ -474,6 +474,12 @@ int gup_hugepte(pte_t *ptep, unsigned long sz, unsigned long addr,
  */
 pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr, unsigned long sz)
 {
+	/*
+	 * Can't find a better place to put this
+	 */
+	BUILD_BUG_ON_MSG(RPGD_TABLE_SIZE <  H_PGD_TABLE_SIZE,
+			 "Hash pgd table size is larger than radix, "
+			 "will need adjustment to swapper pgdir");
 #ifdef CONFIG_HUGETLB_PAGE
 	return huge_hlpte_alloc(mm, addr, sz);
 #else

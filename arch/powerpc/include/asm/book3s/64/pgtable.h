@@ -7,12 +7,19 @@
 
 #define SWP_TYPE_BITS 5
 #include <asm/book3s/64/hash.h>
+#include <asm/book3s/64/radix.h>
 #include <asm/barrier.h>
 
 #ifndef __ASSEMBLY__
 #include <asm/tlbflush.h>
 #include <linux/mm_types.h>
 #endif
+
+/*
+ * Radix require pgd to be 64K in size even for 4K page size.
+ * Hence default to that always
+ */
+#define MAX_PGD_TABLE_SIZE  RPGD_TABLE_SIZE
 /*
  * The second half of the kernel virtual space is used for IO mappings,
  * it's itself carved into the PIO region (ISA and PHB IO space) and

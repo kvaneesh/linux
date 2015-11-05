@@ -433,7 +433,7 @@ int main(void)
 	 * We use that as swapper pgdir
 	 */
 #ifdef CONFIG_PPC_BOOK3S_64
-	DEFINE(PGD_TABLE_SIZE, H_PGD_TABLE_SIZE);
+	DEFINE(PGD_TABLE_SIZE, MAX_PGD_TABLE_SIZE);
 #else
 	DEFINE(PGD_TABLE_SIZE, PGD_TABLE_SIZE);
 #endif

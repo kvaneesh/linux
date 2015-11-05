@@ -556,6 +556,7 @@ static inline unsigned long gup_hlpte_filter(int write)
 
 static inline unsigned long ioremap_prot_flags(unsigned long flags)
 {
+	/* FIXME!! Radix for this ? not needed ? */
 	/* writeable implies dirty for kernel addresses */
 	if (flags & H_PAGE_RW)
 		flags |= H_PAGE_DIRTY;
