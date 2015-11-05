@@ -544,5 +544,7 @@ static inline unsigned long gup_rpte_filter(int write)
 	return mask;
 }
 
+extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
+			pte_t pte);
 #endif /* __ASSEMBLY__ */
 #endif

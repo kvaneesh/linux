@@ -203,6 +203,9 @@ extern void setup_initial_memory_limit(phys_addr_t first_memblock_base,
 #  include <asm/mmu-8xx.h>
 #endif
 
+#ifndef radix_enabled
+#define radix_enabled() (0)
+#endif
 
 #endif /* __KERNEL__ */
 #endif /* _ASM_POWERPC_MMU_H_ */

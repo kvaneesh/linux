@@ -143,6 +143,8 @@ static inline int ptep_test_and_clear_young(struct vm_area_struct *vma,
 					    unsigned long address,
 					    pte_t *ptep)
 {
+	if (radix_enabled())
+		return  __rptep_test_and_clear_young(vma->vm_mm, address, ptep);
 	return  __hlptep_test_and_clear_young(vma->vm_mm, address, ptep);
 }
 
@@ -152,7 +154,10 @@ static inline int ptep_clear_flush_young(struct vm_area_struct *vma,
 {
 	int young;
 
-	young = __hlptep_test_and_clear_young(vma->vm_mm, address, ptep);
+	if (radix_enabled())
+		young = __rptep_test_and_clear_young(vma->vm_mm, address, ptep);
+	else
+		young = __hlptep_test_and_clear_young(vma->vm_mm, address, ptep);
 	if (young)
 		flush_tlb_page(vma, address);
 	return young;
@@ -162,18 +167,29 @@ static inline int ptep_clear_flush_young(struct vm_area_struct *vma,
 static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 				       unsigned long addr, pte_t *ptep)
 {
-	unsigned long old = hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
+	unsigned long old;
+
+	if (radix_enabled())
+		old = rpte_update(mm, addr, ptep, ~0UL, 0, 0);
+	else
+		old = hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
 	return __pte(old);
 }
 
 static inline void pte_clear(struct mm_struct *mm, unsigned long addr,
 			     pte_t * ptep)
 {
-	hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
+
+	if (radix_enabled())
+		rpte_update(mm, addr, ptep, ~0UL, 0, 0);
+	else
+		hlpte_update(mm, addr, ptep, ~0UL, 0, 0);
 }
 
 static inline int pte_index(unsigned long addr)
 {
+	if (radix_enabled())
+		return rpte_index(addr);
 	return hlpte_index(addr);
 }
 
@@ -183,12 +199,16 @@ static inline unsigned long pte_update(struct mm_struct *mm,
 				       unsigned long set,
 				       int huge)
 {
+	if (radix_enabled())
+		return rpte_update(mm, addr, ptep, clr, set, huge);
 	return hlpte_update(mm, addr, ptep, clr, set, huge);
 }
 
 static inline int __ptep_test_and_clear_young(struct mm_struct *mm,
 					      unsigned long addr, pte_t *ptep)
 {
+	if (radix_enabled())
+		return __rptep_test_and_clear_young(mm, addr, ptep);
 	return __hlptep_test_and_clear_young(mm, addr, ptep);
 
 }
@@ -197,12 +217,16 @@ static inline int __ptep_test_and_clear_young(struct mm_struct *mm,
 static inline void ptep_set_wrprotect(struct mm_struct *mm, unsigned long addr,
 				      pte_t *ptep)
 {
+	if (radix_enabled())
+		return rptep_set_wrprotect(mm, addr, ptep);
 	return hlptep_set_wrprotect(mm, addr, ptep);
 }
 
 static inline void huge_ptep_set_wrprotect(struct mm_struct *mm,
 					   unsigned long addr, pte_t *ptep)
 {
+	if (radix_enabled())
+		return huge_rptep_set_wrprotect(mm, addr, ptep);
 	return huge_hlptep_set_wrprotect(mm, addr, ptep);
 }
 
@@ -212,121 +236,167 @@ static inline void huge_ptep_set_wrprotect(struct mm_struct *mm,
  */
 static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
 {
+	if (radix_enabled())
+		return __rptep_set_access_flags(ptep, entry);
 	return __hlptep_set_access_flags(ptep, entry);
 }
 
 #define __HAVE_ARCH_PTE_SAME
 static inline int pte_same(pte_t pte_a, pte_t pte_b)
 {
+	if (radix_enabled())
+		return rpte_same(pte_a, pte_b);
 	return hlpte_same(pte_a, pte_b);
 }
 
 static inline int pte_write(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_write(pte);
 	return hlpte_write(pte);
 }
 
 static inline int pte_dirty(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_dirty(pte);
 	return hlpte_dirty(pte);
 }
 
 static inline int pte_young(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_young(pte);
 	return hlpte_young(pte);
 }
 
 static inline int pte_special(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_special(pte);
 	return hlpte_special(pte);
 }
 
 static inline int pte_none(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_none(pte);
 	return hlpte_none(pte);
 }
 
 static inline pgprot_t pte_pgprot(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_pgprot(pte);
 	return hlpte_pgprot(pte);
 }
 
 static inline pte_t pfn_pte(unsigned long pfn, pgprot_t pgprot)
 {
+	if (radix_enabled())
+		return pfn_rpte(pfn, pgprot);
 	return pfn_hlpte(pfn, pgprot);
 }
 
 static inline unsigned long pte_pfn(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_pfn(pte);
 	return hlpte_pfn(pte);
 }
 
 static inline pte_t pte_wrprotect(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_wrprotect(pte);
 	return hlpte_wrprotect(pte);
 }
 
 static inline pte_t pte_mkclean(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkclean(pte);
 	return hlpte_mkclean(pte);
 }
 
 static inline pte_t pte_mkold(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkold(pte);
 	return hlpte_mkold(pte);
 }
 
 static inline pte_t pte_mkwrite(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkwrite(pte);
 	return hlpte_mkwrite(pte);
 }
 
 static inline pte_t pte_mkdirty(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkdirty(pte);
 	return hlpte_mkdirty(pte);
 }
 
 static inline pte_t pte_mkyoung(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkyoung(pte);
 	return hlpte_mkyoung(pte);
 }
 
 static inline pte_t pte_mkspecial(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkspecial(pte);
 	return hlpte_mkspecial(pte);
 }
 
 static inline pte_t pte_mkhuge(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_mkhuge(pte);
 	return hlpte_mkhuge(pte);
 }
 
 static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
 {
+	if (radix_enabled())
+		return rpte_modify(pte, newprot);
 	return hlpte_modify(pte, newprot);
 }
 
 static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
 				pte_t *ptep, pte_t pte, int percpu)
 {
+	if (radix_enabled())
+		return __set_rpte_at(mm, addr, ptep, pte, percpu);
 	return __set_hlpte_at(mm, addr, ptep, pte, percpu);
 }
 
 #ifdef CONFIG_NUMA_BALANCING
 static inline int pte_protnone(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_protnone(pte);
 	return hlpte_protnone(pte);
 }
 #endif /* CONFIG_NUMA_BALANCING */
 
 static inline int pte_present(pte_t pte)
 {
+	if (radix_enabled())
+		return rpte_present(pte);
 	return hlpte_present(pte);
 }
 
 static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 			      pte_t *ptep, pte_t pte)
 {
+	if (radix_enabled())
+		return set_rpte_at(mm, addr, ptep, pte);
 	return set_hlpte_at(mm, addr, ptep, pte);
 }
 /*
@@ -349,16 +419,22 @@ static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 #define __swp_entry_to_pte(x)		__pte((x).val)
 static inline unsigned long __swp_type(swp_entry_t entry)
 {
+	if (radix_enabled())
+		return r_swp_type(entry);
 	return hl_swp_type(entry);
 }
 
 static inline pgoff_t __swp_offset(swp_entry_t entry)
 {
+	if (radix_enabled())
+		return r_swp_offset(entry);
 	return hl_swp_offset(entry);
 }
 
 static inline swp_entry_t __swp_entry(unsigned long type, pgoff_t offset)
 {
+	if (radix_enabled())
+		return r_swp_entry(type, offset);
 	return hl_swp_entry(type, offset);
 }
 
@@ -374,16 +450,22 @@ static inline void pmd_clear(pmd_t *pmdp)
 
 static inline int pmd_bad(pmd_t pmd)
 {
+	if (radix_enabled())
+		return rpmd_bad(pmd);
 	return hlpmd_bad(pmd);
 }
 
 static inline unsigned long pmd_page_vaddr(pmd_t pmd)
 {
+	if (radix_enabled())
+		return rpmd_page_vaddr(pmd);
 	return hlpmd_page_vaddr(pmd);
 }
 
 static inline int pmd_index(unsigned long addr)
 {
+	if (radix_enabled())
+		return rpmd_index(addr);
 	return hlpmd_index(addr);
 }
 
@@ -418,16 +500,22 @@ static inline pud_t pte_pud(pte_t pte)
 
 static inline int pud_bad(pud_t pud)
 {
+	if (radix_enabled())
+		return rpud_bad(pud);
 	return hlpud_bad(pud);
 }
 
 static inline unsigned long pud_page_vaddr(pud_t pud)
 {
+	if (radix_enabled())
+		return rpud_page_vaddr(pud);
 	return hlpud_page_vaddr(pud);
 }
 
 static inline int pud_index(unsigned long addr)
 {
+	if (radix_enabled())
+		return rpud_index(addr);
 	return hlpud_index(addr);
 }
 
@@ -458,16 +546,22 @@ static inline pgd_t pte_pgd(pte_t pte)
 
 static inline int pgd_bad(pgd_t pgd)
 {
+	if (radix_enabled())
+		return rpgd_bad(pgd);
 	return hlpgd_bad(pgd);
 }
 
 static inline unsigned long pgd_page_vaddr(pgd_t pgd)
 {
+	if (radix_enabled())
+		return rpgd_page_vaddr(pgd);
 	return hlpgd_page_vaddr(pgd);
 }
 
 static inline int pgd_index(unsigned long addr)
 {
+	if (radix_enabled())
+		return rpgd_index(addr);
 	return hlpgd_index(addr);
 }
 
@@ -542,6 +636,8 @@ static inline void vmemmap_remove_mapping(unsigned long start,
 static inline void update_mmu_cache(struct vm_area_struct *vma, unsigned long address,
 				    pte_t *ptep)
 {
+	if (radix_enabled())
+		return;
 	return hlupdate_mmu_cache(vma, address, ptep);
 }
 
@@ -634,6 +730,8 @@ static inline pmd_t pmd_mkhuge(pmd_t pmd)
 #define __HAVE_ARCH_PMD_SAME
 static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
 {
+	if (radix_enabled())
+		return rpmd_same(pmd_a, pmd_b);
 	return hlpmd_same(pmd_a, pmd_b);
 }
 
@@ -789,36 +887,48 @@ static inline bool is_hugepd(hugepd_t hpd)
 #define pgprot_noncached pgprot_noncached
 static inline pgprot_t pgprot_noncached(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_noncached(prot);
 	return hlpgprot_noncached(prot);
 }
 
 #define pgprot_noncached_wc pgprot_noncached_wc
 static inline pgprot_t pgprot_noncached_wc(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_noncached_wc(prot);
 	return hlpgprot_noncached_wc(prot);
 }
 
 #define pgprot_cached pgprot_cached
 static inline pgprot_t pgprot_cached(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_cached(prot);
 	return hlpgprot_cached(prot);
 }
 
 #define pgprot_cached_wthru pgprot_cached_wthru
 static inline pgprot_t pgprot_cached_wthru(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_cached_wthru(prot);
 	return hlpgprot_cached_wthru(prot);
 }
 
 #define pgprot_cached_noncoherent pgprot_cached_noncoherent
 static inline pgprot_t pgprot_cached_noncoherent(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_cached_noncoherent(prot);
 	return hlpgprot_cached_noncoherent(prot);
 }
 
 #define pgprot_writecombine pgprot_writecombine
 static inline pgprot_t pgprot_writecombine(pgprot_t prot)
 {
+	if (radix_enabled())
+		return rpgprot_writecombine(prot);
 	return hlpgprot_writecombine(prot);
 }
 
@@ -831,11 +941,15 @@ static inline pgprot_t vm_get_page_prot(unsigned long vm_flags)
 
 static inline unsigned long pte_io_cache_bits(void)
 {
+	if (radix_enabled())
+		return rpte_io_cache_bits();
 	return hlpte_io_cache_bits();
 }
 
 static inline unsigned long gup_pte_filter(int write)
 {
+	if (radix_enabled())
+		return gup_rpte_filter(write);
 	return gup_hlpte_filter(write);
 }
 
