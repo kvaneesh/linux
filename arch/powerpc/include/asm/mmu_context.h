@@ -33,34 +33,50 @@ extern void mm_iommu_mapped_dec(struct mm_iommu_table_group_mem_t *mem);
  */
 #ifdef CONFIG_PPC_BOOK3S_64
 extern int hlinit_new_context(struct task_struct *tsk, struct mm_struct *mm);
+extern int rinit_new_context(struct task_struct *tsk, struct mm_struct *mm);
 static inline int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
 {
+	if (radix_enabled())
+		return rinit_new_context(tsk, mm);
 	return hlinit_new_context(tsk, mm);
 }
 
 extern void hldestroy_context(struct mm_struct *mm);
+extern void rdestroy_context(struct mm_struct *mm);
 static inline void destroy_context(struct mm_struct *mm)
 {
+	if (radix_enabled())
+	return rdestroy_context(mm);
 	return hldestroy_context(mm);
 }
 
 extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
+extern void switch_radix_mmu_context(struct mm_struct *prev,
+				     struct mm_struct *next);
 static inline void switch_mmu_context(struct mm_struct *prev,
 				      struct mm_struct *next,
 				      struct task_struct *tsk)
 {
+	if (radix_enabled())
+		return switch_radix_mmu_context(prev, next);
 	return switch_slb(tsk, next);
 }
 
 extern void set_context(unsigned long id, pgd_t *pgd);
 extern int __hlinit_new_context(void);
+extern int __rinit_new_context(void);
 static inline int __init_new_context(void)
 {
+	if (radix_enabled())
+		return __rinit_new_context();
 	return __hlinit_new_context();
 }
 extern void __hldestroy_context(int context_id);
+extern void __rdestroy_context(int context_id);
 static inline void __destroy_context(int context_id)
 {
+	if (radix_enabled())
+		return __rdestroy_context(context_id);
 	return __hldestroy_context(context_id);
 }
 static inline void mmu_context_init(void) { }
