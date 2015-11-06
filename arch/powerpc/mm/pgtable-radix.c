@@ -19,6 +19,8 @@
 #include <asm/mmu.h>
 #include <asm/firmware.h>
 
+#include <trace/events/thp.h>
+
 struct prtb_entry *process_tb;
 struct patb_entry *partition_tb;
 
@@ -358,3 +360,233 @@ void rvmemmap_remove_mapping(unsigned long start, unsigned long page_size)
 }
 #endif
 #endif
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+/*
+ * This is called when relaxing access to a hugepage. It's also called in the page
+ * fault path when we don't hit any of the major fault cases, ie, a minor
+ * update of _PAGE_ACCESSED, _PAGE_DIRTY, etc... The generic code will have
+ * handled those two for us, we additionally deal with missing execute
+ * permission here on some processors
+ */
+int rpmdp_set_access_flags(struct vm_area_struct *vma, unsigned long address,
+			    pmd_t *pmdp, pmd_t entry, int dirty)
+{
+	int changed;
+#ifdef CONFIG_DEBUG_VM
+	WARN_ON(!rpmd_trans_huge(*pmdp));
+	assert_spin_locked(&vma->vm_mm->page_table_lock);
+#endif
+	changed = !rpmd_same(*(pmdp), entry);
+	if (changed) {
+		__rptep_set_access_flags(pmdp_ptep(pmdp), pmd_pte(entry));
+		/*
+		 * Since we are not supporting SW TLB systems, we don't
+		 * have any thing similar to flush_tlb_page_nohash()
+		 */
+	}
+	return changed;
+}
+
+unsigned long rpmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
+				  pmd_t *pmdp, unsigned long clr,
+				  unsigned long set)
+{
+
+	unsigned long old;
+
+#ifdef CONFIG_DEBUG_VM
+	WARN_ON(!rpmd_trans_huge(*pmdp));
+	assert_spin_locked(&mm->page_table_lock);
+#endif
+
+	old = pmd_val(*pmdp);
+	*pmdp = __pmd((old & ~clr) | set);
+	trace_hugepage_update(addr, old, clr, set);
+	return old;
+}
+
+/* FIXME!! we may not need all these kicks */
+pmd_t rpmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
+			pmd_t *pmdp)
+
+{
+	pmd_t pmd;
+
+	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
+	VM_BUG_ON(rpmd_trans_huge(*pmdp));
+	/*
+	 * khugepaged calls this for normal pmd
+	 */
+	pmd = *pmdp;
+	pmd_clear(pmdp);
+	/*
+	 * Wait for all pending hash_page to finish. This is needed
+	 * in case of subpage collapse. When we collapse normal pages
+	 * to hugepage, we first clear the pmd, then invalidate all
+	 * the PTE entries. The assumption here is that any low level
+	 * page fault will see a none pmd and take the slow path that
+	 * will wait on mmap_sem. But we could very well be in a
+	 * hash_page with local ptep pointer value. Such a hash page
+	 * can result in adding new HPTE entries for normal subpages.
+	 * That means we could be modifying the page content as we
+	 * copy them to a huge page. So wait for parallel hash_page
+	 * to finish before invalidating HPTE entries. We can do this
+	 * by sending an IPI to all the cpus and executing a dummy
+	 * function there.
+	 */
+	kick_all_cpus_sync();
+	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+	return pmd;
+}
+/*
+ * We mark the pmd splitting and invalidate all the hpte
+ * entries for this hugepage.
+ */
+void rpmdp_splitting_flush(struct vm_area_struct *vma,
+			  unsigned long address, pmd_t *pmdp)
+{
+	unsigned long old;
+
+	VM_BUG_ON(address & ~HPAGE_PMD_MASK);
+
+#ifdef CONFIG_DEBUG_VM
+	WARN_ON(!rpmd_trans_huge(*pmdp));
+	assert_spin_locked(&vma->vm_mm->page_table_lock);
+#endif
+	old = pmd_val(*pmdp);
+	*pmdp = __pmd(old | _RPAGE_SPLITTING);
+	/*
+	 * If we didn't had the splitting flag set, go and flush the
+	 * HPTE entries.
+	 */
+	trace_hugepage_splitting(address, old);
+	/*
+	 * This ensures that generic code that rely on IRQ disabling
+	 * to prevent a parallel THP split work as expected.
+	 */
+	kick_all_cpus_sync();
+	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+}
+
+void rpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+				 pgtable_t pte)
+{
+	struct page *pgtable = virt_to_page(pte);
+	assert_spin_locked(pmd_lockptr(mm, pmdp));
+
+	/* FIFO */
+	if (!pmd_huge_pte(mm, pmdp))
+		INIT_LIST_HEAD(&pgtable->lru);
+	else
+		list_add(&pgtable->lru, &pmd_huge_pte(mm, pmdp)->lru);
+	pmd_huge_pte(mm, pmdp) = pgtable;
+}
+
+/* no "address" argument so destroys page coloring of some arch */
+pgtable_t rpgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp)
+{
+	struct page *pgtable;
+
+	assert_spin_locked(pmd_lockptr(mm, pmdp));
+
+	/* FIFO */
+	pgtable = pmd_huge_pte(mm, pmdp);
+	if (list_empty(&pgtable->lru))
+		pmd_huge_pte(mm, pmdp) = NULL;
+	else {
+		pmd_huge_pte(mm, pmdp) = list_entry(pgtable->lru.next,
+						    struct page, lru);
+		list_del(&pgtable->lru);
+	}
+	return page_address(pgtable);
+}
+/*
+ * set a new huge pmd. We should not be called for updating
+ * an existing pmd entry. That should go via pmd_hugepage_update.
+ */
+void set_rpmd_at(struct mm_struct *mm, unsigned long addr,
+		pmd_t *pmdp, pmd_t pmd)
+{
+#ifdef CONFIG_DEBUG_VM
+        WARN_ON(pte_present(pmd_pte(*pmdp)));
+	assert_spin_locked(&mm->page_table_lock);
+	WARN_ON(!rpmd_trans_huge(pmd));
+#endif
+	trace_hugepage_set_pmd(addr, pmd_val(pmd));
+	return set_rpte_at(mm, addr, pmdp_ptep(pmdp), pmd_pte(pmd));
+}
+
+void rpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+		      pmd_t *pmdp)
+{
+	rpmd_hugepage_update(vma->vm_mm, address, pmdp,
+			     _RPAGE_PRESENT, 0);
+	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+}
+
+static pmd_t pmd_set_protbits(pmd_t pmd, pgprot_t pgprot)
+{
+	return __pmd(pmd_val(pmd) | pgprot_val(pgprot));
+}
+
+pmd_t pfn_rpmd(unsigned long pfn, pgprot_t pgprot)
+{
+	/* FIXME!! check the pfn shifts */
+	unsigned long pmdv;
+	/*
+	 * For a valid pte, we would have _PAGE_PRESENT always
+	 * set. We use this to check THP page at pmd level.
+	 * leaf pte for huge page, bottom two bits != 00
+	 */
+	pmdv = pfn << PAGE_SHIFT;
+	return pmd_set_protbits(__pmd(pmdv), pgprot);
+}
+
+pmd_t mk_rpmd(struct page *page, pgprot_t pgprot)
+{
+	return pfn_pmd(page_to_pfn(page), pgprot);
+}
+
+pmd_t rpmd_modify(pmd_t pmd, pgprot_t newprot)
+{
+	unsigned long pmdv;
+
+	pmdv = pmd_val(pmd);
+	pmdv &= _RHPAGE_CHG_MASK;
+	return pmd_set_protbits(__pmd(pmdv), newprot);
+}
+
+pmd_t rpmdp_huge_get_and_clear(struct mm_struct *mm,
+			       unsigned long addr, pmd_t *pmdp)
+{
+	pmd_t old_pmd;
+	unsigned long old;
+
+	old = rpmd_hugepage_update(mm, addr, pmdp, ~0UL, 0);
+	old_pmd = __pmd(old);
+	/*
+	 * Serialize against find_linux_pte_or_hugepte which does lock-less
+	 * lookup in page tables with local interrupts disabled. For huge pages
+	 * it casts pmd_t to pte_t. Since format of pte_t is different from
+	 * pmd_t we want to prevent transit from pmd pointing to page table
+	 * to pmd pointing to huge page (and back) while interrupts are disabled.
+	 * We clear pmd to possibly replace it with page table pointer in
+	 * different code paths. So make sure we wait for the parallel
+	 * find_linux_pte_or_hugepage to finish.
+	 */
+	kick_all_cpus_sync();
+	return old_pmd;
+}
+
+int r_has_transparent_hugepage(void)
+{
+	BUILD_BUG_ON_MSG((RPMD_SHIFT - PAGE_SHIFT) >= MAX_ORDER,
+		"hugepages can't be allocated by the buddy allocator");
+
+	/* For radix 2M at PMD level means thp */
+	if (mmu_psize_defs[MMU_PAGE_2M].shift == PMD_SHIFT)
+		return 1;
+	return 0;
+}
+#endif /* CONFIG_TRANSPARENT_HUGEPAGE */

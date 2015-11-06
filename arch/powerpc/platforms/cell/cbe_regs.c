@@ -11,6 +11,7 @@
 #include <linux/export.h>
 #include <linux/of_device.h>
 #include <linux/of_platform.h>
+#include <linux/mm.h>
 
 #include <asm/io.h>
 #include <asm/pgtable.h>

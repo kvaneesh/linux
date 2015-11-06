@@ -467,6 +467,79 @@ static inline int rpmd_same(pmd_t pmd_a, pmd_t pmd_b)
 	return ((pmd_val(pmd_a) == pmd_val(pmd_b)));
 }
 
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+static inline int rpmd_trans_huge(pmd_t pmd)
+{
+	/*
+	 * FIXME!! Verify this again, whether we need additional check
+	 * WE just check leaf bit here.
+	 */
+	return !!(pmd_val(pmd) & _RPAGE_LEAF);
+}
+
+static inline int rpmd_trans_splitting(pmd_t pmd)
+{
+	if (rpmd_trans_huge(pmd))
+		return pmd_val(pmd) & _RPAGE_SPLITTING;
+	return 0;
+}
+#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+
+static inline int rpmd_large(pmd_t pmd)
+{
+	/*
+	 * FIXME!! Verify this again, whether we need additional check
+	 * WE just check leaf bit here.
+	 */
+	return !!(pmd_val(pmd) & _RPAGE_LEAF);
+}
+
+static inline pmd_t rpmd_mknotpresent(pmd_t pmd)
+{
+	return __pmd(pmd_val(pmd) & ~_RPAGE_PRESENT);
+}
+
+static inline pmd_t rpmd_mkhuge(pmd_t pmd)
+{
+	return __pmd(pmd_val(pmd) | _RPAGE_LEAF);
+}
+
+/* Move this FIXME!! */
+static inline pmd_t rpmd_mksplitting(pmd_t pmd)
+{
+	return __pmd(pmd_val(pmd) | _RPAGE_SPLITTING);
+}
+
+extern unsigned long rpmd_hugepage_update(struct mm_struct *mm,
+					  unsigned long addr, pmd_t *pmdp,
+					  unsigned long clr, unsigned long set);
+static inline int __rpmdp_test_and_clear_young(struct mm_struct *mm,
+					       unsigned long addr, pmd_t *pmdp)
+{
+	unsigned long old;
+
+	if ((pmd_val(*pmdp) & _RPAGE_ACCESSED) == 0)
+		return 0;
+	old = rpmd_hugepage_update(mm, addr, pmdp, _RPAGE_ACCESSED, 0);
+	return ((old & _RPAGE_ACCESSED) != 0);
+}
+
+static inline int rpmdp_test_and_clear_young(struct vm_area_struct *vma,
+					     unsigned long address, pmd_t *pmdp)
+{
+	return __rpmdp_test_and_clear_young(vma->vm_mm, address, pmdp);
+}
+
+static inline void rpmdp_set_wrprotect(struct mm_struct *mm, unsigned long addr,
+				       pmd_t *pmdp)
+{
+
+	if ((pmd_val(*pmdp) & _RPAGE_RW) == 0)
+		return;
+
+	rpmd_hugepage_update(mm, addr, pmdp, _RPAGE_RW, 0);
+}
+
 static inline int rpud_bad(pud_t pud)
 {
 	return !!(pud_val(pud) & RPUD_BAD_BITS);
@@ -555,5 +628,27 @@ extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 				 pgprot_t flags, unsigned int psz);
 extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 			pte_t pte);
+extern pmd_t pfn_rpmd(unsigned long pfn, pgprot_t pgprot);
+extern pmd_t mk_rpmd(struct page *page, pgprot_t pgprot);
+extern pmd_t rpmd_modify(pmd_t pmd, pgprot_t newprot);
+extern int r_has_transparent_hugepage(void);
+extern void set_rpmd_at(struct mm_struct *mm, unsigned long addr,
+			pmd_t *pmdp, pmd_t pmd);
+extern int rpmdp_set_access_flags(struct vm_area_struct *vma,
+				  unsigned long address, pmd_t *pmdp,
+				  pmd_t entry, int dirty);
+extern int rpmdp_test_and_clear_young(struct vm_area_struct *vma,
+				      unsigned long address, pmd_t *pmdp);
+extern pmd_t rpmdp_huge_get_and_clear(struct mm_struct *mm,
+				      unsigned long addr, pmd_t *pmdp);
+extern void rpmdp_splitting_flush(struct vm_area_struct *vma,
+				  unsigned long address, pmd_t *pmdp);
+extern pmd_t rpmdp_collapse_flush(struct vm_area_struct *vma,
+				  unsigned long address, pmd_t *pmdp);
+extern void rpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+					pgtable_t pgtable);
+extern pgtable_t rpgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+extern void rpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+			     pmd_t *pmdp);
 #endif /* __ASSEMBLY__ */
 #endif
