@@ -606,6 +606,13 @@ static inline void pgtable_cache_init(void)
 static inline int map_kernel_page(unsigned long ea, unsigned long pa,
 				  unsigned long flags)
 {
+	if (radix_enabled()) {
+#if defined(CONFIG_PPC_RADIX_MMU) && defined(DEBUG_VM)
+		unsigned long page_size = 1 << mmu_psize_defs[mmu_io_psize].shift;
+		WARN((page_size != PAGE_SIZE), "I/O page size != PAGE_SIZE");
+#endif
+		return map_radix_kernel_page(ea, pa, __pgprot(flags), PAGE_SIZE);
+	}
 	return hlmap_kernel_page(ea, pa, flags);
 }
 

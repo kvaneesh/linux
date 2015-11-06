@@ -544,6 +544,8 @@ static inline unsigned long gup_rpte_filter(int write)
 	return mask;
 }
 
+extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,
+				 pgprot_t flags, unsigned int psz);
 extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 			pte_t pte);
 #endif /* __ASSEMBLY__ */
