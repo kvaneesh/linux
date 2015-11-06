@@ -75,8 +75,4 @@ static inline void __hlpud_free_tlb(struct mmu_gather *tlb, pud_t *pud,
 
 extern pte_t *huge_hlpte_alloc(struct mm_struct *mm, unsigned long addr,
 			       unsigned long sz);
-extern void hugetlb_free_hlpgd_range(struct mmu_gather *tlb, unsigned long addr,
-				     unsigned long end, unsigned long floor,
-				     unsigned long ceiling);
-
 #endif /* _ASM_POWERPC_BOOK3S_64_PGALLOC_HASH_H */

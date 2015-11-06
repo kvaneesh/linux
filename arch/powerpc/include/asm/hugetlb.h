@@ -8,6 +8,8 @@
 extern struct kmem_cache *hugepte_cache;
 
 #ifdef CONFIG_PPC_BOOK3S_64
+
+#include <asm/book3s/64/hugetlb-radix.h>
 /*
  * This should work for other subarchs too. But right now we use the
  * new format only for 64bit book3s
@@ -30,6 +32,32 @@ static inline unsigned int hugepd_mmu_psize(hugepd_t hpd)
 static inline unsigned int hugepd_shift(hugepd_t hpd)
 {
 	return mmu_psize_to_shift(hugepd_mmu_psize(hpd));
+}
+static inline void flush_hugetlb_page(struct vm_area_struct *vma,
+				      unsigned long vmaddr)
+{
+	if (radix_enabled())
+		return flush_hugetlb_rpage(vma, vmaddr);
+}
+
+static inline void __local_flush_hugetlb_page(struct vm_area_struct *vma,
+					      unsigned long vmaddr)
+{
+	if (radix_enabled())
+		return __local_flush_hugetlb_rpage(vma, vmaddr);
+}
+
+extern void hugetlb_free_hlpgd_range(struct mmu_gather *tlb, unsigned long addr,
+				     unsigned long end, unsigned long floor,
+				     unsigned long ceiling);
+
+static inline void hugetlb_free_pgd_range(struct mmu_gather *tlb, unsigned long addr,
+					  unsigned long end, unsigned long floor,
+					  unsigned long ceiling)
+{
+	if (radix_enabled())
+		return hugetlb_free_rpgd_range(tlb, addr, end, floor, ceiling);
+	return hugetlb_free_hlpgd_range(tlb, addr, end, floor, ceiling);
 }
 
 #else
@@ -168,7 +196,6 @@ static inline pte_t huge_ptep_get(pte_t *ptep)
 static inline void arch_clear_hugepage_flags(struct page *page)
 {
 }
-
 #else /* ! CONFIG_HUGETLB_PAGE */
 static inline void flush_hugetlb_page(struct vm_area_struct *vma,
 				      unsigned long vmaddr)

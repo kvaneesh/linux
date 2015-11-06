@@ -72,15 +72,6 @@ static inline void pmd_populate_kernel(struct mm_struct *mm, pmd_t *pmd,
 	return hlpmd_populate_kernel(mm, pmd, pte);
 }
 
-#ifdef CONFIG_HUGETLB_PAGE
-static inline void hugetlb_free_pgd_range(struct mmu_gather *tlb, unsigned long addr,
-					  unsigned long end, unsigned long floor,
-					  unsigned long ceiling)
-{
-	return hugetlb_free_hlpgd_range(tlb, addr, end, floor, ceiling);
-}
-#endif
-
 static inline pgd_t *pgd_alloc(struct mm_struct *mm)
 {
 	if (radix_enabled())
