@@ -494,6 +494,11 @@ static inline int rpmd_large(pmd_t pmd)
 	return !!(pmd_val(pmd) & _RPAGE_LEAF);
 }
 
+static inline int rpmd_huge(pmd_t pmd)
+{
+	return !!(pmd_val(pmd) & _RPAGE_LEAF);
+}
+
 static inline pmd_t rpmd_mknotpresent(pmd_t pmd)
 {
 	return __pmd(pmd_val(pmd) & ~_RPAGE_PRESENT);
@@ -555,6 +560,11 @@ static inline int rpud_index(unsigned long addr)
 	return (addr >> RPUD_SHIFT) & (PTRS_PER_RPUD - 1);
 }
 
+static inline int rpud_huge(pud_t pud)
+{
+	return !!(pud_val(pud) & _RPAGE_LEAF);
+}
+
 static inline int rpgd_bad(pgd_t pgd)
 {
 	return !!(pgd_val(pgd) & RPGD_BAD_BITS);
@@ -568,6 +578,21 @@ static inline unsigned long rpgd_page_vaddr(pgd_t pgd)
 static inline int rpgd_index(unsigned long addr)
 {
 	return (addr >> RPGDIR_SHIFT) & (PTRS_PER_RPGD - 1);
+}
+
+static inline int rpgd_huge(pgd_t pgd)
+{
+	return !!(pgd_val(pgd) & _RPAGE_LEAF);
+}
+
+static inline int rhugepd_ok(hugepd_t hpd)
+{
+	return 0;
+}
+
+static inline int is_rhugepd(hugepd_t hpd)
+{
+	return 0;
 }
 
 static inline pgprot_t rpgprot_noncached(pgprot_t prot)

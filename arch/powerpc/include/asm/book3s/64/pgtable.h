@@ -925,26 +925,39 @@ static inline int pmd_move_must_withdraw(struct spinlock *new_pmd_ptl,
 
 static inline int pmd_huge(pmd_t pmd)
 {
+
+	if (radix_enabled())
+		return rpmd_huge(pmd);
 	return hlpmd_huge(pmd);
 }
 
 static inline int pud_huge(pud_t pud)
 {
+
+	if (radix_enabled())
+		return rpud_huge(pud);
 	return hlpud_huge(pud);
 }
 
 static inline int pgd_huge(pgd_t pgd)
 {
+
+	if (radix_enabled())
+		return rpgd_huge(pgd);
 	return hlpgd_huge(pgd);
 }
 
 static inline bool hugepd_ok(hugepd_t hpd)
 {
+	if (radix_enabled())
+		return rhugepd_ok(hpd);
 	return hlhugepd_ok(hpd);
 }
 
 static inline bool is_hugepd(hugepd_t hpd)
 {
+	if (radix_enabled())
+		return is_rhugepd(hpd);
 	return is_hlhugepd(hpd);
 }
 #define is_hugepd is_hugepd

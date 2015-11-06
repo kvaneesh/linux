@@ -1,6 +1,7 @@
 #ifndef _ASM_POWERPC_HUGETLB_H
 #define _ASM_POWERPC_HUGETLB_H
 
+#include <asm/book3s/64/hugetlb-radix.h>
 #ifdef CONFIG_HUGETLB_PAGE
 #include <asm/page.h>
 #include <asm-generic/hugetlb.h>
@@ -31,6 +32,20 @@ static inline unsigned int hugepd_shift(hugepd_t hpd)
 {
 	return mmu_psize_to_shift(hugepd_mmu_psize(hpd));
 }
+static inline void flush_hugetlb_page(struct vm_area_struct *vma,
+				      unsigned long vmaddr)
+{
+	if (radix_enabled())
+		return flush_hugetlb_rpage(vma, vmaddr);
+}
+
+static inline void __local_flush_hugetlb_page(struct vm_area_struct *vma,
+					      unsigned long vmaddr)
+{
+	if (radix_enabled())
+		return __local_flush_hugetlb_rpage(vma, vmaddr);
+}
+
 
 #else
 
