@@ -98,7 +98,7 @@ int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 		if (pgd_none(*pgdp)) {
 			pudp = early_alloc_pgtable(RPUD_TABLE_SIZE);
 			BUG_ON(pudp == NULL);
-			pgd_populate(&init_mm, pgdp, pudp);
+			rpgd_populate(&init_mm, pgdp, pudp);
 		}
 		pudp = pud_offset(pgdp, ea);
 		if (map_page_size == PUD_SIZE) {
@@ -108,7 +108,7 @@ int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 		if (pud_none(*pudp)) {
 			pmdp = early_alloc_pgtable(RPMD_TABLE_SIZE);
 			BUG_ON(pmdp == NULL);
-			pud_populate(&init_mm, pudp, pmdp);
+			rpud_populate(&init_mm, pudp, pmdp);
 		}
 		pmdp = pmd_offset(pudp, ea);
 		if (map_page_size == PMD_SIZE) {
@@ -118,7 +118,7 @@ int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 		if (!pmd_present(*pmdp)) {
 			ptep = early_alloc_pgtable(PAGE_SIZE);
 			BUG_ON(ptep == NULL);
-			pmd_populate_kernel(&init_mm, pmdp, ptep);
+			rpmd_populate_kernel(&init_mm, pmdp, ptep);
 		}
 		ptep = pte_offset_kernel(pmdp, ea);
 	}
@@ -283,3 +283,57 @@ void rsetup_initial_memory_limit(phys_addr_t first_memblock_base,
 	/* Finally limit subsequent allocations */
 	memblock_set_current_limit(first_memblock_base + first_memblock_size);
 }
+
+static void pgd_ctor(void *addr)
+{
+	memset(addr, 0, RPGD_TABLE_SIZE);
+}
+
+static void pmd_ctor(void *addr)
+{
+	memset(addr, 0, RPMD_TABLE_SIZE);
+}
+
+void rpgtable_cache_init(void)
+{
+	pgtable_cache_add(RPGD_INDEX_SIZE, pgd_ctor);
+	pgtable_cache_add(RPMD_INDEX_SIZE, pmd_ctor);
+
+	if (!PGT_CACHE(RPGD_INDEX_SIZE) || !PGT_CACHE(RPMD_INDEX_SIZE))
+		panic("Couldn't allocate pgtable caches");
+	/* PUD_INDEX == PMD_INDEX */
+	if (RPUD_INDEX_SIZE && !PGT_CACHE(RPUD_INDEX_SIZE))
+		panic("Couldn't allocate pud pgtable caches");
+}
+
+pgtable_t rpte_alloc_one(struct mm_struct *mm, unsigned long address)
+{
+	struct page *page;
+
+	page = alloc_page(PGALLOC_GFP);
+	if (!page)
+		return NULL;
+	if (!pgtable_page_ctor(page)) {
+		__free_page(page);
+		return NULL;
+	}
+	return page_address(page);
+}
+
+static pgprot_t radix_protection_map[16] = {
+	__RP000, __RP001, __RP010, __RP011, __RP100, __RP101, __RP110, __RP111,
+	__RS000, __RS001, __RS010, __RS011, __RS100, __RS101, __RS110, __RS111
+};
+
+pgprot_t rvm_get_page_prot(unsigned long vm_flags)
+{
+	pgprot_t prot_soa = __pgprot(0);
+
+	if (vm_flags & VM_SAO)
+		prot_soa = __pgprot(_RPAGE_SAO);
+
+	return __pgprot(pgprot_val(radix_protection_map[vm_flags &
+				(VM_READ|VM_WRITE|VM_EXEC|VM_SHARED)]) |
+			pgprot_val(prot_soa));
+}
+EXPORT_SYMBOL(rvm_get_page_prot);

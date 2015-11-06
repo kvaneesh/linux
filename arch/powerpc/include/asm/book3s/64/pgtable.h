@@ -600,6 +600,8 @@ extern struct page *pgd_page(pgd_t pgd);
 void pgtable_cache_add(unsigned shift, void (*ctor)(void *));
 static inline void pgtable_cache_init(void)
 {
+	if (radix_enabled())
+		return rpgtable_cache_init();
 	return hlpgtable_cache_init();
 }
 
@@ -943,6 +945,8 @@ static inline pgprot_t pgprot_writecombine(pgprot_t prot)
 #define vm_get_page_prot vm_get_page_prot
 static inline pgprot_t vm_get_page_prot(unsigned long vm_flags)
 {
+	if (radix_enabled())
+		return rvm_get_page_prot(vm_flags);
 	return hlvm_get_page_prot(vm_flags);
 }
 

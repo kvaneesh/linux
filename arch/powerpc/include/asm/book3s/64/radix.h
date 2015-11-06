@@ -544,6 +544,8 @@ static inline unsigned long gup_rpte_filter(int write)
 	return mask;
 }
 
+extern pgprot_t rvm_get_page_prot(unsigned long vm_flags);
+extern void rpgtable_cache_init(void);
 extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 				 pgprot_t flags, unsigned int psz);
 extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
