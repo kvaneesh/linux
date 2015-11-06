@@ -669,6 +669,10 @@ struct mm_struct *mm_alloc(void)
 		return NULL;
 
 	memset(mm, 0, sizeof(*mm));
+	/*
+	 * FIXME!! we need a better way handle this
+	 */
+	mm->context.id = MMU_NO_CONTEXT;
 	return mm_init(mm, current);
 }
 
