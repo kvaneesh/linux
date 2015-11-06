@@ -94,22 +94,34 @@ extern int mmu_vmemmap_psize;
 extern int mmu_io_psize;
 
 /* MMU initialization */
+extern void radix_init_native(void);
 extern void hlearly_init_mmu(void);
+extern void rearly_init_mmu(void);
 static inline void early_init_mmu(void)
 {
+	if (radix_enabled())
+		return rearly_init_mmu();
 	return hlearly_init_mmu();
 }
 extern void hlearly_init_mmu_secondary(void);
+extern void rearly_init_mmu_secondary(void);
 static inline void early_init_mmu_secondary(void)
 {
+	if (radix_enabled())
+		return rearly_init_mmu_secondary();
 	return hlearly_init_mmu_secondary();
 }
 
 extern void hlsetup_initial_memory_limit(phys_addr_t first_memblock_base,
 					 phys_addr_t first_memblock_size);
+extern void rsetup_initial_memory_limit(phys_addr_t first_memblock_base,
+					 phys_addr_t first_memblock_size);
 static inline void setup_initial_memory_limit(phys_addr_t first_memblock_base,
 					      phys_addr_t first_memblock_size)
 {
+	if (radix_enabled())
+		return rsetup_initial_memory_limit(first_memblock_base,
+						   first_memblock_size);
 	return hlsetup_initial_memory_limit(first_memblock_base,
 					   first_memblock_size);
 }

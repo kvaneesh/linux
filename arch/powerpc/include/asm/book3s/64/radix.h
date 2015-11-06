@@ -558,6 +558,9 @@ static inline unsigned long rioremap_update_flags(unsigned long *oflags)
 	*oflags = flags;
 	return 0;
 }
+
+extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,
+				 pgprot_t flags, unsigned int psz);
 extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
 			pte_t pte);
 #endif /* __ASSEMBLY__ */
