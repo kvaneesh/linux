@@ -544,6 +544,11 @@ static inline unsigned long gup_rpte_filter(int write)
 	return mask;
 }
 
+extern void __meminit rvmemmap_create_mapping(unsigned long start,
+					      unsigned long page_size,
+					      unsigned long phys);
+extern void rvmemmap_remove_mapping(unsigned long start,
+				    unsigned long page_size);
 extern pgprot_t rvm_get_page_prot(unsigned long vm_flags);
 extern void rpgtable_cache_init(void);
 extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,

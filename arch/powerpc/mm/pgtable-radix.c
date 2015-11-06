@@ -337,3 +337,24 @@ pgprot_t rvm_get_page_prot(unsigned long vm_flags)
 			pgprot_val(prot_soa));
 }
 EXPORT_SYMBOL(rvm_get_page_prot);
+
+#ifdef CONFIG_SPARSEMEM_VMEMMAP
+void __meminit rvmemmap_create_mapping(unsigned long start,
+				      unsigned long page_size,
+				      unsigned long phys)
+{
+	/* Create a PTE encoding */
+	unsigned long flags = _RPAGE_PRESENT | _RPAGE_ACCESSED |
+				_RPAGE_KERNEL_RW;
+
+	/* FIXME!! Assume page_size == PAGE_SIZE for now */
+	BUG_ON(map_radix_kernel_page(start, phys, __pgprot(flags), PAGE_SIZE));
+}
+
+#ifdef CONFIG_MEMORY_HOTPLUG
+void rvmemmap_remove_mapping(unsigned long start, unsigned long page_size)
+{
+	/* FIXME!! intel does more. We should free page tables mapping vmemmap ? */
+}
+#endif
+#endif

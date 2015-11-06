@@ -622,6 +622,8 @@ static inline void __meminit vmemmap_create_mapping(unsigned long start,
 						    unsigned long page_size,
 						    unsigned long phys)
 {
+	if (radix_enabled())
+		return rvmemmap_create_mapping(start, page_size, phys);
 	return hlvmemmap_create_mapping(start, page_size, phys);
 }
 
@@ -629,6 +631,8 @@ static inline void __meminit vmemmap_create_mapping(unsigned long start,
 static inline void vmemmap_remove_mapping(unsigned long start,
 					  unsigned long page_size)
 {
+	if (radix_enabled())
+		return rvmemmap_remove_mapping(start, page_size);
 	return hlvmemmap_remove_mapping(start, page_size);
 }
 #endif
