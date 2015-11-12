@@ -6,12 +6,24 @@
 
 static inline pgd_t *rpgd_alloc(struct mm_struct *mm)
 {
+#ifdef CONFIG_PPC_64K_PAGES
 	return (pgd_t *)__get_free_page(PGALLOC_GFP);
+#else
+	struct page *page;
+	page = alloc_pages(PGALLOC_GFP, 4);
+	if (!page)
+		return NULL;
+	return (pgd_t *) page_address(page);
+#endif
 }
 
 static inline void rpgd_free(struct mm_struct *mm, pgd_t *pgd)
 {
+#ifdef CONFIG_PPC_64K_PAGES
 	free_page((unsigned long)pgd);
+#else
+	free_pages((unsigned long)pgd, 4);
+#endif
 }
 
 static inline void rpgd_populate(struct mm_struct *mm, pgd_t *pgd, pud_t *pud)
