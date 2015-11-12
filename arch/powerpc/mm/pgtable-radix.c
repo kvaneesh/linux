@@ -274,6 +274,10 @@ void __init rearly_init_mmu(void)
 	__page_kernel_exec = RPAGE_KERNEL_EXEC;
 #endif
 
+
+	mmu_psize_defs[MMU_PAGE_4K].shift = 12;
+	mmu_psize_defs[MMU_PAGE_4K].sllp = 0x0000;
+
 	mmu_psize_defs[MMU_PAGE_64K].shift = 16;
 	mmu_psize_defs[MMU_PAGE_64K].sllp = 0x0110;
 
