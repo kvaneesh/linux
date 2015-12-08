@@ -1181,6 +1181,7 @@
 #define PVR_POWER8	0x004D
 #define PVR_BE		0x0070
 #define PVR_PA6T	0x0090
+#define PVR_POWER9	0x004E
 
 /* "Logical" PVR values defined in PAPR, representing architecture levels */
 #define PVR_ARCH_204	0x0f000001

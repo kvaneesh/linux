@@ -45,6 +45,17 @@ static int __init powersave_off(char *arg)
 }
 __setup("powersave=off", powersave_off);
 
+static int __init
+power9_powersave_nap_disable(void)
+{
+	if (pvr_version_is(PVR_POWER9)) {
+		printk(KERN_WARNING "HACK: Turn off powersave on POWER9!");
+		powersave_off(NULL);
+	}
+	return 0;
+}
+early_initcall(power9_powersave_nap_disable);
+
 #ifdef CONFIG_HOTPLUG_CPU
 void arch_cpu_idle_dead(void)
 {
