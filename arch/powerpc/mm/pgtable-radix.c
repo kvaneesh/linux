@@ -295,7 +295,12 @@ void __init rearly_init_mmu(void)
 
 void rearly_init_mmu_secondary(void)
 {
-	/* XXX TODO: Setup SDR etc... */
+	/*
+	 * update partition table control register, 64 K size.
+	 */
+	if (!firmware_has_feature(FW_FEATURE_LPAR))
+		mtspr(SPRN_PTCR,
+		      __pa(partition_tb) | (PATB_SIZE_SHIFT - 12));
 }
 
 void rsetup_initial_memory_limit(phys_addr_t first_memblock_base,
