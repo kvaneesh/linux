@@ -892,9 +892,13 @@ void __init hlearly_init_mmu(void)
 void hlearly_init_mmu_secondary(void)
 {
 	/* Initialize hash table for that CPU */
-	if (!firmware_has_feature(FW_FEATURE_LPAR))
-		mtspr(SPRN_SDR1, _SDR1);
-
+	if (!firmware_has_feature(FW_FEATURE_LPAR)) {
+		if (!cpu_has_feature(CPU_FTR_ARCH_300))
+			mtspr(SPRN_SDR1, _SDR1);
+		else
+			mtspr(SPRN_PTCR,
+			      __pa(partition_tb) | (PATB_SIZE_SHIFT - 12));
+	}
 	/* Initialize SLB */
 	slb_initialize();
 }
