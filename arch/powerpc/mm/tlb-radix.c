@@ -257,3 +257,62 @@ void rtlb_flush(struct mmu_gather *tlb)
 	struct mm_struct *mm = tlb->mm;
 	flush_rtlb_mm(mm);
 }
+
+#define TLB_FLUSH_ALL -1UL
+/*
+ * Number of pages above which we will do a bcast tlbie. Just a
+ * number at this point copied from x86
+ */
+static unsigned long tlb_single_page_flush_ceiling __read_mostly = 33;
+
+static void __flush_rtlb_range(unsigned long pid, unsigned long start,
+			       unsigned long end, int psize, int local)
+
+{
+	unsigned long addr;
+	unsigned long ap = mmu_get_ap(psize);
+	int lock_tlbie = !mmu_has_feature(MMU_FTR_LOCKLESS_TLBIE);
+	unsigned long page_size = 1UL << mmu_psize_defs[psize].shift;
+
+
+	preempt_disable();
+	if (unlikely(pid == MMU_NO_CONTEXT))
+		goto err_out;
+
+	if (end == TLB_FLUSH_ALL ||
+	    (end - start) > tlb_single_page_flush_ceiling * page_size) {
+		if (local)
+			_tlbiel_pid(pid);
+		else
+			_tlbie_pid(pid);
+		goto err_out;
+	}
+	for (addr = start; addr < end; addr += page_size) {
+
+		if (local)
+			_tlbiel_va(addr, pid, ap);
+		else {
+			if (lock_tlbie)
+				raw_spin_lock(&native_tlbie_lock);
+			_tlbie_va(addr, pid, ap);
+			if (lock_tlbie)
+				raw_spin_unlock(&native_tlbie_lock);
+		}
+	}
+err_out:
+	preempt_enable();
+}
+void flush_pmd_rtlb_range(struct vm_area_struct *vma, unsigned long start,
+			  unsigned long end)
+{
+	struct mm_struct *mm = vma->vm_mm;
+
+#ifdef CONFIG_SMP
+	int local = mm_is_core_local(mm);
+#else
+	int local = 1;
+#endif
+
+	__flush_rtlb_range(mm->context.id, start, end, MMU_PAGE_2M, local);
+}
+EXPORT_SYMBOL(flush_pmd_rtlb_range);

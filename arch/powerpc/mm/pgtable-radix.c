@@ -459,7 +459,7 @@ pmd_t rpmdp_collapse_flush(struct vm_area_struct *vma, unsigned long address,
 	 * function there.
 	 */
 	kick_all_cpus_sync();
-	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+	flush_pmd_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
 	return pmd;
 }
 /*
@@ -489,7 +489,7 @@ void rpmdp_splitting_flush(struct vm_area_struct *vma,
 	 * to prevent a parallel THP split work as expected.
 	 */
 	kick_all_cpus_sync();
-	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+	flush_pmd_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
 }
 
 void rpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
@@ -545,7 +545,7 @@ void rpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
 {
 	rpmd_hugepage_update(vma->vm_mm, address, pmdp,
 			     _RPAGE_PRESENT, 0);
-	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+	flush_pmd_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
 }
 
 static pmd_t pmd_set_protbits(pmd_t pmd, pgprot_t pgprot)
