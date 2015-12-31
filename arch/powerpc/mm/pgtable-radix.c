@@ -520,7 +520,7 @@ void rpmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
 {
 	rpmd_hugepage_update(vma->vm_mm, address, pmdp,
 			     _RPAGE_PRESENT, 0);
-	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+	flush_pmd_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
 }
 
 static pmd_t pmd_set_protbits(pmd_t pmd, pgprot_t pgprot)

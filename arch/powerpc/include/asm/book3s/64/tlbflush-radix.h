@@ -18,6 +18,8 @@ static inline int mmu_get_ap(int psize)
 	return sllp;
 }
 
+extern void flush_pmd_rtlb_range(struct vm_area_struct *vma, unsigned long start,
+				 unsigned long end);
 extern void flush_rtlb_range(struct vm_area_struct *vma, unsigned long start,
 			    unsigned long end);
 extern void flush_rtlb_kernel_range(unsigned long start, unsigned long end);
