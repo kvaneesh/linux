@@ -260,9 +260,8 @@ void rtlb_flush(struct mmu_gather *tlb)
  */
 static unsigned long tlb_single_page_flush_ceiling __read_mostly = 33;
 
-static void __flush_rtlb_range(unsigned long pid, unsigned long start,
-			       unsigned long end, int psize, int local)
-
+void __flush_rtlb_range(unsigned long pid, unsigned long start,
+			unsigned long end, int psize, int local)
 {
 	unsigned long addr;
 	unsigned long ap = mmu_get_ap(psize);
