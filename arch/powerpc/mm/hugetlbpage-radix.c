@@ -5,39 +5,26 @@
 #include <asm/cacheflush.h>
 #include <asm/machdep.h>
 #include <asm/mman.h>
+#include <asm/tlb.h>
 
 void flush_hugetlb_rpage(struct vm_area_struct *vma, unsigned long vmaddr)
 {
-	unsigned long ap, shift;
+	unsigned long ap;
+	int local = mm_is_core_local(vma->vm_mm);
 	struct hstate *hstate = hstate_file(vma->vm_file);
 
-	shift = huge_page_shift(hstate);
-	if (shift == mmu_psize_defs[MMU_PAGE_2M].shift)
-		ap = mmu_get_ap(MMU_PAGE_2M);
-	else if (shift == mmu_psize_defs[MMU_PAGE_1G].shift)
-		ap = mmu_get_ap(MMU_PAGE_1G);
-	else {
-		WARN(1, "Wrong huge page shift\n");
-		return ;
-	}
-	__flush_rtlb_page(vma->vm_mm, vmaddr, ap, 0);
+	ap = hstate_get_ap(hstate);
+	__flush_rtlb_page(vma->vm_mm, vmaddr, ap, local);
 }
 
 void __local_flush_hugetlb_rpage(struct vm_area_struct *vma, unsigned long vmaddr)
 {
-	unsigned long ap, shift;
+	unsigned long ap;
+	int local = mm_is_core_local(vma->vm_mm);
 	struct hstate *hstate = hstate_file(vma->vm_file);
 
-	shift = huge_page_shift(hstate);
-	if (shift == mmu_psize_defs[MMU_PAGE_2M].shift)
-		ap = mmu_get_ap(MMU_PAGE_2M);
-	else if (shift == mmu_psize_defs[MMU_PAGE_1G].shift)
-		ap = mmu_get_ap(MMU_PAGE_1G);
-	else {
-		WARN(1, "Wrong huge page shift\n");
-		return ;
-	}
-	__local_flush_rtlb_page(vma->vm_mm, vmaddr, ap, 0);
+	ap = hstate_get_ap(hstate);
+	__local_flush_rtlb_page(vma->vm_mm, vmaddr, ap, local);
 }
 
 /*
