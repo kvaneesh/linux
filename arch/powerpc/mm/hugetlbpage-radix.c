@@ -27,6 +27,26 @@ void __local_flush_hugetlb_rpage(struct vm_area_struct *vma, unsigned long vmadd
 	__local_flush_rtlb_page(vma->vm_mm, vmaddr, ap, local);
 }
 
+void flush_hugetlb_rtlb_range(struct vm_area_struct *vma, unsigned long start,
+			      unsigned long end)
+{
+	int psize, shift;
+	struct mm_struct *mm = vma->vm_mm;
+	int local = mm_is_core_local(mm);
+	struct hstate *hstate = hstate_file(vma->vm_file);
+
+	shift = huge_page_shift(hstate);
+	if (shift == mmu_psize_defs[MMU_PAGE_2M].shift)
+		psize = MMU_PAGE_2M;
+	else if (shift == mmu_psize_defs[MMU_PAGE_1G].shift)
+		psize = MMU_PAGE_1G;
+	else {
+		WARN(1, "Wrong huge page shift\n");
+		return ;
+	}
+	__flush_rtlb_range(mm->context.id, start, end, psize, local);
+}
+
 /*
  * For radix we don't support hugepd.
  * sizes 1G and 2M

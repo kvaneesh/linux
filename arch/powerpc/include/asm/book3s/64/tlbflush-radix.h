@@ -17,9 +17,12 @@ static inline int mmu_get_ap(int psize)
 		((mmu_psize_defs[psize].sllp & SLB_VSID_LP) >> 4);
 	return sllp;
 }
-
+extern void __flush_rtlb_range(unsigned long pid, unsigned long start,
+			       unsigned long end, int psize, int local);
 extern void flush_pmd_rtlb_range(struct vm_area_struct *vma, unsigned long start,
 				 unsigned long end);
+extern void flush_hugetlb_rtlb_range(struct vm_area_struct *vma, unsigned long start,
+				     unsigned long end);
 extern void flush_rtlb_range(struct vm_area_struct *vma, unsigned long start,
 			    unsigned long end);
 extern void flush_rtlb_kernel_range(unsigned long start, unsigned long end);
