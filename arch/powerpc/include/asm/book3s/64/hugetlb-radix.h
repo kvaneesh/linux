@@ -22,4 +22,20 @@ hugetlb_get_radix_unmapped_area(struct file *file, unsigned long addr,
 				unsigned long flags);
 extern pte_t *huge_rpte_alloc(struct mm_struct *mm, unsigned long addr,
 			      unsigned long sz);
+
+static inline int hstate_get_ap(struct hstate *hstate)
+{
+	unsigned long ap, shift;
+
+	shift = huge_page_shift(hstate);
+	if (shift == mmu_psize_defs[MMU_PAGE_2M].shift)
+		ap = mmu_get_ap(MMU_PAGE_2M);
+	else if (shift == mmu_psize_defs[MMU_PAGE_1G].shift)
+		ap = mmu_get_ap(MMU_PAGE_1G);
+	else {
+		WARN(1, "Wrong huge page shift\n");
+		return 0;
+	}
+	return ap;
+}
 #endif

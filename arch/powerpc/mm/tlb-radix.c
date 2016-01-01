@@ -157,11 +157,6 @@ void local_flush_rtlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
 EXPORT_SYMBOL(local_flush_rtlb_page);
 
 #ifdef CONFIG_SMP
-static int mm_is_core_local(struct mm_struct *mm)
-{
-	return cpumask_subset(mm_cpumask(mm),
-			      topology_sibling_cpumask(smp_processor_id()));
-}
 
 void flush_rtlb_mm(struct mm_struct *mm)
 {
@@ -306,12 +301,7 @@ void flush_pmd_rtlb_range(struct vm_area_struct *vma, unsigned long start,
 			  unsigned long end)
 {
 	struct mm_struct *mm = vma->vm_mm;
-
-#ifdef CONFIG_SMP
 	int local = mm_is_core_local(mm);
-#else
-	int local = 1;
-#endif
 
 	__flush_rtlb_range(mm->context.id, start, end, MMU_PAGE_2M, local);
 }
