@@ -1764,7 +1764,7 @@ int migrate_misplaced_transhuge_page(struct mm_struct *mm,
 	}
 
 	if (mm_tlb_flush_pending(mm))
-		flush_tlb_range(vma, mmun_start, mmun_end);
+		flush_pmd_tlb_range(vma, mmun_start, mmun_end);
 
 	/* Prepare a page as a migration target */
 	__set_page_locked(new_page);
@@ -1818,12 +1818,16 @@ fail_putback:
 	page_add_anon_rmap(new_page, vma, mmun_start);
 	pmdp_huge_clear_flush_notify(vma, mmun_start, pmd);
 	set_pmd_at(mm, mmun_start, pmd, entry);
-	flush_tlb_range(vma, mmun_start, mmun_end);
+	/*
+	 * Which mapping are we flushing here ? added by
+	 * f714f4f20e59ea6eea264a86b9a51fd51b88fc54
+	 * flush_tlb_range(vma, mmun_start, mmun_end);
+	 */
 	update_mmu_cache_pmd(vma, address, &entry);
 
 	if (page_count(page) != 2) {
 		set_pmd_at(mm, mmun_start, pmd, orig_entry);
-		flush_tlb_range(vma, mmun_start, mmun_end);
+		flush_pmd_tlb_range(vma, mmun_start, mmun_end);
 		mmu_notifier_invalidate_range(mm, mmun_start, mmun_end);
 		update_mmu_cache_pmd(vma, address, &entry);
 		page_remove_rmap(new_page);
