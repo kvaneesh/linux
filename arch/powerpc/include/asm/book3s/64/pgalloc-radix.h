@@ -50,6 +50,11 @@ static inline void rpud_populate(struct mm_struct *mm, pud_t *pud, pmd_t *pmd)
 static inline void __rpud_free_tlb(struct mmu_gather *tlb, pud_t *pud,
 				  unsigned long address)
 {
+	/*
+	 * By now all the pud entries should be none entries. So go
+	 * ahead and flush the page walk cache
+	 */
+	rtlb_flush_pgtable(tlb, address);
 	pgtable_free_tlb(tlb, pud, RPUD_INDEX_SIZE);
 }
 
@@ -81,6 +86,11 @@ static inline void rpmd_populate(struct mm_struct *mm, pmd_t *pmdp,
 static inline void __rpmd_free_tlb(struct mmu_gather *tlb, pmd_t *pmd,
 				  unsigned long address)
 {
+	/*
+	 * By now all the pmd entries should be none entries. So go
+	 * ahead and flush the page walk cache
+	 */
+	rtlb_flush_pgtable(tlb, address);
 	pgtable_free_tlb(tlb, pmd, RPMD_CACHE_INDEX);
 }
 
@@ -112,7 +122,11 @@ static inline void rpte_free(struct mm_struct *mm, pgtable_t pte)
 static inline void __rpte_free_tlb(struct mmu_gather *tlb, pgtable_t pte,
 				  unsigned long address)
 {
-	tlb_flush_pgtable(tlb, address);
+	/*
+	 * By now all the pte entries should be none entries. So go
+	 * ahead and flush the page walk cache
+	 */
+	rtlb_flush_pgtable(tlb, address);
 	pgtable_free_tlb(tlb, pte, 0);
 }
 

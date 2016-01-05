@@ -32,6 +32,7 @@ extern void local_flush_rtlb_page(struct vm_area_struct *vma, unsigned long vmad
 extern void __local_flush_rtlb_page(struct mm_struct *mm, unsigned long vmaddr,
 				    unsigned long ap, int nid);
 extern void rtlb_flush(struct mmu_gather *tlb);
+extern void rtlb_flush_pgtable(struct mmu_gather *tlb, unsigned long address);
 #ifdef CONFIG_SMP
 extern void flush_rtlb_mm(struct mm_struct *mm);
 extern void flush_rtlb_page(struct vm_area_struct *vma, unsigned long vmaddr);
