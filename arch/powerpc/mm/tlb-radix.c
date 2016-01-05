@@ -249,8 +249,24 @@ EXPORT_SYMBOL(flush_rtlb_range);
 
 void rtlb_flush(struct mmu_gather *tlb)
 {
+	int psize = 0;
 	struct mm_struct *mm = tlb->mm;
-	flush_rtlb_mm(mm);
+	int local = mm_is_core_local(mm);
+	int page_size = tlb->page_size;
+
+	if (page_size == (1UL << mmu_psize_defs[mmu_virtual_psize].shift))
+		psize = mmu_virtual_psize;
+	else if (page_size == (1UL << mmu_psize_defs[MMU_PAGE_2M].shift))
+		psize = MMU_PAGE_2M;
+	else if (page_size == (1UL << mmu_psize_defs[MMU_PAGE_1G].shift))
+		psize = MMU_PAGE_1G;
+
+
+	if (!tlb->fullmm && !tlb->need_flush_all)
+		__flush_rtlb_range(mm->context.id,
+				   tlb->start, tlb->end, psize, local);
+	else
+		flush_rtlb_mm(mm);
 }
 
 #define TLB_FLUSH_ALL -1UL
