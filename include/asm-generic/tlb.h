@@ -107,6 +107,7 @@ struct mmu_gather {
 	struct mmu_gather_batch	local;
 	struct page		*__pages[MMU_GATHER_BUNDLE];
 	unsigned int		batch_count;
+	int page_size;
 };
 
 #define HAVE_GENERIC_MMU_GATHER
@@ -115,16 +116,20 @@ void tlb_gather_mmu(struct mmu_gather *tlb, struct mm_struct *mm, unsigned long 
 void tlb_flush_mmu(struct mmu_gather *tlb);
 void tlb_finish_mmu(struct mmu_gather *tlb, unsigned long start,
 							unsigned long end);
-int __tlb_remove_page(struct mmu_gather *tlb, struct page *page);
+bool __tlb_remove_page(struct mmu_gather *tlb, struct page *page, int page_size);
 
 /* tlb_remove_page
  *	Similar to __tlb_remove_page but will call tlb_flush_mmu() itself when
  *	required.
  */
-static inline void tlb_remove_page(struct mmu_gather *tlb, struct page *page)
+static inline void tlb_remove_page(struct mmu_gather *tlb, struct page *page,
+				   int page_size)
 {
-	if (!__tlb_remove_page(tlb, page))
+	if (__tlb_remove_page(tlb, page, page_size)) {
 		tlb_flush_mmu(tlb);
+		tlb->page_size = page_size;
+		__tlb_remove_page(tlb, page, page_size);
+	}
 }
 
 static inline void __tlb_adjust_range(struct mmu_gather *tlb,
