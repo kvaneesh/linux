@@ -1,0 +1,51 @@
+Hello,
+
+This is a large series, mostly consisting of code movement. No new features
+are done in this series. The changes are done to accomodate the upcoming new memory
+model in future powerpc chips. The details of the new MMU model can be found at
+
+ http://ibm.biz/power-isa3 (Needs registration). I am including a summary of the changes below.
+
+ISA 3.0 adds support for the radix tree style of MMU with full
+virtualization and related control mechanisms that manage its
+coexistence with the HPT. Radix-using operating systems will
+manage their own translation tables instead of relying on hcalls.
+
+Radix style MMU model requires us to do a 4 level page table
+with 64K and 4K page size. The table index size different page size
+is listed below
+
+PGD -> 13 bits
+PUD -> 9 (1G hugepage)
+PMD -> 9 (2M huge page)
+PTE -> 5 (for 64k), 9 (for 4k)
+
+We also require the page table to be in big endian format.
+
+The changes proposed in this series enables us to support both
+hash page table and radix tree style MMU using a single kernel
+with limited impact. The idea is to change core page table
+accessors to static inline functions and later hotpatch them
+to switch to hash or radix tree functions. For ex:
+
+static inline int pte_write(pte_t pte)
+{
+       if (radix_enabled())
+               return rpte_write(pte);
+        return hlpte_write(pte);
+}
+
+On boot we will hotpatch the code so as to avoid conditional operation.
+
+The other two major change propsed in this series is to switch hash
+linux page table to a 4 level table in big endian format. This is
+done so that functions like pte_val(), pud_populate() doesn't need
+hotpatching and thereby helps in limiting runtime impact of the changes.
+
+I didn't included the radix related changes in this series. You can
+find them at https://github.com/kvaneesh/linux/commits/radix-mmu-v1
+
+Changes from V1:
+* move patches adding helpers to the next series
+
+-aneesh
