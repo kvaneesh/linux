@@ -795,7 +795,7 @@ data_access_slb_relon_pSeries:
 	mfspr	r3,SPRN_DAR
 	mfspr	r12,SPRN_SRR1
 #ifndef CONFIG_RELOCATABLE
-	b	slb_miss_realmode
+	b	handle_slb_miss_relon
 #else
 	/*
 	 * We can't just use a direct branch to slb_miss_realmode
@@ -804,7 +804,7 @@ data_access_slb_relon_pSeries:
 	 */
 	mfctr	r11
 	ld	r10,PACAKBASE(r13)
-	LOAD_HANDLER(r10, slb_miss_realmode)
+	LOAD_HANDLER(r10, handle_slb_miss_relon)
 	mtctr	r10
 	bctr
 #endif
@@ -820,11 +820,11 @@ instruction_access_slb_relon_pSeries:
 	mfspr	r3,SPRN_SRR0		/* SRR0 is faulting address */
 	mfspr	r12,SPRN_SRR1
 #ifndef CONFIG_RELOCATABLE
-	b	slb_miss_realmode
+	b	handle_slb_miss_relon
 #else
 	mfctr	r11
 	ld	r10,PACAKBASE(r13)
-	LOAD_HANDLER(r10, slb_miss_realmode)
+	LOAD_HANDLER(r10, handle_slb_miss_relon)
 	mtctr	r10
 	bctr
 #endif
@@ -967,7 +967,23 @@ h_data_storage_common:
 	bl      unknown_exception
 	b       ret_from_except
 
+/* r3 point to DAR */
 	.align	7
+	.globl slb_miss_user
+slb_miss_user:
+	std	r3,PACA_EXSLB+EX_DAR(r13)
+	/* Restore r3 as expected by PROLOG_COMMON below */
+	ld	r3,PACA_EXSLB+EX_R3(r13)
+	EXCEPTION_PROLOG_COMMON(0x380, PACA_EXSLB)
+	RECONCILE_IRQ_STATE(r10, r11)
+	ld	r4,PACA_EXSLB+EX_DAR(r13)
+	li	r5,0x380
+	std	r4,_DAR(r1)
+	addi	r3,r1,STACK_FRAME_OVERHEAD
+	bl	handle_slb_miss
+	b       ret_from_except_lite
+
+        .align	7
 	.globl instruction_access_common
 instruction_access_common:
 	EXCEPTION_PROLOG_COMMON(0x400, PACA_EXGEN)
@@ -1442,11 +1458,17 @@ unrecover_mce:
  * We assume we aren't going to take any exceptions during this procedure.
  */
 slb_miss_realmode:
-	mflr	r10
 #ifdef CONFIG_RELOCATABLE
 	mtctr	r11
 #endif
+	/*
+	 * Handle user slb miss with translation enabled
+	 */
+	cmpdi	r3,0
+	bge	3f
 
+5:
+	mflr	r10
 	stw	r9,PACA_EXSLB+EX_CCR(r13)	/* save CR in exc. frame */
 	std	r10,PACA_EXSLB+EX_LR(r13)	/* save LR */
 
@@ -1491,6 +1513,27 @@ END_MMU_FTR_SECTION_IFSET(MMU_FTR_RADIX)
 	mtspr	SPRN_SRR1,r10
 	rfid
 	b	.
+3:
+	/*
+	 * Enable IR/DR and handle the fault
+	 */
+	EXCEPTION_PROLOG_PSERIES_1(slb_miss_user, EXC_STD)
+
+handle_slb_miss_relon:
+#ifdef CONFIG_RELOCATABLE
+	mtctr	r11
+#endif
+	/*
+	 * Handle user slb miss with stack initialized.
+	 */
+	cmpdi	r3,0
+	bge	4f
+	/*
+	 * go back to slb_miss_realmode
+	 */
+	b	5b
+4:
+	EXCEPTION_RELON_PROLOG_PSERIES_1(slb_miss_user, EXC_STD)
 
 unrecov_slb:
 	EXCEPTION_PROLOG_COMMON(0x4100, PACA_EXSLB)

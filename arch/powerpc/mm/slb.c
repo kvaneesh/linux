@@ -24,6 +24,8 @@
 #include <asm/udbg.h>
 #include <asm/code-patching.h>
 
+#include <linux/context_tracking.h>
+
 enum slb_index {
 	LINEAR_INDEX	= 0, /* Kernel linear map  (0xc000000000000000) */
 	VMALLOC_INDEX	= 1, /* Kernel virtual map (0xd000000000000000) */
@@ -345,4 +347,13 @@ void slb_initialize(void)
 				     mmu_kernel_ssize, lflags, KSTACK_INDEX);
 
 	asm volatile("isync":::"memory");
+}
+
+void handle_slb_miss(struct pt_regs *regs,
+		     unsigned long address, unsigned long trap)
+{
+	enum ctx_state prev_state = exception_enter();
+
+	slb_allocate(address);
+	exception_exit(prev_state);
 }
