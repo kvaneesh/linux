@@ -51,15 +51,20 @@ static inline void destroy_context(struct mm_struct *mm)
 }
 
 extern void switch_slb(struct task_struct *tsk, struct mm_struct *mm);
-extern void switch_radix_mmu_context(struct mm_struct *prev,
-				     struct mm_struct *next);
 static inline void switch_mmu_context(struct mm_struct *prev,
 				      struct mm_struct *next,
 				      struct task_struct *tsk)
 {
-	if (radix_enabled())
-		return switch_radix_mmu_context(prev, next);
-	return switch_slb(tsk, next);
+
+	if (cpu_has_feature(CPU_FTR_ARCH_30)) {
+		mtspr(SPRN_PID, next->context.id);
+		asm volatile("isync": : :"memory");
+	}
+	/*
+	 * switch the pid before flushing the slb
+	 */
+	if (!radix_enabled())
+		return switch_slb(tsk, next);
 }
 
 extern void set_context(unsigned long id, pgd_t *pgd);

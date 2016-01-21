@@ -89,6 +89,13 @@
 #define H_VMALLOC_END	(H_VMALLOC_START + H_VMALLOC_SIZE)
 
 /*
+ * Process table with ISA 3.0 need to be mapped at the beginning of a 1TB segment
+ * We put that in the top of VMALLOC region. For each region we can go upto 64TB for now.
+ */
+#define H_SEG_PROC_TBL_START	ASM_CONST(0xD000200000000000)
+#define H_SEG_PROC_TBL_END	ASM_CONST(0xD00020ffffffffff)
+
+/*
  * Region IDs
  */
 #define REGION_SHIFT		60UL

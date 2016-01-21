@@ -54,12 +54,14 @@ extern struct patb_entry *partition_tb;
  * For now we limit both the process table and partition
  * table size to be PAGE_SIZE
  */
+#define SEGTB_SIZE_SHIFT	PAGE_SHIFT
 #define PRTB_SIZE_SHIFT	PAGE_SHIFT
 /*
  * We now support only 64K partition table size
  */
 #define PATB_SIZE_SHIFT	16
 
+extern unsigned long segment_table_initialize(struct prtb_entry *prtb);
 typedef unsigned long mm_context_id_t;
 struct spinlock;
 
@@ -89,6 +91,8 @@ typedef struct {
 #ifdef CONFIG_SPAPR_TCE_IOMMU
 	struct list_head iommu_group_mem_list;
 #endif
+	unsigned long seg_table;
+	struct spinlock *seg_tbl_lock;
 } mm_context_t;
 
 /*

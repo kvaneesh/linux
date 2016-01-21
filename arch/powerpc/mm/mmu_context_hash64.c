@@ -48,6 +48,7 @@ again:
 	else if (err)
 		return err;
 
+	/* P9 pid name space limitation */
 	if (index > MAX_USER_CONTEXT) {
 		spin_lock(&mmu_context_lock);
 		ida_remove(&mmu_context_ida, index);
@@ -77,12 +78,8 @@ int hlinit_new_context(struct task_struct *tsk, struct mm_struct *mm)
 	mm->context.id = index;
 #ifdef CONFIG_PPC_ICSWX
 	mm->context.cop_lockp = kmalloc(sizeof(spinlock_t), GFP_KERNEL);
-	if (!mm->context.cop_lockp) {
-		__hldestroy_context(index);
-		subpage_prot_free(mm);
-		mm->context.id = MMU_NO_CONTEXT;
-		return -ENOMEM;
-	}
+	if (!mm->context.cop_lockp)
+		goto err_out;
 	spin_lock_init(mm->context.cop_lockp);
 #endif /* CONFIG_PPC_ICSWX */
 
@@ -92,7 +89,31 @@ int hlinit_new_context(struct task_struct *tsk, struct mm_struct *mm)
 #ifdef CONFIG_SPAPR_TCE_IOMMU
 	mm_iommu_init(&mm->context);
 #endif
+	/*
+	 * Setup segment table and update process table entry
+	 */
+	if (mmu_has_feature(MMU_FTR_SEG_TABLE)) {
+		mm->context.seg_tbl_lock = kmalloc(sizeof(spinlock_t), GFP_KERNEL);
+		if (!mm->context.seg_tbl_lock)
+			goto err_out_free;
+		spin_lock_init(mm->context.seg_tbl_lock);
+		mm->context.seg_table = segment_table_initialize(&process_tb[index]);
+		if (!mm->context.seg_table) {
+			kfree(mm->context.seg_tbl_lock);
+			goto err_out_free;
+		}
+	}
 	return 0;
+
+err_out_free:
+#ifdef CONFIG_PPC_ICSWX
+	kfree(mm->context.cop_lockp);
+err_out:
+#endif
+	__hldestroy_context(index);
+	subpage_prot_free(mm);
+	mm->context.id = MMU_NO_CONTEXT;
+	return -ENOMEM;
 }
 
 void __hldestroy_context(int context_id)

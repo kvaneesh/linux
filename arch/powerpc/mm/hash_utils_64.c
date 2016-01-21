@@ -667,18 +667,53 @@ static void __init hash_init_partition_table(phys_addr_t hash_table,
 	/* Initialize the Partition Table with no entries */
 	memset((void *)partition_tb, 0, patb_size);
 	partition_tb->patb0 = cpu_to_be64(ps_field | hash_table | htab_size);
-	/*
-	 * FIXME!! This should be done via update_partition table
-	 *  For now UPRT is 0 for us
-	 */
-	partition_tb->patb1 = 0;
+	if (!mmu_has_feature(MMU_FTR_SEG_TABLE))
+		partition_tb->patb1 = 0;
 	DBG("Partition table %p\n", partition_tb);
 	/*
 	 * update partition table control register,
 	 * 64 K size.
 	 */
 	mtspr(SPRN_PTCR, __pa(partition_tb) | (PATB_SIZE_SHIFT - 12));
+}
 
+static unsigned long  __init hash_init_process_table(void)
+{
+	unsigned long ptb;
+	unsigned long prtps_field;
+	unsigned long process_tb_vsid;
+	unsigned long prtb_size = 1UL<< PRTB_SIZE_SHIFT;
+	/*
+	 * Allocate process table
+	 */
+	BUILD_BUG_ON_MSG((PRTB_SIZE_SHIFT > 23), "Process table size too large.");
+	ptb = memblock_alloc_base(prtb_size, prtb_size, MEMBLOCK_ALLOC_ANYWHERE);
+	/*
+	 * Map this to start of process table segment
+	 */
+	process_tb = (void *)H_SEG_PROC_TBL_START;
+	htab_bolt_mapping(H_SEG_PROC_TBL_START,
+			  H_SEG_PROC_TBL_START + prtb_size, ptb,
+			  pgprot_val(H_PAGE_KERNEL),
+			  mmu_linear_psize, MMU_SEGSIZE_1T);
+
+	/* Initialize the process table with no entries */
+	memset((void *)process_tb, 0, prtb_size);
+	/*
+	 * Now fill the partition table. This should be page size
+	 * use to map the segment table.
+	 */
+	prtps_field = mmu_psize_defs[mmu_linear_psize].sllp << PPC_BITLSHIFT(58);
+
+	process_tb_vsid = get_kernel_vsid((unsigned long)process_tb,
+					  MMU_SEGSIZE_1T);
+	pr_info("Process table %p (%p)  and vsid 0x%lx\n", process_tb, (void *)ptb, process_tb_vsid);
+	process_tb_vsid <<= PPC_BITLSHIFT(38);
+	/*
+	 * Fill in the partition table, 64k size for process table.
+	 */
+	ppc_md.update_partition_table(process_tb_vsid | prtps_field | (PRTB_SIZE_SHIFT - 12));
+	return ptb;
 }
 
 static void __init htab_initialize(void)
@@ -836,6 +871,7 @@ static void __init htab_initialize(void)
 #undef KB
 #undef MB
 
+static DEFINE_SPINLOCK(init_segtbl_lock);
 void __init hlearly_init_mmu(void)
 {
 	/*
@@ -868,6 +904,19 @@ void __init hlearly_init_mmu(void)
 	 * currently where the page size encoding is obtained.
 	 */
 	htab_initialize();
+
+	if(mmu_has_feature(MMU_FTR_SEG_TABLE)) {
+		unsigned long prtb;
+
+		prtb = hash_init_process_table();
+		/*
+		 * FIXME!! should we init mm_context for this ?
+		 * Access in real mode hence we can't use process_tb
+		 */
+		/* spinlock what to do ? */
+		init_mm.context.seg_tbl_lock = &init_segtbl_lock;
+		init_mm.context.seg_table = segment_table_initialize((struct prtb_entry *)prtb);
+	}
 
 	/* Initialize SLB management */
 	slb_initialize();

@@ -101,6 +101,17 @@
 #define HPTE_V_1TB_SEG		ASM_CONST(0x4000000000000000)
 #define HPTE_V_VRMA_MASK	ASM_CONST(0x4001ffffff000000)
 
+/* segment table entry masks/bits */
+/* Upper 64 bit */
+#define STE_VALID	PPC_BIT(36)
+/*
+ * lower 64 bit
+ * 64th bit become 0 bit, For example below is
+ * #define STE_SEG_MASK    PPC_BITMASK(64 - 64 , 65 - 64)
+ */
+#define STE_SEG_MASK    PPC_BITMASK(0, 1)
+#define STE_BOLTED	PPC_BIT(63)
+
 /* Values for PP (assumes Ks=0, Kp=1) */
 #define PP_RWXX	0	/* Supervisor read/write, User none */
 #define PP_RWRX 1	/* Supervisor read/write, User read */
@@ -126,6 +137,11 @@
 struct hash_pte {
 	__be64 v;
 	__be64 r;
+};
+
+struct seg_entry {
+	__be64 ste_e;
+	__be64 ste_v;
 };
 
 extern struct hash_pte *htab_address;

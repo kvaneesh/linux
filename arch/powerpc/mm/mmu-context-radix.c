@@ -85,13 +85,3 @@ void rdestroy_context(struct mm_struct *mm)
 	__destroy_context(mm->context.id);
 	mm->context.id = MMU_NO_CONTEXT;
 }
-
-void switch_radix_mmu_context(struct mm_struct *prev, struct mm_struct *next)
-{
-	/*
-	 * FIXME!! do we need hard disable irq ?
-	 */
-	mtspr(SPRN_PID, next->context.id);
-	asm volatile("isync": : :"memory");
-
-}

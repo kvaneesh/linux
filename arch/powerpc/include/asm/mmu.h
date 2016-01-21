@@ -19,7 +19,11 @@
 #define MMU_FTR_TYPE_40x		ASM_CONST(0x00000004)
 #define MMU_FTR_TYPE_44x		ASM_CONST(0x00000008)
 #define MMU_FTR_TYPE_FSL_E		ASM_CONST(0x00000010)
+#ifdef CONFIG_PPC_BOOK3S_64
+#define MMU_FTR_SEG_TABLE		ASM_CONST(0x00000020)
+#else
 #define MMU_FTR_TYPE_47x		ASM_CONST(0x00000020)
+#endif
 
 /*
  * This is individual features
