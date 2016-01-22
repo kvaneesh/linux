@@ -55,7 +55,10 @@ extern struct patb_entry *partition_tb;
  * table size to be PAGE_SIZE
  */
 #define PRTB_SIZE_SHIFT	PAGE_SHIFT
-#define PATB_SIZE_SHIFT	PAGE_SHIFT
+/*
+ * We now support only 64K partition table size
+ */
+#define PATB_SIZE_SHIFT	16
 
 typedef unsigned long mm_context_id_t;
 struct spinlock;
