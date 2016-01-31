@@ -490,6 +490,14 @@ static inline pgprot_t pgprot_writecombine(pgprot_t prot)
  * waiting for the inevitable extra hash-table miss exception.
  */
 extern void update_mmu_cache(struct vm_area_struct *, unsigned long, pte_t *);
+static inline unsigned long gup_pte_filter(int write)
+{
+	unsigned long mask;
+	mask = _PAGE_PRESENT | _PAGE_USER;
+	if (write)
+		mask |= _PAGE_RW;
+	return mask;
+}
 #endif /* !__ASSEMBLY__ */
 
 #endif /*  _ASM_POWERPC_BOOK3S_32_PGTABLE_H */

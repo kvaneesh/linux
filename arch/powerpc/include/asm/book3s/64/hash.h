@@ -568,6 +568,16 @@ static inline pgprot_t hlpgprot_writecombine(pgprot_t prot)
 
 extern pgprot_t hlvm_get_page_prot(unsigned long vm_flags);
 
+static inline unsigned long gup_pte_filter(int write)
+{
+	unsigned long mask;
+
+	mask = H_PAGE_PRESENT | H_PAGE_USER;
+	if (write)
+		mask |= H_PAGE_RW;
+	return mask;
+}
+
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 extern void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 				   pmd_t *pmdp, unsigned long old_pmd);
