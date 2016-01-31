@@ -84,12 +84,6 @@ unsigned long __page_coherent;
 EXPORT_SYMBOL(__page_coherent);
 unsigned long __page_present;
 EXPORT_SYMBOL(__page_present);
-unsigned long __page_rw;
-EXPORT_SYMBOL(__page_rw);
-unsigned long __page_dirty;
-EXPORT_SYMBOL(__page_dirty);
-unsigned long __page_exec;
-EXPORT_SYMBOL(__page_exec);
 
 /* kernel constants */
 unsigned long __ptrs_per_pte;
@@ -242,21 +236,7 @@ void __iomem * ioremap_prot(phys_addr_t addr, unsigned long size,
 {
 	void *caller = __builtin_return_address(0);
 
-	/* writeable implies dirty for kernel addresses */
-	if (flags & _PAGE_RW)
-		flags |= _PAGE_DIRTY;
-
-	/* we don't want to let _PAGE_USER and _PAGE_EXEC leak out */
-	flags &= ~(_PAGE_USER | _PAGE_EXEC);
-
-#ifdef _PAGE_BAP_SR
-	/* _PAGE_USER contains _PAGE_BAP_SR on BookE using the new PTE format
-	 * which means that we just cleared supervisor access... oops ;-) This
-	 * restores it
-	 */
-	flags |= _PAGE_BAP_SR;
-#endif
-
+	flags = ioremap_prot_flags(flags);
 	if (ppc_md.ioremap)
 		return ppc_md.ioremap(addr, size, flags, caller);
 	return __ioremap_caller(addr, size, flags, caller);

@@ -97,14 +97,6 @@ extern unsigned long __page_coherent;
 extern unsigned long __page_present;
 #define _PAGE_PRESENT __page_present
 
-extern unsigned long __page_rw;
-#define _PAGE_RW  __page_rw
-
-extern unsigned long __page_dirty;
-#define _PAGE_DIRTY  __page_dirty
-
-extern unsigned long __page_exec;
-#define _PAGE_EXEC  __page_exec
 #endif /* CONFIG_PPC_BOOK3S_64 */
 extern unsigned long ioremap_bot;
 
@@ -848,5 +840,9 @@ static inline pgprot_t vm_get_page_prot(unsigned long vm_flags)
 	return hlvm_get_page_prot(vm_flags);
 }
 
+static inline unsigned long ioremap_prot_flags(unsigned long flags)
+{
+	return hlioremap_prot_flags(flags);
+}
 #endif /* __ASSEMBLY__ */
 #endif /* _ASM_POWERPC_BOOK3S_64_PGTABLE_H_ */

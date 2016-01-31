@@ -865,9 +865,6 @@ void __init hlearly_init_mmu(void)
 	__page_coherent = H_PAGE_COHERENT;
 	__page_present = H_PAGE_PRESENT;
 	__page_kernel_exec = H_PAGE_KERNEL_EXEC;
-	__page_rw = H_PAGE_RW;
-	__page_dirty = H_PAGE_DIRTY;
-	__page_exec = H_PAGE_EXEC;
 
 	/* Initialize the MMU Hash table and create the linear mapping
 	 * of memory. Has to be done before SLB initialization as this is
