@@ -76,26 +76,17 @@ extern unsigned long __pgdir_shift;
 extern pgprot_t __kernel_page_prot;
 #define PAGE_KERNEL __kernel_page_prot
 
+extern unsigned long __page_user;
+#define _PAGE_USER __page_user
+
 extern pgprot_t __page_none;
 #define PAGE_NONE  __page_none
-
-extern pgprot_t __page_kernel_exec;
-#define PAGE_KERNEL_EXEC __page_kernel_exec
 
 extern unsigned long __page_no_cache;
 #define _PAGE_NO_CACHE  __page_no_cache
 
 extern unsigned long __page_guarded;
 #define _PAGE_GUARDED  __page_guarded
-
-extern unsigned long __page_user;
-#define _PAGE_USER __page_user
-
-extern unsigned long __page_coherent;
-#define _PAGE_COHERENT __page_coherent
-
-extern unsigned long __page_present;
-#define _PAGE_PRESENT __page_present
 
 #endif /* CONFIG_PPC_BOOK3S_64 */
 extern unsigned long ioremap_bot;
@@ -844,5 +835,11 @@ static inline unsigned long ioremap_prot_flags(unsigned long flags)
 {
 	return hlioremap_prot_flags(flags);
 }
+
+static inline unsigned long ioremap_update_flags(unsigned long *oflags)
+{
+	return hlioremap_update_flags(oflags);
+}
+
 #endif /* __ASSEMBLY__ */
 #endif /* _ASM_POWERPC_BOOK3S_64_PGTABLE_H_ */

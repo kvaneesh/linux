@@ -509,6 +509,23 @@ static inline unsigned long ioremap_prot_flags(unsigned long flags)
 	flags &= ~(_PAGE_USER | _PAGE_EXEC);
 	return flags;
 }
+
+static inline unsigned long ioremap_update_flags(unsigned long *oflags)
+{
+	unsigned long flags = *oflags;
+
+	/* Make sure we have the base flags */
+	if ((flags & _PAGE_PRESENT) == 0)
+		flags |= pgprot_val(PAGE_KERNEL);
+
+	/* Non-cacheable page cannot be coherent */
+	if (flags & _PAGE_NO_CACHE)
+		flags &= ~_PAGE_COHERENT;
+
+	*oflags = flags;
+	return 0;
+}
+
 #endif /* !__ASSEMBLY__ */
 
 #endif /*  _ASM_POWERPC_BOOK3S_32_PGTABLE_H */

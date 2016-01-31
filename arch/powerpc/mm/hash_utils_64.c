@@ -858,13 +858,10 @@ void __init hlearly_init_mmu(void)
 	 * initialize page flags used by the core kernel
 	 */
 	__kernel_page_prot = H_PAGE_KERNEL;
+	__page_user = H_PAGE_USER;
 	__page_none = H_PAGE_NONE;
 	__page_no_cache = H_PAGE_NO_CACHE;
 	__page_guarded = H_PAGE_GUARDED;
-	__page_user = H_PAGE_USER;
-	__page_coherent = H_PAGE_COHERENT;
-	__page_present = H_PAGE_PRESENT;
-	__page_kernel_exec = H_PAGE_KERNEL_EXEC;
 
 	/* Initialize the MMU Hash table and create the linear mapping
 	 * of memory. Has to be done before SLB initialization as this is

@@ -589,6 +589,30 @@ static inline unsigned long hlioremap_prot_flags(unsigned long flags)
 	return flags;
 }
 
+static inline unsigned long hlioremap_update_flags(unsigned long *oflags)
+{
+	unsigned long flags = *oflags;
+
+	/* Make sure we have the base flags */
+	if ((flags & H_PAGE_PRESENT) == 0)
+		flags |= pgprot_val(H_PAGE_KERNEL);
+
+	/*
+	 * Non-cacheable page cannot be coherent.
+	 * hash will optimize this out. But we track it here
+	 * for correctness
+	 */
+	if (flags & H_PAGE_NO_CACHE)
+		flags &= ~H_PAGE_COHERENT;
+
+	/* We don't support the 4K PFN hack with ioremap */
+	if (flags & H_PAGE_4K_PFN)
+		return 1;
+
+	*oflags = flags;
+	return 0;
+}
+
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 extern void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 				   pmd_t *pmdp, unsigned long old_pmd);

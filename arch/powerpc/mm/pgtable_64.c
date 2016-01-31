@@ -70,20 +70,14 @@
  */
 pgprot_t __kernel_page_prot;
 EXPORT_SYMBOL(__kernel_page_prot);
+unsigned long __page_user;
+EXPORT_SYMBOL(__page_user);
 pgprot_t __page_none;
 EXPORT_SYMBOL(__page_none);
-pgprot_t __page_kernel_exec;
-EXPORT_SYMBOL(__page_kernel_exec);
 unsigned long __page_no_cache;
 EXPORT_SYMBOL(__page_no_cache);
 unsigned long __page_guarded;
 EXPORT_SYMBOL(__page_guarded);
-unsigned long __page_user;
-EXPORT_SYMBOL(__page_user);
-unsigned long __page_coherent;
-EXPORT_SYMBOL(__page_coherent);
-unsigned long __page_present;
-EXPORT_SYMBOL(__page_present);
 
 /* kernel constants */
 unsigned long __ptrs_per_pte;
@@ -123,16 +117,7 @@ void __iomem * __ioremap_at(phys_addr_t pa, void *ea, unsigned long size,
 {
 	unsigned long i;
 
-	/* Make sure we have the base flags */
-	if ((flags & _PAGE_PRESENT) == 0)
-		flags |= pgprot_val(PAGE_KERNEL);
-
-	/* Non-cacheable page cannot be coherent */
-	if (flags & _PAGE_NO_CACHE)
-		flags &= ~_PAGE_COHERENT;
-
-	/* We don't support the 4K PFN hack with ioremap */
-	if (flags & H_PAGE_4K_PFN)
+	if (ioremap_update_flags(&flags) != 0)
 		return NULL;
 
 	WARN_ON(pa & ~PAGE_MASK);
