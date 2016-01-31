@@ -593,6 +593,10 @@ static inline unsigned long gup_pte_filter(int write)
 {
 	unsigned long mask;
 
+#ifdef CONFIG_DEBUG_VM
+	WARN(radix_enabled(), "Hugepd gup filter called for radix\n");
+#endif
+
 	mask = H_PAGE_PRESENT | H_PAGE_USER;
 	if (write)
 		mask |= H_PAGE_RW;

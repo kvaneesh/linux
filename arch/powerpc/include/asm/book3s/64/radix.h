@@ -558,5 +558,7 @@ static inline unsigned long rioremap_update_flags(unsigned long *oflags)
 	*oflags = flags;
 	return 0;
 }
+extern void set_rpte_at(struct mm_struct *mm, unsigned long addr, pte_t *ptep,
+			pte_t pte);
 #endif /* __ASSEMBLY__ */
 #endif
