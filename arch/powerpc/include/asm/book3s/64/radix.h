@@ -196,12 +196,12 @@
 #define __RS111		RPAGE_SHARED_X
 
 /* Permission masks used for kernel mappings */
-#define RPAGE_KERNEL		__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_RW)
+#define RPAGE_KERNEL		__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_RW | _RPAGE_DIRTY)
 #define RPAGE_KERNEL_NC		__pgprot(_RPAGE_BASE_NC | _RPAGE_KERNEL_RW | \
 					_RPAGE_NO_CACHE)
 #define RPAGE_KERNEL_NCG	__pgprot(_RPAGE_BASE_NC | _RPAGE_KERNEL_RW | \
 					_RPAGE_NO_CACHE | _RPAGE_GUARDED)
-#define RPAGE_KERNEL_X		__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_RWX)
+#define RPAGE_KERNEL_X		__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_RWX | _RPAGE_DIRTY)
 #define RPAGE_KERNEL_RO		__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_RO)
 #define RPAGE_KERNEL_ROX	__pgprot(_RPAGE_BASE | _RPAGE_KERNEL_ROX)
 

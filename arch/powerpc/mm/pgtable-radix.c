@@ -348,7 +348,7 @@ void __meminit rvmemmap_create_mapping(unsigned long start,
 				      unsigned long phys)
 {
 	/* Create a PTE encoding */
-	unsigned long flags = _RPAGE_PRESENT | _RPAGE_ACCESSED |
+	unsigned long flags = _RPAGE_PRESENT | _RPAGE_ACCESSED | _RPAGE_DIRTY |
 				_RPAGE_KERNEL_RW;
 
 	/* FIXME!! Assume page_size == PAGE_SIZE for now */
