@@ -21,12 +21,35 @@ struct mmu_psize_def {
 extern struct mmu_psize_def mmu_psize_defs[MMU_PAGE_COUNT];
 #endif /* __ASSEMBLY__ */
 
-#ifdef CONFIG_PPC_STD_MMU_64
 /* 64-bit classic hash table MMU */
 #include <asm/book3s/64/mmu-hash.h>
-#endif
 
 #ifndef __ASSEMBLY__
+/*
+ * ISA 3.0 partiton and process table entry format
+ */
+struct prtb_entry {
+	__be64 prtb0;
+	__be64 prtb1;
+};
+extern struct prtb_entry *process_tb;
+
+struct patb_entry {
+	__be64 patb0;
+	__be64 patb1;
+};
+extern struct patb_entry *partition_tb;
+
+#define PATB_HR		PPC_BIT(0)
+#define PATB_GR		PPC_BIT(0)
+#define RPDB_MASK	(PPC_BITMASK(3, 55))
+#define RPDB_SHIFT	PPC_BITLSHIFT(55)
+/*
+ * For now we limit both the process table and partition
+ * table size to be PAGE_SIZE
+ */
+#define PRTB_SIZE_SHIFT	PAGE_SHIFT
+#define PATB_SIZE_SHIFT	PAGE_SHIFT
 
 typedef unsigned long mm_context_id_t;
 struct spinlock;

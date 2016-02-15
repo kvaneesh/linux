@@ -112,6 +112,11 @@ unsigned long __vmalloc_end;
 EXPORT_SYMBOL(__vmalloc_end);
 struct page *vmemmap;
 EXPORT_SYMBOL(vmemmap);
+/*
+ * partition table and process table for ISA 3.0
+ */
+struct prtb_entry *process_tb;
+struct patb_entry *partition_tb;
 #endif
 unsigned long ioremap_bot;
 
