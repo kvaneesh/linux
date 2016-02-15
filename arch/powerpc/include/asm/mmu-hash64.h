@@ -68,7 +68,6 @@
 #define HPTES_PER_GROUP 8
 
 #define HPTE_V_SSIZE_SHIFT	62
-#define HPTE_V_SSIZE_SHIFT_NEW_PTE	58
 #define HPTE_V_AVPN_SHIFT	7
 #define HPTE_V_AVPN		ASM_CONST(0x3fffffffffffff80)
 #define HPTE_V_AVPN_VAL(x)	(((x) & HPTE_V_AVPN) >> HPTE_V_AVPN_SHIFT)
@@ -248,8 +247,7 @@ static inline unsigned long hpte_encode_avpn(unsigned long vpn, int psize,
 	 */
 	v = (vpn >> (23 - VPN_SHIFT)) & ~(mmu_psize_defs[psize].avpnm);
 	v <<= HPTE_V_AVPN_SHIFT;
-	if (! mmu_has_feature(MMU_FTR_RADIX))
-		v |= ((unsigned long) ssize) << HPTE_V_SSIZE_SHIFT;
+	v |= ((unsigned long) ssize) << HPTE_V_SSIZE_SHIFT;
 	return v;
 }
 
@@ -273,11 +271,8 @@ static inline unsigned long hpte_encode_v(unsigned long vpn, int base_psize,
  * aligned for the requested page size
  */
 static inline unsigned long hpte_encode_r(unsigned long pa, int base_psize,
-					  int actual_psize, int ssize)
+					  int actual_psize)
 {
-	if (mmu_has_feature(MMU_FTR_RADIX))
-		pa |= ((unsigned long) ssize) << HPTE_V_SSIZE_SHIFT_NEW_PTE;
-
 	/* A 4K page needs no special encoding */
 	if (actual_psize == MMU_PAGE_4K)
 		return pa & HPTE_R_RPN;
