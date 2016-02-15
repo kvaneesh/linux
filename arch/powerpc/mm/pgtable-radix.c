@@ -296,6 +296,13 @@ found:
 
 void __init rearly_init_mmu(void)
 {
+	unsigned long lpcr;
+	/*
+	 * setup LPCR UPRT based on mmu_features
+	 */
+	lpcr = mfspr(SPRN_LPCR);
+	mtspr(SPRN_LPCR, lpcr | LPCR_UPRT);
+
 #ifdef CONFIG_PPC_64K_PAGES
 	/* PAGE_SIZE mappings */
 	mmu_virtual_psize = MMU_PAGE_64K;
@@ -345,6 +352,12 @@ void __init rearly_init_mmu(void)
 
 void rearly_init_mmu_secondary(void)
 {
+	unsigned long lpcr;
+	/*
+	 * setup LPCR UPRT based on mmu_features
+	 */
+	lpcr = mfspr(SPRN_LPCR);
+	mtspr(SPRN_LPCR, lpcr | LPCR_UPRT);
 	/*
 	 * update partition table control register, 64 K size.
 	 */
