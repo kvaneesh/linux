@@ -72,10 +72,13 @@ extern void __setup_cpu_power8(unsigned long offset, struct cpu_spec* spec);
 extern void __restore_cpu_power8(void);
 extern void __setup_cpu_power9(unsigned long offset, struct cpu_spec* spec);
 extern void __restore_cpu_power9(void);
+extern void __setup_cpu_power9_uprt(unsigned long offset, struct cpu_spec* spec);
+extern void __restore_cpu_power9_uprt(void);
 extern void __restore_cpu_a2(void);
 extern void __flush_tlb_power7(unsigned int action);
 extern void __flush_tlb_power8(unsigned int action);
 extern void __flush_tlb_power9(unsigned int action);
+extern void __flush_tlb_power9_radix(unsigned int action);
 extern long __machine_check_early_realmode_p7(struct pt_regs *regs);
 extern long __machine_check_early_realmode_p8(struct pt_regs *regs);
 #endif /* CONFIG_PPC64 */
@@ -508,9 +511,9 @@ static struct cpu_spec __initdata cpu_specs[] = {
 		.platform		= "power8",
 	},
 	{	/* Power9 */
-		.pvr_mask		= 0xffff0000,
-		.pvr_value		= 0x004e0000,
-		.cpu_name		= "POWER9 (raw)",
+		.pvr_mask		= 0xffffff00,
+		.pvr_value		= 0x004e0200,
+		.cpu_name		= "POWER9/hash (raw)",
 		.cpu_features		= CPU_FTRS_POWER9,
 		.cpu_user_features	= COMMON_USER_POWER9,
 		.cpu_user_features2	= COMMON_USER2_POWER9,
@@ -524,6 +527,26 @@ static struct cpu_spec __initdata cpu_specs[] = {
 		.cpu_setup		= __setup_cpu_power9,
 		.cpu_restore		= __restore_cpu_power9,
 		.flush_tlb		= __flush_tlb_power9,
+		.platform		= "power9",
+	},
+	{	/*  Power9 */
+		.pvr_mask		= 0xffff0000,
+		.pvr_value		= 0x004e0000,
+		.cpu_name		= "POWER9/radix (raw)",
+		.cpu_features		= CPU_FTRS_POWER9,
+		.cpu_user_features	= COMMON_USER_POWER9,
+		.cpu_user_features2	= COMMON_USER2_POWER9,
+		.mmu_features		= MMU_FTRS_POWER9 | MMU_FTR_RADIX,
+		.icache_bsize		= 128,
+		.dcache_bsize		= 128,
+		.num_pmcs		= 6,
+		.pmc_type		= PPC_PMC_IBM,
+		.oprofile_cpu_type	= "ppc64/power8",
+		.oprofile_type		= PPC_OPROFILE_INVALID,
+		.cpu_setup		= __setup_cpu_power9_uprt,
+		.cpu_restore		= __restore_cpu_power9_uprt,
+		.flush_tlb		= __flush_tlb_power9_radix,
+		.machine_check_early	= __machine_check_early_realmode_p8,
 		.platform		= "power9",
 	},
 	{	/* Cell Broadband Engine */

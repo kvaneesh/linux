@@ -347,6 +347,10 @@
 #define   LPCR_LPES_SH	2
 #define   LPCR_RMI     0x00000002      /* real mode is cache inhibit */
 #define   LPCR_HDICE   0x00000001      /* Hyp Decr enable (HV,PR,EE) */
+/*
+ * Used in asm code, hence we don't want to use PPC_BITCOUNT
+ */
+#define	  LPCR_UPRT	(ASM_CONST(0x1) << (64 - 42))
 #ifndef SPRN_LPID
 #define SPRN_LPID	0x13F	/* Logical Partition Identifier */
 #endif

@@ -117,6 +117,41 @@ _GLOBAL(__restore_cpu_power9)
 	mtlr	r11
 	blr
 
+_GLOBAL(__setup_cpu_power9_uprt)
+	mflr	r11
+	bl	__init_FSCR
+	bl	__init_hvmode_206
+	mtlr	r11
+	beqlr
+	li	r0,0
+	mtspr	SPRN_LPID,r0
+	mfspr	r3,SPRN_LPCR
+	ori	r3, r3, LPCR_PECEDH
+	oris	r3,r3,(LPCR_UPRT >> 16)
+	bl	__init_LPCR
+	bl	__init_HFSCR
+	bl	__init_tlb_power7
+	mtlr	r11
+	blr
+
+_GLOBAL(__restore_cpu_power9_uprt)
+	mflr	r11
+	bl	__init_FSCR
+	mfmsr	r3
+	rldicl.	r0,r3,4,63
+	mtlr	r11
+	beqlr
+	li	r0,0
+	mtspr	SPRN_LPID,r0
+	mfspr   r3,SPRN_LPCR
+	ori	r3, r3, LPCR_PECEDH
+	oris	r3,r3,(LPCR_UPRT >> 16)
+	bl	__init_LPCR
+	bl	__init_HFSCR
+	bl	__init_tlb_power7
+	mtlr	r11
+	blr
+
 __init_hvmode_206:
 	/* Disable CPU_FTR_HVMODE and exit if MSR:HV is not set */
 	mfmsr	r3

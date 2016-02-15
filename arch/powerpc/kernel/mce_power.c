@@ -75,6 +75,10 @@ void __flush_tlb_power9(unsigned int action)
 	flush_tlb_206(POWER9_TLB_SETS_HASH, action);
 }
 
+void __flush_tlb_power9_radix(unsigned int action)
+{
+	flush_tlb_206(POWER9_TLB_SETS_RADIX, action);
+}
 
 /* flush SLBs and reload */
 #ifdef CONFIG_PPC_MMU_STD_64
