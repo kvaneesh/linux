@@ -60,15 +60,12 @@
 #define PTE_FRAG_SIZE_SHIFT  12
 #define PTE_FRAG_SIZE (1UL << PTE_FRAG_SIZE_SHIFT)
 
-/*
- * Bits to mask out from a PMD to get to the PTE page
- * PMDs point to PTE table fragments which are PTE_FRAG_SIZE aligned.
- */
-#define PMD_MASKED_BITS		(PTE_FRAG_SIZE - 1)
-/* Bits to mask out from a PGD/PUD to get to the PMD page */
-#define PUD_MASKED_BITS		0x1ff
-/* FIXME!! Will be fixed in next patch */
-#define PGD_MASKED_BITS		0
+/* Bits to mask out from a PMD to get to the PTE page */
+#define PMD_MASKED_BITS		0xc0000000000000ffUL
+/* Bits to mask out from a PUD to get to the PMD page */
+#define PUD_MASKED_BITS		0xc0000000000000ffUL
+/* Bits to mask out from a PGD to get to the PUD page */
+#define PGD_MASKED_BITS		0xc0000000000000ffUL
 
 #ifndef __ASSEMBLY__
 
