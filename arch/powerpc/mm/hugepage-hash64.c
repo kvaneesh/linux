@@ -48,7 +48,7 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 		 * a write access
 		 */
 		new_pmd = old_pmd | _PAGE_BUSY | _PAGE_ACCESSED;
-		if (access & _PAGE_RW)
+		if (access & _PAGE_WRITE)
 			new_pmd |= _PAGE_DIRTY;
 		opmd = cpu_to_be64(old_pmd);
 		npmd = cpu_to_be64(new_pmd);
