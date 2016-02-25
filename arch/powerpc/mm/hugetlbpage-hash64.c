@@ -56,7 +56,7 @@ int __hash_page_huge(unsigned long ea, unsigned long access, unsigned long vsid,
 		/* Try to lock the PTE, add ACCESSED and DIRTY if it was
 		 * a write access */
 		new_pte = old_pte | _PAGE_BUSY | _PAGE_ACCESSED;
-		if (access & _PAGE_RW)
+		if (access & _PAGE_WRITE)
 			new_pte |= _PAGE_DIRTY;
 		opte = cpu_to_be64(old_pte);
 		npte = cpu_to_be64(new_pte);
