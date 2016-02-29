@@ -46,7 +46,7 @@ static inline int pte_looks_normal(pte_t pte)
 
 #if defined(CONFIG_PPC_BOOK3S_64)
 	if ((pte_val(pte) &
-	     (_PAGE_PRESENT | _PAGE_SPECIAL | _PAGE_NO_CACHE)) ==
+	     (_PAGE_PRESENT | _PAGE_SPECIAL | _PAGE_TOLERANT)) ==
 	    _PAGE_PRESENT) {
 		if (!(pte_val(pte) & _PAGE_PRIVILEGED))
 			return 1;

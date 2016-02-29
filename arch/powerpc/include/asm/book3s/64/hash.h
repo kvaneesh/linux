@@ -21,11 +21,9 @@
 #define _PAGE_RW		(_PAGE_READ | _PAGE_WRITE)
 #define _PAGE_RWX		(_PAGE_READ | _PAGE_WRITE | _PAGE_EXEC)
 #define _PAGE_PRIVILEGED	0x00008 /* page can only be access by kernel */
-#define _PAGE_GUARDED		0x00010 /* G: guarded (side-effect) page */
-/* M (memory coherence) is always set in the HPTE, so we don't need it here */
-#define _PAGE_COHERENT		0x0
-#define _PAGE_NO_CACHE		0x00020 /* I: cache inhibit */
-#define _PAGE_WRITETHRU		0x00040 /* W: cache write-through */
+#define _PAGE_SAO		0x00010 /* Strong access order */
+#define _PAGE_NON_IDEMPOTENT	0x00020 /* non idempotent memory */
+#define _PAGE_TOLERANT		0x00040 /* tolerant memory, cache inhibited */
 #define _PAGE_DIRTY		0x00080 /* C: page changed */
 #define _PAGE_ACCESSED		0x00100 /* R: page referenced */
 #define _PAGE_SPECIAL		0x00400 /* software: special page */
@@ -122,9 +120,6 @@
 #define _PAGE_KERNEL_RWX	(_PAGE_PRIVILEGED | _PAGE_DIRTY | \
 				 _PAGE_RW | _PAGE_EXEC)
 
-/* Strong Access Ordering */
-#define _PAGE_SAO		(_PAGE_WRITETHRU | _PAGE_NO_CACHE | _PAGE_COHERENT)
-
 /* No page size encoding in the linux PTE */
 #define _PAGE_PSIZE		0
 
@@ -150,10 +145,9 @@
 /*
  * Mask of bits returned by pte_pgprot()
  */
-#define PAGE_PROT_BITS	(_PAGE_GUARDED | _PAGE_COHERENT | _PAGE_NO_CACHE | \
-			 _PAGE_WRITETHRU | _PAGE_4K_PFN | \
-			 _PAGE_PRIVILEGED | _PAGE_ACCESSED |  _PAGE_READ |\
-			 _PAGE_WRITE |  _PAGE_DIRTY | _PAGE_EXEC | \
+#define PAGE_PROT_BITS  (_PAGE_SAO | _PAGE_NON_IDEMPOTENT | _PAGE_TOLERANT | \
+			 _PAGE_4K_PFN | _PAGE_PRIVILEGED | _PAGE_ACCESSED | \
+			 _PAGE_READ | _PAGE_WRITE |  _PAGE_DIRTY | _PAGE_EXEC | \
 			 _PAGE_SOFT_DIRTY)
 /*
  * We define 2 sets of base prot bits, one for basic pages (ie,
@@ -162,7 +156,7 @@
  * the processor might need it for DMA coherency.
  */
 #define _PAGE_BASE_NC	(_PAGE_PRESENT | _PAGE_ACCESSED | _PAGE_PSIZE)
-#define _PAGE_BASE	(_PAGE_BASE_NC | _PAGE_COHERENT)
+#define _PAGE_BASE	(_PAGE_BASE_NC)
 
 /* Permission masks used to generate the __P and __S table,
  *
@@ -203,9 +197,9 @@
 /* Permission masks used for kernel mappings */
 #define PAGE_KERNEL	__pgprot(_PAGE_BASE | _PAGE_KERNEL_RW)
 #define PAGE_KERNEL_NC	__pgprot(_PAGE_BASE_NC | _PAGE_KERNEL_RW | \
-				 _PAGE_NO_CACHE)
+				 _PAGE_TOLERANT)
 #define PAGE_KERNEL_NCG	__pgprot(_PAGE_BASE_NC | _PAGE_KERNEL_RW | \
-				 _PAGE_NO_CACHE | _PAGE_GUARDED)
+				 _PAGE_NON_IDEMPOTENT)
 #define PAGE_KERNEL_X	__pgprot(_PAGE_BASE | _PAGE_KERNEL_RWX)
 #define PAGE_KERNEL_RO	__pgprot(_PAGE_BASE | _PAGE_KERNEL_RO)
 #define PAGE_KERNEL_ROX	__pgprot(_PAGE_BASE | _PAGE_KERNEL_ROX)
@@ -516,41 +510,26 @@ static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
  * Macro to mark a page protection value as "uncacheable".
  */
 
-#define _PAGE_CACHE_CTL	(_PAGE_COHERENT | _PAGE_GUARDED | _PAGE_NO_CACHE | \
-			 _PAGE_WRITETHRU)
+#define _PAGE_CACHE_CTL	(_PAGE_SAO | _PAGE_NON_IDEMPOTENT | _PAGE_TOLERANT)
 
 #define pgprot_noncached pgprot_noncached
 static inline pgprot_t pgprot_noncached(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~_PAGE_CACHE_CTL) |
-			_PAGE_NO_CACHE | _PAGE_GUARDED);
+			_PAGE_NON_IDEMPOTENT);
 }
 
 #define pgprot_noncached_wc pgprot_noncached_wc
 static inline pgprot_t pgprot_noncached_wc(pgprot_t prot)
 {
 	return __pgprot((pgprot_val(prot) & ~_PAGE_CACHE_CTL) |
-			_PAGE_NO_CACHE);
+			_PAGE_TOLERANT);
 }
 
 #define pgprot_cached pgprot_cached
 static inline pgprot_t pgprot_cached(pgprot_t prot)
 {
-	return __pgprot((pgprot_val(prot) & ~_PAGE_CACHE_CTL) |
-			_PAGE_COHERENT);
-}
-
-#define pgprot_cached_wthru pgprot_cached_wthru
-static inline pgprot_t pgprot_cached_wthru(pgprot_t prot)
-{
-	return __pgprot((pgprot_val(prot) & ~_PAGE_CACHE_CTL) |
-			_PAGE_COHERENT | _PAGE_WRITETHRU);
-}
-
-#define pgprot_cached_noncoherent pgprot_cached_noncoherent
-static inline pgprot_t pgprot_cached_noncoherent(pgprot_t prot)
-{
-	return __pgprot(pgprot_val(prot) & ~_PAGE_CACHE_CTL);
+	return __pgprot((pgprot_val(prot) & ~_PAGE_CACHE_CTL));
 }
 
 #define pgprot_writecombine pgprot_writecombine

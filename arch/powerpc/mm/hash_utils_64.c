@@ -192,12 +192,12 @@ unsigned long htab_convert_pte_flags(unsigned long pteflags)
 	/*
 	 * Add in WIG bits
 	 */
-	if (pteflags & _PAGE_WRITETHRU)
-		rflags |= HPTE_R_W;
-	if (pteflags & _PAGE_NO_CACHE)
+	if (pteflags & _PAGE_TOLERANT)
 		rflags |= HPTE_R_I;
-	if (pteflags & _PAGE_GUARDED)
-		rflags |= HPTE_R_G;
+	if (pteflags & _PAGE_NON_IDEMPOTENT)
+		rflags |= (HPTE_R_I | HPTE_R_G);
+	if (pteflags & _PAGE_SAO)
+		rflags |= (HPTE_R_I | HPTE_R_W);
 
 	return rflags;
 }
@@ -1139,7 +1139,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea,
 	 * using non cacheable large pages, then we switch to 4k
 	 */
 	if (mmu_ci_restrictions && psize == MMU_PAGE_64K &&
-	    (pte_val(*ptep) & _PAGE_NO_CACHE)) {
+	    (pte_val(*ptep) & _PAGE_TOLERANT)) {
 		if (user_region) {
 			demote_segment_4k(mm, ea);
 			psize = MMU_PAGE_4K;
@@ -1298,7 +1298,7 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 	 * That way we don't have to duplicate all of the logic for segment
 	 * page size demotion here
 	 */
-	if (pte_val(*ptep) & (_PAGE_4K_PFN | _PAGE_NO_CACHE))
+	if (pte_val(*ptep) & (_PAGE_4K_PFN | _PAGE_TOLERANT))
 		goto out_exit;
 #endif /* CONFIG_PPC_64K_PAGES */
 
