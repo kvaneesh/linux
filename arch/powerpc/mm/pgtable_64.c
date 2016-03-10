@@ -475,7 +475,6 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 	assert_spin_locked(&mm->page_table_lock);
 #endif
 
-#ifdef PTE_ATOMIC_UPDATES
 	clr = cpu_to_be64(clr);
 	set = cpu_to_be64(set);
 	__asm__ __volatile__(
@@ -491,10 +490,7 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 	: "cc" );
 
 	old = be64_to_cpu(old);
-#else
-	old = pmd_val(*pmdp);
-	*pmdp = __pmd((old & ~clr) | set);
-#endif
+
 	trace_hugepage_update(addr, old, clr, set);
 	if (old & H_PAGE_HASHPTE)
 		hpte_do_hugepage_flush(mm, addr, pmdp, old);
