@@ -133,6 +133,12 @@ static inline int rpmd_trans_huge(pmd_t pmd)
 
 #endif
 
+extern int __meminit rvmemmap_create_mapping(unsigned long start,
+					     unsigned long page_size,
+					     unsigned long phys);
+extern void rvmemmap_remove_mapping(unsigned long start,
+				    unsigned long page_size);
+
 extern int map_radix_kernel_page(unsigned long ea, unsigned long pa,
 				 pgprot_t flags, unsigned int psz);
 #endif /* __ASSEMBLY__ */
