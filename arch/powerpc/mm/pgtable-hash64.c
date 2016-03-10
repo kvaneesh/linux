@@ -26,9 +26,9 @@
  * On hash-based CPUs, the vmemmap is bolted in the hash table.
  *
  */
-int __meminit vmemmap_create_mapping(unsigned long start,
-				     unsigned long page_size,
-				     unsigned long phys)
+int __meminit hlvmemmap_create_mapping(unsigned long start,
+				       unsigned long page_size,
+				       unsigned long phys)
 {
 	int rc = htab_bolt_mapping(start, start + page_size, phys,
 				   pgprot_val(PAGE_KERNEL),
@@ -43,8 +43,8 @@ int __meminit vmemmap_create_mapping(unsigned long start,
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG
-void vmemmap_remove_mapping(unsigned long start,
-			    unsigned long page_size)
+void hlvmemmap_remove_mapping(unsigned long start,
+			      unsigned long page_size)
 {
 	int rc = htab_remove_mapping(start, start + page_size,
 				     mmu_vmemmap_psize,
@@ -60,7 +60,7 @@ void vmemmap_remove_mapping(unsigned long start,
  * map_kernel_page adds an entry to the ioremap page table
  * and adds an entry to the HPT, possibly bolting it
  */
-int map_kernel_page(unsigned long ea, unsigned long pa, unsigned long flags)
+int hlmap_kernel_page(unsigned long ea, unsigned long pa, unsigned long flags)
 {
 	pgd_t *pgdp;
 	pud_t *pudp;
