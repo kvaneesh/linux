@@ -92,7 +92,7 @@ void __iomem * __ioremap_at(phys_addr_t pa, void *ea, unsigned long size,
 		flags |= pgprot_val(PAGE_KERNEL);
 
 	/* We don't support the 4K PFN hack with ioremap */
-	if (flags & _PAGE_4K_PFN)
+	if (flags & H_PAGE_4K_PFN)
 		return NULL;
 
 	WARN_ON(pa & ~PAGE_MASK);
@@ -445,7 +445,7 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 {
 
 	unsigned long old, tmp;
-	unsigned long busy = cpu_to_be64(_PAGE_BUSY);
+	unsigned long busy = cpu_to_be64(H_PAGE_BUSY);
 
 #ifdef CONFIG_DEBUG_VM
 	WARN_ON(!pmd_trans_huge(*pmdp));
@@ -473,7 +473,7 @@ unsigned long pmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
 	*pmdp = __pmd((old & ~clr) | set);
 #endif
 	trace_hugepage_update(addr, old, clr, set);
-	if (old & _PAGE_HASHPTE)
+	if (old & H_PAGE_HASHPTE)
 		hpte_do_hugepage_flush(mm, addr, pmdp, old);
 	return old;
 }
@@ -645,7 +645,7 @@ void hpte_do_hugepage_flush(struct mm_struct *mm, unsigned long addr,
 	psize = get_slice_psize(mm, addr);
 	BUG_ON(psize == MMU_PAGE_16M);
 #endif
-	if (old_pmd & _PAGE_COMBO)
+	if (old_pmd & H_PAGE_COMBO)
 		psize = MMU_PAGE_4K;
 	else
 		psize = MMU_PAGE_64K;
