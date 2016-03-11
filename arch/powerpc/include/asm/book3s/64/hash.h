@@ -88,23 +88,26 @@
 /* Hash table based platforms need atomic updates of the linux PTE */
 #define PTE_ATOMIC_UPDATES	1
 
-#define PMD_BAD_BITS		(PTE_TABLE_SIZE-1)
-#define PUD_BAD_BITS		(PMD_TABLE_SIZE-1)
+#define H_PMD_BAD_BITS		(PTE_TABLE_SIZE-1)
+#define H_PUD_BAD_BITS		(PMD_TABLE_SIZE-1)
 
 #ifndef __ASSEMBLY__
-#define	pmd_bad(pmd)		(pmd_val(pmd) & PMD_BAD_BITS)
-
-#define	pud_bad(pud)		(pud_val(pud) & PUD_BAD_BITS)
+#define	hlpmd_bad(pmd)		(pmd_val(pmd) & H_PMD_BAD_BITS)
+#define	hlpud_bad(pud)		(pud_val(pud) & H_PUD_BAD_BITS)
+static inline int hlpgd_bad(pgd_t pgd)
+{
+	return (pgd_val(pgd) == 0);
+}
 
 extern void hpte_need_flush(struct mm_struct *mm, unsigned long addr,
 			    pte_t *ptep, unsigned long pte, int huge);
 extern unsigned long htab_convert_pte_flags(unsigned long pteflags);
 /* Atomic PTE updates */
-static inline unsigned long pte_update(struct mm_struct *mm,
-				       unsigned long addr,
-				       pte_t *ptep, unsigned long clr,
-				       unsigned long set,
-				       int huge)
+static inline unsigned long hlpte_update(struct mm_struct *mm,
+					 unsigned long addr,
+					 pte_t *ptep, unsigned long clr,
+					 unsigned long set,
+					 int huge)
 {
 	unsigned long old, tmp;
 	unsigned long busy = cpu_to_be64(H_PAGE_BUSY);
@@ -137,7 +140,7 @@ static inline unsigned long pte_update(struct mm_struct *mm,
 /* Set the dirty and/or accessed bits atomically in a linux PTE, this
  * function doesn't need to flush the hash entry
  */
-static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
+static inline void __hlptep_set_access_flags(pte_t *ptep, pte_t entry)
 {
 	unsigned long bits = pte_val(entry) &
 		(_PAGE_DIRTY | _PAGE_ACCESSED | _PAGE_READ | _PAGE_WRITE | _PAGE_EXEC |
@@ -160,24 +163,20 @@ static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
 	:"cc");
 }
 
-static inline int pgd_bad(pgd_t pgd)
+#define hlpte_same(A,B)	(((pte_val(A) ^ pte_val(B)) & ~_PAGE_HPTEFLAGS) == 0)
+
+static inline int hlpte_none(pte_t pte)
 {
-	return (pgd_val(pgd) == 0);
+	return (pte_val(pte) & ~H_PTE_NONE_MASK) == 0;
 }
-
-#define __HAVE_ARCH_PTE_SAME
-#define pte_same(A,B)	(((pte_val(A) ^ pte_val(B)) & ~_PAGE_HPTEFLAGS) == 0)
-
-/* Generic accessors to PTE bits */
-static inline int pte_none(pte_t pte)		{ return (pte_val(pte) & ~H_PTE_NONE_MASK) == 0; }
 
 /* This low level function performs the actual PTE insertion
  * Setting the PTE depends on the MMU type and other factors. It's
  * an horrible mess that I'm not going to try to clean up now but
  * I'm keeping it in one place rather than spread around
  */
-static inline void __set_pte_at(struct mm_struct *mm, unsigned long addr,
-				pte_t *ptep, pte_t pte, int percpu)
+static inline void __set_hlpte_at(struct mm_struct *mm, unsigned long addr,
+				  pte_t *ptep, pte_t pte, int percpu)
 {
 	/*
 	 * Anything else just stores the PTE normally. That covers all 64-bit
