@@ -315,9 +315,9 @@ static inline pte_t kvmppc_read_update_linux_pte(pte_t *ptep, int writing)
 		old_pte = READ_ONCE(*ptep);
 		old_ptev = pte_val(old_pte);
 		/*
-		 * wait until _PAGE_BUSY is clear then set it atomically
+		 * wait until H_PAGE_BUSY is clear then set it atomically
 		 */
-		if (unlikely(old_ptev & _PAGE_BUSY)) {
+		if (unlikely(old_ptev & H_PAGE_BUSY)) {
 			cpu_relax();
 			continue;
 		}

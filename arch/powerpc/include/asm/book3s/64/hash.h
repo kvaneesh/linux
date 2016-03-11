@@ -26,19 +26,22 @@
 #define _PAGE_TOLERANT		0x00030 /* tolerant memory, cache inhibited */
 #define _PAGE_DIRTY		0x00080 /* C: page changed */
 #define _PAGE_ACCESSED		0x00100 /* R: page referenced */
-#define _PAGE_SPECIAL		0x00400 /* software: special page */
-#define _PAGE_BUSY		0x00800 /* software: PTE & hash are busy */
-
+/*
+ * Software bits
+ */
 #ifdef CONFIG_MEM_SOFT_DIRTY
-#define _PAGE_SOFT_DIRTY	0x200 /* software: software dirty tracking */
+#define _PAGE_SOFT_DIRTY	0x00200 /* software: software dirty tracking */
 #else
-#define _PAGE_SOFT_DIRTY	0x000
+#define _PAGE_SOFT_DIRTY	0x00000
 #endif
+#define _PAGE_SPECIAL		0x00400 /* software: special page */
+#define H_PAGE_BUSY		0x00800 /* software: PTE & hash are busy */
 
-#define _PAGE_F_GIX_SHIFT	57
-#define _PAGE_F_GIX		(7ul << 57)	/* HPTE index within HPTEG */
-#define _PAGE_F_SECOND		(1ul << 60)	/* HPTE is in 2ndary HPTEG */
-#define _PAGE_HASHPTE		(1ul << 61)	/* PTE has associated HPTE */
+
+#define H_PAGE_F_GIX_SHIFT	57
+#define H_PAGE_F_GIX		(7ul << 57)	/* HPTE index within HPTEG */
+#define H_PAGE_F_SECOND		(1ul << 60)	/* HPTE is in 2ndary HPTEG */
+#define H_PAGE_HASHPTE		(1ul << 61)	/* PTE has associated HPTE */
 #define _PAGE_PTE		(1ul << 62)	/* distinguishes PTEs from pointers */
 #define _PAGE_PRESENT		(1ul << 63)	/* pte contains a translation */
 /*
@@ -48,16 +51,10 @@
  */
 #define _PAGE_NO_CACHE		_PAGE_TOLERANT
 /*
- * We need to differentiate between explicit huge page and THP huge
- * page, since THP huge page also need to track real subpage details
- */
-#define _PAGE_THP_HUGE  _PAGE_4K_PFN
-
-/*
  * set of bits not changed in pmd_modify.
  */
 #define _HPAGE_CHG_MASK (PTE_RPN_MASK | _PAGE_HPTEFLAGS | _PAGE_DIRTY | \
-			 _PAGE_ACCESSED | _PAGE_THP_HUGE | _PAGE_PTE | \
+			 _PAGE_ACCESSED | H_PAGE_THP_HUGE | _PAGE_PTE | \
 			 _PAGE_SOFT_DIRTY)
 
 
@@ -151,7 +148,7 @@
  * Mask of bits returned by pte_pgprot()
  */
 #define PAGE_PROT_BITS  (_PAGE_SAO | _PAGE_NON_IDEMPOTENT | _PAGE_TOLERANT | \
-			 _PAGE_4K_PFN | _PAGE_PRIVILEGED | _PAGE_ACCESSED | \
+			 H_PAGE_4K_PFN | _PAGE_PRIVILEGED | _PAGE_ACCESSED | \
 			 _PAGE_READ | _PAGE_WRITE |  _PAGE_DIRTY | _PAGE_EXEC | \
 			 _PAGE_SOFT_DIRTY)
 /*
@@ -253,7 +250,7 @@ static inline unsigned long pte_update(struct mm_struct *mm,
 				       int huge)
 {
 	unsigned long old, tmp;
-	unsigned long busy = cpu_to_be64(_PAGE_BUSY);
+	unsigned long busy = cpu_to_be64(H_PAGE_BUSY);
 
 	clr = cpu_to_be64(clr);
 	set = cpu_to_be64(set);
@@ -274,7 +271,7 @@ static inline unsigned long pte_update(struct mm_struct *mm,
 		assert_pte_locked(mm, addr);
 
 	old = be64_to_cpu(old);
-	if (old & _PAGE_HASHPTE)
+	if (old & H_PAGE_HASHPTE)
 		hpte_need_flush(mm, addr, ptep, old, huge);
 
 	return old;
@@ -292,7 +289,7 @@ static inline int __ptep_test_and_clear_young(struct mm_struct *mm,
 {
 	unsigned long old;
 
-	if ((pte_val(*ptep) & (_PAGE_ACCESSED | _PAGE_HASHPTE)) == 0)
+	if ((pte_val(*ptep) & (_PAGE_ACCESSED | H_PAGE_HASHPTE)) == 0)
 		return 0;
 	old = pte_update(mm, addr, ptep, _PAGE_ACCESSED, 0, 0);
 	return (old & _PAGE_ACCESSED) != 0;
@@ -350,7 +347,7 @@ static inline void __ptep_set_access_flags(pte_t *ptep, pte_t entry)
 		 _PAGE_SOFT_DIRTY);
 
 	unsigned long old, tmp;
-	unsigned long busy = cpu_to_be64(_PAGE_BUSY);
+	unsigned long busy = cpu_to_be64(H_PAGE_BUSY);
 
 	bits = cpu_to_be64(bits);
 
