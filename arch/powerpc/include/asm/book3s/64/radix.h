@@ -124,5 +124,14 @@ static inline int rpgd_bad(pgd_t pgd)
 	return !!(pgd_val(pgd) & R_PGD_BAD_BITS);
 }
 
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+
+static inline int rpmd_trans_huge(pmd_t pmd)
+{
+	return !!(pmd_val(pmd) & _PAGE_PTE);
+}
+
+#endif
+
 #endif /* __ASSEMBLY__ */
 #endif
