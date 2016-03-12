@@ -318,8 +318,11 @@ void __init rearly_init_mmu(void)
 	__pud_table_size = R_PUD_TABLE_SIZE;
 	__pgd_table_size = R_PGD_TABLE_SIZE;
 
-	radix_init_page_sizes();
+	__pmd_val_bits = R_PMD_VAL_BITS;
+	__pud_val_bits = R_PUD_VAL_BITS;
+	__pgd_val_bits = R_PGD_VAL_BITS;
 
+	radix_init_page_sizes();
 	if (!firmware_has_feature(FW_FEATURE_LPAR))
 		radix_init_partition_table();
 
