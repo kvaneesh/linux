@@ -30,6 +30,27 @@
 #define R_PGTABLE_EADDR_SIZE (R_PTE_INDEX_SIZE + R_PMD_INDEX_SIZE +	\
 			      R_PUD_INDEX_SIZE + R_PGD_INDEX_SIZE + PAGE_SHIFT)
 #define R_PGTABLE_RANGE (ASM_CONST(1) << R_PGTABLE_EADDR_SIZE)
+/*
+ * We support 52 bit address space, Use top bit for kernel
+ * virtual mapping. Also make sure kernel fit in the top
+ * quadrant.
+ */
+#define R_KERN_VIRT_START ASM_CONST(0xc008000000000000)
+#define R_KERN_VIRT_SIZE  ASM_CONST(0x0008000000000000)
+
+/*
+ * The vmalloc space starts at the beginning of that region, and
+ * occupies a quarter of it on radix config.
+ * (we keep a quarter for the virtual memmap)
+ */
+#define R_VMALLOC_START	R_KERN_VIRT_START
+#define R_VMALLOC_SIZE	(R_KERN_VIRT_SIZE >> 2)
+#define R_VMALLOC_END	(R_VMALLOC_START + R_VMALLOC_SIZE)
+/*
+ * Defines the address of the vmemap area, in its own region on
+ * hash table CPUs.
+ */
+#define R_VMEMMAP_BASE		(R_VMALLOC_END)
 
 #ifndef __ASSEMBLY__
 #define R_PTE_TABLE_SIZE	(sizeof(pte_t) << R_PTE_INDEX_SIZE)
