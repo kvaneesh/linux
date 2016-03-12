@@ -97,9 +97,18 @@ unsigned long __pud_val_bits;
 EXPORT_SYMBOL(__pud_val_bits);
 unsigned long __pgd_val_bits;
 EXPORT_SYMBOL(__pgd_val_bits);
-
+unsigned long __kernel_virt_start;
+EXPORT_SYMBOL(__kernel_virt_start);
+unsigned long __kernel_virt_size;
+EXPORT_SYMBOL(__kernel_virt_size);
+unsigned long __vmalloc_start;
+EXPORT_SYMBOL(__vmalloc_start);
+unsigned long __vmalloc_end;
+EXPORT_SYMBOL(__vmalloc_end);
+struct page *vmemmap;
+EXPORT_SYMBOL(vmemmap);
 #endif
-unsigned long ioremap_bot = IOREMAP_BASE;
+unsigned long ioremap_bot;
 
 /**
  * __ioremap_at - Low level function to establish the page tables
