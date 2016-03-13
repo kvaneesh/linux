@@ -27,6 +27,8 @@
  */
 #define H_PAGE_4K_PFN	0x0
 #define H_PAGE_THP_HUGE 0x0
+#define H_PTE_FRAG_NR	0
+#define H_PTE_FRAG_SIZE_SHIFT  0
 /*
  * On all 4K setups, remap_4k_pfn() equates to remap_pfn_range()
  */
