@@ -107,6 +107,10 @@ unsigned long __vmalloc_end;
 EXPORT_SYMBOL(__vmalloc_end);
 struct page *vmemmap;
 EXPORT_SYMBOL(vmemmap);
+unsigned long __pte_frag_nr;
+EXPORT_SYMBOL(__pte_frag_nr);
+unsigned long __pte_frag_size_shift;
+EXPORT_SYMBOL(__pte_frag_size_shift);
 #endif
 unsigned long ioremap_bot;
 
