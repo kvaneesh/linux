@@ -328,6 +328,11 @@ void __init rearly_init_mmu(void)
 	__vmalloc_end = R_VMALLOC_END;
 	vmemmap = (struct page *)R_VMEMMAP_BASE;
 	ioremap_bot = IOREMAP_BASE;
+	/*
+	 * For now radix also use the same frag size
+	 */
+	__pte_frag_nr = H_PTE_FRAG_NR;
+	__pte_frag_size_shift = H_PTE_FRAG_SIZE_SHIFT;
 
 	radix_init_page_sizes();
 	if (!firmware_has_feature(FW_FEATURE_LPAR))
