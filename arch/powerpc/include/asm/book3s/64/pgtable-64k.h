@@ -103,6 +103,12 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
 		return rpmd_same(pmd_a, pmd_b);
 	return hlpmd_same(pmd_a, pmd_b);
 }
+
+static inline pmd_t pmd_mkhuge(pmd_t pmd)
+{
+	return hlpmd_mkhuge(pmd);
+}
+
 #endif /*  CONFIG_TRANSPARENT_HUGEPAGE */
 
 static inline int remap_4k_pfn(struct vm_area_struct *vma, unsigned long addr,
@@ -111,7 +117,6 @@ static inline int remap_4k_pfn(struct vm_area_struct *vma, unsigned long addr,
 	if (radix_enabled())
 		BUG();
 	return hlremap_4k_pfn(vma, addr, pfn, prot);
-
 }
 #endif	/* __ASSEMBLY__ */
 #endif /*_ASM_POWERPC_BOOK3S_64_PGTABLE_64K_H */
