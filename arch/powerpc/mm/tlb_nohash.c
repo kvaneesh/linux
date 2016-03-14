@@ -326,6 +326,10 @@ void __flush_tlb_page(struct mm_struct *mm, unsigned long vmaddr,
 
 void flush_tlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
 {
+	/*
+	 * FIXME!! do we not need a return here ?. Also the non-smp
+	 * version needs to handle the hugetlb ?
+	 */
 #ifdef CONFIG_HUGETLB_PAGE
 	if (vma && is_vm_hugetlb_page(vma))
 		flush_hugetlb_page(vma, vmaddr);
