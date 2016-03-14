@@ -152,6 +152,28 @@ static inline int rpmd_trans_huge(pmd_t pmd)
 	return !!(pmd_val(pmd) & _PAGE_PTE);
 }
 
+static inline pmd_t rpmd_mkhuge(pmd_t pmd)
+{
+	return __pmd(pmd_val(pmd) | _PAGE_PTE);
+}
+static inline void rpmdp_huge_split_prepare(struct vm_area_struct *vma,
+					    unsigned long address, pmd_t *pmdp)
+{
+	/* Nothing to do for radix. */
+	return;
+}
+
+extern unsigned long rpmd_hugepage_update(struct mm_struct *mm, unsigned long addr,
+					  pmd_t *pmdp, unsigned long clr,
+					  unsigned long set);
+extern pmd_t rpmdp_collapse_flush(struct vm_area_struct *vma,
+				  unsigned long address, pmd_t *pmdp);
+extern void rpgtable_trans_huge_deposit(struct mm_struct *mm, pmd_t *pmdp,
+					pgtable_t pgtable);
+extern pgtable_t rpgtable_trans_huge_withdraw(struct mm_struct *mm, pmd_t *pmdp);
+extern pmd_t rpmdp_huge_get_and_clear(struct mm_struct *mm,
+				      unsigned long addr, pmd_t *pmdp);
+extern int r_has_transparent_hugepage(void);
 #endif
 
 extern int __meminit rvmemmap_create_mapping(unsigned long start,
