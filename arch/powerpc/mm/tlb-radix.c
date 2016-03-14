@@ -142,6 +142,11 @@ void __local_flush_rtlb_page(struct mm_struct *mm, unsigned long vmaddr,
 
 void local_flush_rtlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
 {
+#ifdef CONFIG_HUGETLB_PAGE
+	/* need the return fix for nohash.c */
+	if (vma && is_vm_hugetlb_page(vma))
+		return __local_flush_hugetlb_page(vma, vmaddr);
+#endif
 	__local_flush_rtlb_page(vma ? vma->vm_mm : NULL, vmaddr,
 			       mmu_get_ap(mmu_virtual_psize), 0);
 }
@@ -203,6 +208,10 @@ bail:
 
 void flush_rtlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
 {
+#ifdef CONFIG_HUGETLB_PAGE
+	if (vma && is_vm_hugetlb_page(vma))
+		return flush_hugetlb_page(vma, vmaddr);
+#endif
 	__flush_rtlb_page(vma ? vma->vm_mm : NULL, vmaddr,
 			 mmu_get_ap(mmu_virtual_psize), 0);
 }
