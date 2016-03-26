@@ -154,7 +154,7 @@ static void cxl_handle_page_fault(struct cxl_context *ctx,
 		access |= _PAGE_WRITE;
 
 	access |= _PAGE_PRIVILEGED;
-	if ((!ctx->kernel) || ~(dar & (1ULL << 63)))
+	if ((!ctx->kernel) || (REGION_ID(dar) == USER_REGION_ID))
 		access &= ~_PAGE_PRIVILEGED;
 
 	if (dsisr & DSISR_NOHPTE)
