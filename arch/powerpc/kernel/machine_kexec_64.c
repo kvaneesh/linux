@@ -61,6 +61,7 @@ int default_machine_kexec_prepare(struct kimage *image)
 	 * end of the blocked region (begin >= high).  Use the
 	 * boolean identity !(a || b)  === (!a && !b).
 	 */
+#ifdef CONFIG_PPC_STD_MMU_64
 	if (htab_address) {
 		low = __pa(htab_address);
 		high = low + htab_size_bytes;
@@ -73,6 +74,7 @@ int default_machine_kexec_prepare(struct kimage *image)
 				return -ETXTBSY;
 		}
 	}
+#endif /* CONFIG_PPC_STD_MMU_64 */
 
 	/* We also should not overwrite the tce tables */
 	for_each_node_by_type(node, "pci") {

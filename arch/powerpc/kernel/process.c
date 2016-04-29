@@ -1095,6 +1095,9 @@ static void setup_ksp_vsid(struct task_struct *p, unsigned long sp)
 	unsigned long sp_vsid;
 	unsigned long llp = mmu_psize_defs[mmu_linear_psize].sllp;
 
+	if (radix_enabled())
+		return;
+
 	if (mmu_has_feature(MMU_FTR_1T_SEGMENT))
 		sp_vsid = get_kernel_vsid(sp, MMU_SEGSIZE_1T)
 			<< SLB_VSID_SHIFT_1T;
@@ -1641,7 +1644,8 @@ unsigned long arch_randomize_brk(struct mm_struct *mm)
 	 * the heap, we can put it above 1TB so it is backed by a 1TB
 	 * segment. Otherwise the heap will be in the bottom 1TB
 	 * which always uses 256MB segments and this may result in a
-	 * performance penalty.
+	 * performance penalty. We don't need to worry about radix. For
+	 * radix, mmu_highuser_ssize remains unchanged from 256MB.
 	 */
 	if (!is_32bit_task() && (mmu_highuser_ssize == MMU_SEGSIZE_1T))
 		base = max_t(unsigned long, mm->brk, 1UL << SID_SHIFT_1T);
