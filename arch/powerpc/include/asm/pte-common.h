@@ -203,3 +203,7 @@ extern unsigned long bad_call_to_PMD_PAGE_SIZE(void);
 #define _PAGE_READ 0
 #define _PAGE_WRITE _PAGE_RW
 #endif
+
+#ifndef H_PAGE_4K_PFN
+#define H_PAGE_4K_PFN 0
+#endif
