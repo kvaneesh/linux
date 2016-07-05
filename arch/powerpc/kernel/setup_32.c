@@ -279,6 +279,8 @@ void __init setup_arch(char **cmdline_p)
 
 	probe_machine();
 
+	setup_panic();
+
 	setup_power_save();
 
 	find_legacy_serial_ports();
@@ -289,9 +291,6 @@ void __init setup_arch(char **cmdline_p)
 	smp_setup_cpu_maps();
 
 	xmon_setup();
-
-	if (ppc_md.panic)
-		setup_panic();
 
 	init_mm.start_code = (unsigned long)_stext;
 	init_mm.end_code = (unsigned long) _etext;
