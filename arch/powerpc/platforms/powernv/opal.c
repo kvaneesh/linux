@@ -56,7 +56,7 @@ static DEFINE_SPINLOCK(opal_write_lock);
 static struct atomic_notifier_head opal_msg_notifier_head[OPAL_MSG_TYPE_MAX];
 static uint32_t opal_heartbeat;
 
-static void opal_reinit_cores(void)
+void opal_configure_cores(void)
 {
 	/* Do the actual re-init, This will clobber all FPRs, VRs, etc...
 	 *
@@ -69,6 +69,10 @@ static void opal_reinit_cores(void)
 #else
 	opal_reinit_cpus(OPAL_REINIT_CPUS_HILE_LE);
 #endif
+
+	/* Restore some bits */
+	if (cur_cpu_spec->cpu_restore)
+		cur_cpu_spec->cpu_restore();
 }
 
 int __init early_init_dt_scan_opal(unsigned long node,
@@ -109,13 +113,6 @@ int __init early_init_dt_scan_opal(unsigned long node,
 	} else {
 		pr_info("OPAL V1 detected !\n");
 	}
-
-	/* Reinit all cores with the right endian */
-	opal_reinit_cores();
-
-	/* Restore some bits */
-	if (cur_cpu_spec->cpu_restore)
-		cur_cpu_spec->cpu_restore();
 
 	return 1;
 }
