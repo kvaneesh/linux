@@ -55,6 +55,8 @@
 #include <asm/firmware.h>
 #endif
 #include <asm/code-patching.h>
+#include <asm/cpu_has_feature.h>
+
 #include <linux/kprobes.h>
 #include <linux/kdebug.h>
 

@@ -65,6 +65,7 @@
 #include <asm/udbg.h>
 #include <asm/hugetlb.h>
 #include <asm/mmu_context.h>
+#include <asm/cpu_has_feature.h>
 
 #include "setup.h"
 
