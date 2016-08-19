@@ -603,6 +603,9 @@ _GLOBAL(kexec_sequence)
 	li	r6,1
 	stw	r6,kexec_flag-1b(5)
 
+	cmpdi	r27,0
+	beq	1f
+
 	/* clear out hardware hash page table and tlb */
 #if !defined(_CALL_ELF) || _CALL_ELF != 2
 	ld	r12,0(r27)		/* deref function descriptor */
@@ -637,7 +640,7 @@ _GLOBAL(kexec_sequence)
  *    are the boot cpu ?????
  *    other device tree differences (prop sizes, va vs pa, etc)...
  */
-	mr	r3,r25	# my phys cpu
+1:	mr	r3,r25	# my phys cpu
 	mr	r4,r30	# start, aka phys mem offset
 	mtlr	4
 	li	r5,0
