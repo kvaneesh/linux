@@ -24,6 +24,11 @@
 #define _RPAGE_SW1		0x00800
 #define _RPAGE_SW2		0x00400
 #define _RPAGE_SW3		0x00200
+#define _RPAGE_RSV1		0x1000000000000000UL
+#define _RPAGE_RSV2		0x0800000000000000UL
+#define _RPAGE_RSV3		0x0400000000000000UL
+#define _RPAGE_RSV4		0x0200000000000000UL
+
 #ifdef CONFIG_MEM_SOFT_DIRTY
 #define _PAGE_SOFT_DIRTY	_RPAGE_SW3 /* software: software dirty tracking */
 #else
@@ -34,6 +39,10 @@
  * THP pages can't be special. So use the _PAGE_SPECIAL
  */
 #define _PAGE_SPLITTING _PAGE_SPECIAL
+/*
+ * For P9 DD1 only, we need to track whether the pte's huge.
+ */
+#define _PAGE_LARGE	_RPAGE_RSV1
 
 #define _PAGE_PTE		(1ul << 62)	/* distinguishes PTEs from pointers */
 #define _PAGE_PRESENT		(1ul << 63)	/* pte contains a translation */
