@@ -14,7 +14,7 @@
 /*
  * For P9 DD1 only, we need to track whether the pte's huge.
  */
-#define _PAGE_LARGE	_RPAGE_RSV1
+#define R_PAGE_LARGE	_RPAGE_RSV1
 
 
 #ifndef __ASSEMBLY__
