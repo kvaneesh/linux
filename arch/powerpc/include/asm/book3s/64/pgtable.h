@@ -39,13 +39,9 @@
  * THP pages can't be special. So use the _PAGE_SPECIAL
  */
 #define _PAGE_SPLITTING _PAGE_SPECIAL
-/*
- * For P9 DD1 only, we need to track whether the pte's huge.
- */
-#define _PAGE_LARGE	_RPAGE_RSV1
 
-#define _PAGE_PTE		(1ul << 62)	/* distinguishes PTEs from pointers */
-#define _PAGE_PRESENT		(1ul << 63)	/* pte contains a translation */
+#define _PAGE_PTE		0x4000000000000000UL	/* distinguishes PTEs from pointers */
+#define _PAGE_PRESENT		0x8000000000000000UL	/* pte contains a translation */
 /*
  * Drivers request for cache inhibited pte mapping using _PAGE_NO_CACHE
  * Instead of fixing all of them, add an alternate define which
