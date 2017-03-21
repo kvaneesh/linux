@@ -29,11 +29,7 @@
 #define _RPAGE_RSV3		0x0400000000000000UL
 #define _RPAGE_RSV4		0x0200000000000000UL
 
-#ifdef CONFIG_MEM_SOFT_DIRTY
 #define _PAGE_SOFT_DIRTY	_RPAGE_SW3 /* software: software dirty tracking */
-#else
-#define _PAGE_SOFT_DIRTY	0x00000
-#endif
 #define _PAGE_SPECIAL		_RPAGE_SW2 /* software: special page */
 /*
  * THP pages can't be special. So use the _PAGE_SPECIAL
