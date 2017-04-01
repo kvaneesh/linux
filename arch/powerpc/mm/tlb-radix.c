@@ -133,6 +133,12 @@ void radix__local_flush_tlb_pwc(struct mmu_gather *tlb, unsigned long addr)
 {
 	unsigned long pid;
 	struct mm_struct *mm = tlb->mm;
+	/*
+	 * If we are doing a full mm flush, we will do a tlb flush
+	 * with RIC_FLUSH_ALL later.
+	 */
+	if (tlb->fullmm)
+		return;
 
 	preempt_disable();
 
@@ -199,6 +205,12 @@ void radix__flush_tlb_pwc(struct mmu_gather *tlb, unsigned long addr)
 	unsigned long pid;
 	struct mm_struct *mm = tlb->mm;
 
+	/*
+	 * If we are doing a full mm flush, we will do a tlb flush
+	 * with RIC_FLUSH_ALL later.
+	 */
+	if (tlb->fullmm)
+		return;
 	preempt_disable();
 
 	pid = mm->context.id;
