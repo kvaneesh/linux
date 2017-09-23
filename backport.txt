@@ -259,45 +259,4 @@ f2377d4eaab2aabe1938b3974b5b94f5ba4c7ead mm/kasan: don't use kasan shadow pointe
 ec2640b114d535ba7d895b6ee353791d542f2407 powerpc/mm: Disable hugepd for 64K page size.
 f78f7ed72632a0794161f290b89e2cd752f55202 powerpc: Fix _ALIGN_* errors due to type difference.
 65d3223a853ac8598694064c1d37b0955e7d99cc powerpc/mm: Add virt_to_pfn and use this instead of opencoding
-36b35d5d807b7e57aff7d08e63de8b17731ee211 powerpc/mm: Recompute hash value after a failed update
-5a09e6ce90e1bf26f0915e7e31329402766ffead lib/decompress: set the compressor name to NULL on error
-8809aa2d28d74111ff2f1928edaa4e9845c97a7d mm: clarify that the function operates on hugepage pte
-f28b6ff8c3d48af21354ef30164c8ccea69d5928 powerpc/mm: use generic version of pmdp_clear_flush()
-15a25b2ead5f97c5a63c169186e294b41ce03f9a mm/thp: split out pmd collapse flush into separate functions
-e148315852855f8f06b8bb4601c8cade34af8df3 powerpc/mm: Change the swap encoding in pte.
-02505cebc1db06707d31635e9c9b342d58f887b7 powerpc/mm: PTE_RPN_MAX is not used, remove the same
-cfcb3d80a28380ba027331eb548ba309c4b66559 powerpc/mm: Add trace point for tracking hash pte fault
-7b868e81be38d5ad4f4aa4be819a5fa543cc5ee8 powerpc/mm: Return NULL for not present hugetlb page
-13bd817bb88499ce1dc1dfdaffcde17fa492aca5 powerpc/thp: Serialize pmd clear against a linux page table walk.
-2e826695d87c2d213def07bc344ae97d88384f62 powerpc/mm: Fix build error with CONFIG_PPC_TRANSACTIONAL_MEM disabled
-a4bd6eb07ca72d21a7a34499ad34cfef6f527d4e KVM: PPC: Book3S HV: Add helpers for lock/unlock hpte
-31037ecad275e9ad9bc671c34f72b495cf708ca3 KVM: PPC: Book3S HV: Remove RMA-related variables from code
-7d6e7f7ffaba4e013c7a0589140431799bc17985 powerpc/mm/thp: Return pte address if we find trans_splitting.
-691e95fd7396905a38d98919e9c150dbc3ea21a3 powerpc/mm/thp: Make page table walk safe against thp split/collapse
-dac5657067919161eb3273ca787d8ae9814801e7 KVM: PPC: Remove page table walk helpers
-5e1d44aef1673b504dde475aa714b1bdb9b875c4 KVM: PPC: Use READ_ONCE when dereferencing pte_t pointer
-077fcf116c8c2bd7ee9487b645aa3b50368db7e1 mm/thp: allocate transparent hugepages on local node
-f6fb9e848c39d65516caf7614fc8e0b28f5301ce KVM: PPC: Book3S HV: Add missing HPTE unlock
-6f7c97e80b813879a17c0e8ef343cc414761e6f5 mm/numa balancing: rearrange Kconfig entry
-aefa5688c070727b8729de1aef85cad7b9933fc7 powerpc/mm: don't do tlbie for updatepp request with NO HPTE fault
-d557b09800dab5dd6804e5b79324069abcf0be11 powerpc/mm/thp: Use tlbiel if possible
-f1581bf14bc40b4a14bf10358eac0b22173b3313 powerpc/mm/thp: Remove code duplication
-0ec2698fe1c451606c16e21dbfbd29efce694668 powerpc/mm: Check for matching hpte without taking hpte lock
-b30e759072c182538abb6908681cfd49978ba5e2 powerpc/mm: Switch to generic RCU get_user_pages_fast
-f30c59e921f12b209852e1ddc197dc6a8fb0142b mm: Update generic gup implementation to handle hugepage directory
-06743521d0eae1263a09bccb1a92a9fbb94660b3 powerpc/mm: Add missing pmd accessors
-9e819963b45f79e87f5a8c44960a66c0727c80e6 powerpc: Disable CPU_FTR_TM if TM is disabled by firmware
-ca5f1d16a51900d23d2cf834d3aa62dfe3a37881 powerpc/mm: Remove redundant #if case
-6643773ce1a17c99a3ce29ee8ac2b114d2ba771f powerpc/mm: Fix build error with hugetlfs disabled
-cec26bc3c125b5dd12a02f04133cd91eae3f1622 KVM: PPC: BOOK3S: HV: CMA: Reserve cma region only in hypervisor mode
-9e813308a5c18c58f9ccae1ec72ed4e14eaf9025 powerpc/thp: Add tracepoints to track hugepage invalidate
-85c1fafd7262e68ad821ee1808686b1392b1167d powerpc/mm: Use read barrier when creating real_pte
-7e467245bf5226db34c4b12d3cbacfa2f7a15a8b powerpc/thp: Use ACCESS_ONCE when loading pmdp
-969b7b208f7408712a3526856e4ae60ad13f6928 powerpc/thp: Invalidate with vpn in loop
-fc0479557572375100ef16c71170b29a98e0d69a powerpc/thp: Handle combo pages in invalidate
-629149fae478f0ac6bf705a535708b192e9c6b59 powerpc/thp: Invalidate old 64K based hash page mapping before insert of 4k pte
-fa1f8ae80f8bb996594167ff4750a0b0a5a5bb5d powerpc/thp: Don't recompute vsid and ssize in loop on invalidate
-b0aa44a3dfae3d8f45bd1264349aa87f87b7774f powerpc/thp: Add write barrier after updating the valid bit
-63fff5c1e3695ff5c9ad8c198a3b03ca4c0c73a8 KVM: PPC: BOOK3S: HV: Update compute_tlbie_rb to handle 16MB base page
-06da28e76b87331ebccdb6d486cfd94835b8be5e KVM: PPC: BOOK3S: PR: Emulate instruction counter
-8f42ab2749d00ea15157ab896cfbed73a247b3e1 KVM: PPC: BOOK3S: PR: Emulate virtual timebase register
+
