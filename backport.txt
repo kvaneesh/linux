@@ -249,14 +249,15 @@ cbbb8683fb632ecadafcf8a5f81d38156d4274ab powerpc/mm: Delete booke bits from book
 ab537dca2f3303a6ef646c33cccf56eaa8a76f9c powerpc/mm: Move hash specific pte width and other defines to book3s
 3dfcb315d81e663bf70401de61940c1b4de2deea powerpc/mm: make a separate copy for book3s
 26b6a3d9bb48f8b4624a62281bc2a295df3a8109 powerpc/mm: move pte headers to book3s directory
-0863d7f2136550a281f40f4d8556bffd09fd4c2d powerpc/mm: Fix infinite loop in hash fault with 4K page size
-c7c72c5a127507687c737ede0f97d85bde674433 net/9p: Add device name details on error
-fc5aeeaf593278f07ffa4d97296e27423ecae867 mm/kasan: prevent deadlock in kasan reporting
-f2377d4eaab2aabe1938b3974b5b94f5ba4c7ead mm/kasan: don't use kasan shadow pointer in generic functions
-527f215b78976e94995dce7163b07539b576d519 mm/kasan: MODULE_VADDR is not available on all archs
-0ba8663cbfae066fc504b858db7cbb7d03c2b872 mm/kasan: rename kasan_enabled() to kasan_report_enabled()
-891121e6c02c6242487aa4ea1d5c75b7ecdc45ee powerpc/mm: Differentiate between hugetlb and THP during page walk
-ec2640b114d535ba7d895b6ee353791d542f2407 powerpc/mm: Disable hugepd for 64K page size.
-f78f7ed72632a0794161f290b89e2cd752f55202 powerpc: Fix _ALIGN_* errors due to type difference.
-65d3223a853ac8598694064c1d37b0955e7d99cc powerpc/mm: Add virt_to_pfn and use this instead of opencoding
+
+Done - 0863d7f2136550a281f40f4d8556bffd09fd4c2d powerpc/mm: Fix infinite loop in hash fault with 4K page size
+Drop - c7c72c5a127507687c737ede0f97d85bde674433 net/9p: Add device name details on error
+Drop - fc5aeeaf593278f07ffa4d97296e27423ecae867 mm/kasan: prevent deadlock in kasan reporting
+Drop - f2377d4eaab2aabe1938b3974b5b94f5ba4c7ead mm/kasan: don't use kasan shadow pointer in generic functions
+Drop - 527f215b78976e94995dce7163b07539b576d519 mm/kasan: MODULE_VADDR is not available on all archs
+Drop - 0ba8663cbfae066fc504b858db7cbb7d03c2b872 mm/kasan: rename kasan_enabled() to kasan_report_enabled()
+Done - 891121e6c02c6242487aa4ea1d5c75b7ecdc45ee powerpc/mm: Differentiate between hugetlb and THP during page walk
+Done - ec2640b114d535ba7d895b6ee353791d542f2407 powerpc/mm: Disable hugepd for 64K page size.
+Done - f78f7ed72632a0794161f290b89e2cd752f55202 powerpc: Fix _ALIGN_* errors due to type difference.
+Done - 65d3223a853ac8598694064c1d37b0955e7d99cc powerpc/mm: Add virt_to_pfn and use this instead of opencoding
 
