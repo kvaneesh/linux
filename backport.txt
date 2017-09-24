@@ -213,16 +213,17 @@ f64e8084c94bb0449177364856d8117e2f14c4c0 powerpc/mm: Move hash related mmu-*.h h
 c367a44133bcd7f94fb48b58e991dbffe7c25e22 powerpc/mm: add _PAGE_HASHPTE similar to 4K hash
 e9a681478ce535b4a0263a760a25a65fd8ca5ba3 powerp/mm: Update code comments
 368ced78e6ed3d72c2acc61233b58487071ec289 powerpc/mm: Switch book3s 64 with 64K page size to 4 level page table
-8daf51f55febbc755fe20e74320a194e175811a9 powerpc/mm/book3s-64: Expand the real page number field of the Linux PTE
-e726202f06cbfda4e42d2b32138cf288445ec80d powerpc/mm/book3s-64: Move software-used bits in PTE
-c915df162d09f0957baf56fd3e2f03b8992699a6 powerpc/mm/book3s-64: Shuffle read, write, execute and user bits in PTE
-a9d4996df1f49dc7b45e55060436cace87f1e0d4 powerpc/mm/book3s-64: Move HPTE-related bits in PTE to upper end
-84c957560a7a8f548aaf6b6b2b15e6d03b7249e2 powerpc/mm/book3s-64: Move _PAGE_PTE to 2nd most significant bit
-849f86a630e9c84bf4c9d5dcbfe59dc94b2e15ce powerpc/mm/book3s-64: Move _PAGE_PRESENT to the most significant bit
-c61a8843124e353f4ba27c073133868da00e0335 powerpc/mm/book3s-64: Use physical addresses in upper page table tree levels
-f1a9ae034a263d93ea408825afe699aebf37010a powerpc/mm/book3s-64: Free up 7 high-order bits in the Linux PTE
-1ec3f937102154b54c3ba97b79d4bd3931bb0eaa powerpc/mm/book3s-64: Clean up some obsolete or misleading comments
-7207f43665b83ed7881c5111bc45475ccf5ce48b powerpc/mm: Add page soft dirty tracking  
+
+Done - 8daf51f55febbc755fe20e74320a194e175811a9 powerpc/mm/book3s-64: Expand the real page number field of the Linux PTE
+Done-Fixup - e726202f06cbfda4e42d2b32138cf288445ec80d powerpc/mm/book3s-64: Move software-used bits in PTE
+Done - c915df162d09f0957baf56fd3e2f03b8992699a6 powerpc/mm/book3s-64: Shuffle read, write, execute and user bits in PTE
+Done - a9d4996df1f49dc7b45e55060436cace87f1e0d4 powerpc/mm/book3s-64: Move HPTE-related bits in PTE to upper end
+Done - 84c957560a7a8f548aaf6b6b2b15e6d03b7249e2 powerpc/mm/book3s-64: Move _PAGE_PTE to 2nd most significant bit
+Done - 849f86a630e9c84bf4c9d5dcbfe59dc94b2e15ce powerpc/mm/book3s-64: Move _PAGE_PRESENT to the most significant bit
+Done - c61a8843124e353f4ba27c073133868da00e0335 powerpc/mm/book3s-64: Use physical addresses in upper page table tree levels
+Done - f1a9ae034a263d93ea408825afe699aebf37010a powerpc/mm/book3s-64: Free up 7 high-order bits in the Linux PTE
+Done - 1ec3f937102154b54c3ba97b79d4bd3931bb0eaa powerpc/mm/book3s-64: Clean up some obsolete or misleading comments
+Done - 7207f43665b83ed7881c5111bc45475ccf5ce48b powerpc/mm: Add page soft dirty tracking  
 Done - ae9a71afa4d7cf29a816fbc387bfd59ad7c292b6 powerpc/mm: Don't have conditional defines for real_pte_t
 Done - 2bf59916ef033edb9f8e968ee27e486ccb8ba1ce powerpc/mm: Split pgtable types to separate header
 Done - 9ab3ac233a8b4ffcc27c8475b83dee49fc46bc76 powerpc/mm/hash: Clear the invalid slot information correctly
