@@ -222,6 +222,7 @@ a9d4996df1f49dc7b45e55060436cace87f1e0d4 powerpc/mm/book3s-64: Move HPTE-related
 c61a8843124e353f4ba27c073133868da00e0335 powerpc/mm/book3s-64: Use physical addresses in upper page table tree levels
 f1a9ae034a263d93ea408825afe699aebf37010a powerpc/mm/book3s-64: Free up 7 high-order bits in the Linux PTE
 1ec3f937102154b54c3ba97b79d4bd3931bb0eaa powerpc/mm/book3s-64: Clean up some obsolete or misleading comments
+7207f43665b83ed7881c5111bc45475ccf5ce48b powerpc/mm: Add page soft dirty tracking  
 Done - ae9a71afa4d7cf29a816fbc387bfd59ad7c292b6 powerpc/mm: Don't have conditional defines for real_pte_t
 Done - 2bf59916ef033edb9f8e968ee27e486ccb8ba1ce powerpc/mm: Split pgtable types to separate header
 Done - 9ab3ac233a8b4ffcc27c8475b83dee49fc46bc76 powerpc/mm/hash: Clear the invalid slot information correctly
