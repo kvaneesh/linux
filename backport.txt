@@ -209,11 +209,12 @@ c7d54842deb1fa357cff75b988275a1c9f259140 powerpc/mm: Use _PAGE_READ to indicate 
 3b1dbfa14f97188ec33fdfc7acb66bea59a3bb21 cxl: Fix DAR check & use REGION_ID instead of opencoding
 458aa76d132dc1c3c60be0f0db99bcc0ce1767fc mm/thp/migration: switch from flush_tlb_range to flush_pmd_tlb_range
 ee3b93ebfbed6279f7a329001433c75c50ddfcc9 powerpc/mm: Move hash64 tlbflush code into a new header
-f64e8084c94bb0449177364856d8117e2f14c4c0 powerpc/mm: Move hash related mmu-*.h headers to book3s/
-c367a44133bcd7f94fb48b58e991dbffe7c25e22 powerpc/mm: add _PAGE_HASHPTE similar to 4K hash
-e9a681478ce535b4a0263a760a25a65fd8ca5ba3 powerp/mm: Update code comments
-368ced78e6ed3d72c2acc61233b58487071ec289 powerpc/mm: Switch book3s 64 with 64K page size to 4 level page table
 
+Done f64e8084c94bb0449177364856d8117e2f14c4c0 powerpc/mm: Move hash related mmu-*.h headers to book3s/
+Done-mikey 15b1624b78075d4f52e170600c81720532ca790d powerpc: Use defines for __init_tlb_power[78] (dependency for above patch)
+Done - c367a44133bcd7f94fb48b58e991dbffe7c25e22 powerpc/mm: add _PAGE_HASHPTE similar to 4K hash
+Done - e9a681478ce535b4a0263a760a25a65fd8ca5ba3 powerp/mm: Update code comments
+Done - 368ced78e6ed3d72c2acc61233b58487071ec289 powerpc/mm: Switch book3s 64 with 64K page size to 4 level page table
 Done - 8daf51f55febbc755fe20e74320a194e175811a9 powerpc/mm/book3s-64: Expand the real page number field of the Linux PTE
 Done-Fixup - e726202f06cbfda4e42d2b32138cf288445ec80d powerpc/mm/book3s-64: Move software-used bits in PTE
 Done - c915df162d09f0957baf56fd3e2f03b8992699a6 powerpc/mm/book3s-64: Shuffle read, write, execute and user bits in PTE
