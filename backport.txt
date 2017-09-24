@@ -220,36 +220,36 @@ c777e2a8b65420b31dac28a453e35be984f5808b powerpc/mm: Fix Multi hit ERAT cause by
 19f97c98307115f5a6b0bbf84850c9c272ce5dd3 powerpc/book3s_32: Fix build error with checkpoint restart
 2d19fc639516dc7b4184450b315c931d38549e61 powerpc/mm: Fixup _HPAGE_CHG_MASK
 44734f23de2465c3c0d39e4a16df7735b23fd142 powerpc/mm: Fix _PAGE_PTE breaking swapoff
-4dcbd88eb600d52ce52a75c5075c2eff2f6849e6 powerpc/mm: Don't open code pgtable_t size
-4ad90c864989337e7946f456478b6417325689d0 powerpc/mm: Use H_READ with H_READ_4
-45949ebe6c748cba93c1dd6ab9d03190f862ecf7 powerpc/nohash: we don't use real_pte_t for nohash
-cc50380db32771af61201cff39da1043b90f2a6d powerpc/nohash: Update 64K nohash config to have 32 pte fragement
-4d9057c39aceb3a94ccb6005f4433a0105e60521 powerpc/mm: Don't hardcode the hash pte slot shift
-62607bc64c5cbb8d9b330da4be34c6d5302348af powerpc/mm: Don't hardcode page table size
-6a119eae942c51ccf1091936c534bac12cae630e powerpc/mm: Add a _PAGE_PTE bit
-e34aa03ca48d0c7982530436ce996f374b65913c powerpc/mm: Move THP headers around
-26a344aea48c99cfd80d292a470a480e1c2bd5d9 powerpc/mm: Move hugetlb related headers
-40e8550afc19dfc588171c089cb3f31f7b9e16f7 powerpc/mm: Move WIMG update to helper.
-c6a3c495f05a070d4c4016d4a51c384cba723971 powerpc/mm: Add helper for converting pte bit to hpte bits
-a43c0eb8364c022725df586e91dd753633374d66 powerpc/mm: Convert 4k insert from asm to C
-89ff725051d177556b23d80f2a30f880a657a6c1 powerpc/mm: Convert __hash_page_64K to C
-227fdbee5a963f4358bb1edd78a6f654574a4991 powerpc/mm: Increase the width of #define
-506b863c68cd6e720037f1548e101932af3bb006 powerpc/mm: Remove pte_val usage for the second half of pgtable_t
-bf680d51605662aae5482d87e0e0a54ba6db056b powerpc/mm: Don't track subpage valid bit in pte_t
-106713a14590cd7b223db000f4f47f7d1d898153 powerpc/mm: Remove the dependency on pte bit position in asm code
-91f1da99792a1d133df94c4753510305353064a1 powerpc/mm: Convert 4k hash insert to C
-17ed9e3192b2b29ad24ffe711fa4b71716ef3ff3 powerpc/booke: Move nohash headers
-1ca7212932862e348f2f9307f35bd309a7da82d8 powerpc/mm: Move PTE bits from generic functions to hash64 functions.
-371352ca0e7f3fad8406933e37c965d5a44365d9 powerpc/mm: Move hash64 PTE bits from book3s/64/pgtable.h to hash.h
-f281b5d50c87ecca108dcbf8f791bd8923fde3de powerpc/mm: Don't use pmd_val, pud_val and pgd_val as lvalue
-10bd3808dfd067d6d6c941cc6e1b13be165f6a70 powerpc/mm: Don't use pte_val as lvalue
-b0412ea94bcbd08dc1e61043dfdd9c33272cec48 powerpc/mm: Drop pte-common.h from BOOK3S 64
-ee4889c7bc2a416d76730f318c741723cd64d432 powerpc/mm: Don't have generic headers introduce functions touching pte bits
-cbbb8683fb632ecadafcf8a5f81d38156d4274ab powerpc/mm: Delete booke bits from book3s
-ab537dca2f3303a6ef646c33cccf56eaa8a76f9c powerpc/mm: Move hash specific pte width and other defines to book3s
-3dfcb315d81e663bf70401de61940c1b4de2deea powerpc/mm: make a separate copy for book3s
-26b6a3d9bb48f8b4624a62281bc2a295df3a8109 powerpc/mm: move pte headers to book3s directory
 
+Done - 4dcbd88eb600d52ce52a75c5075c2eff2f6849e6 powerpc/mm: Don't open code pgtable_t size
+Done - 4ad90c864989337e7946f456478b6417325689d0 powerpc/mm: Use H_READ with H_READ_4
+Done - 45949ebe6c748cba93c1dd6ab9d03190f862ecf7 powerpc/nohash: we don't use real_pte_t for nohash
+Done - cc50380db32771af61201cff39da1043b90f2a6d powerpc/nohash: Update 64K nohash config to have 32 pte fragement
+Done - 4d9057c39aceb3a94ccb6005f4433a0105e60521 powerpc/mm: Don't hardcode the hash pte slot shift
+Done - 62607bc64c5cbb8d9b330da4be34c6d5302348af powerpc/mm: Don't hardcode page table size
+Done - 6a119eae942c51ccf1091936c534bac12cae630e powerpc/mm: Add a _PAGE_PTE bit
+Done - e34aa03ca48d0c7982530436ce996f374b65913c powerpc/mm: Move THP headers around
+Done - 26a344aea48c99cfd80d292a470a480e1c2bd5d9 powerpc/mm: Move hugetlb related headers
+Done - 40e8550afc19dfc588171c089cb3f31f7b9e16f7 powerpc/mm: Move WIMG update to helper.
+Done - c6a3c495f05a070d4c4016d4a51c384cba723971 powerpc/mm: Add helper for converting pte bit to hpte bits
+Done - a43c0eb8364c022725df586e91dd753633374d66 powerpc/mm: Convert 4k insert from asm to C
+Done - 89ff725051d177556b23d80f2a30f880a657a6c1 powerpc/mm: Convert __hash_page_64K to C
+Done - 227fdbee5a963f4358bb1edd78a6f654574a4991 powerpc/mm: Increase the width of #define
+Done - 506b863c68cd6e720037f1548e101932af3bb006 powerpc/mm: Remove pte_val usage for the second half of pgtable_t
+Done - bf680d51605662aae5482d87e0e0a54ba6db056b powerpc/mm: Don't track subpage valid bit in pte_t
+Done - 106713a14590cd7b223db000f4f47f7d1d898153 powerpc/mm: Remove the dependency on pte bit position in asm code
+Done - 91f1da99792a1d133df94c4753510305353064a1 powerpc/mm: Convert 4k hash insert to C
+Done - 17ed9e3192b2b29ad24ffe711fa4b71716ef3ff3 powerpc/booke: Move nohash headers
+Done - 1ca7212932862e348f2f9307f35bd309a7da82d8 powerpc/mm: Move PTE bits from generic functions to hash64 functions.
+Done - 371352ca0e7f3fad8406933e37c965d5a44365d9 powerpc/mm: Move hash64 PTE bits from book3s/64/pgtable.h to hash.h
+Done - f281b5d50c87ecca108dcbf8f791bd8923fde3de powerpc/mm: Don't use pmd_val, pud_val and pgd_val as lvalue
+Done - 10bd3808dfd067d6d6c941cc6e1b13be165f6a70 powerpc/mm: Don't use pte_val as lvalue
+Done - b0412ea94bcbd08dc1e61043dfdd9c33272cec48 powerpc/mm: Drop pte-common.h from BOOK3S 64
+Done - ee4889c7bc2a416d76730f318c741723cd64d432 powerpc/mm: Don't have generic headers introduce functions touching pte bits
+Done - cbbb8683fb632ecadafcf8a5f81d38156d4274ab powerpc/mm: Delete booke bits from book3s
+Done - ab537dca2f3303a6ef646c33cccf56eaa8a76f9c powerpc/mm: Move hash specific pte width and other defines to book3s
+Done - 3dfcb315d81e663bf70401de61940c1b4de2deea powerpc/mm: make a separate copy for book3s
+Done - 26b6a3d9bb48f8b4624a62281bc2a295df3a8109 powerpc/mm: move pte headers to book3s directory
 Done - 0863d7f2136550a281f40f4d8556bffd09fd4c2d powerpc/mm: Fix infinite loop in hash fault with 4K page size
 Drop - c7c72c5a127507687c737ede0f97d85bde674433 net/9p: Add device name details on error
 Drop - fc5aeeaf593278f07ffa4d97296e27423ecae867 mm/kasan: prevent deadlock in kasan reporting
