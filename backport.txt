@@ -208,8 +208,11 @@ c7d54842deb1fa357cff75b988275a1c9f259140 powerpc/mm: Use _PAGE_READ to indicate 
 8ffb4103f5e28d7e7890ed4774d8e009f253f56e IB/qib: Use cache inhibitted and guarded mapping on powerpc
 3b1dbfa14f97188ec33fdfc7acb66bea59a3bb21 cxl: Fix DAR check & use REGION_ID instead of opencoding
 458aa76d132dc1c3c60be0f0db99bcc0ce1767fc mm/thp/migration: switch from flush_tlb_range to flush_pmd_tlb_range
-ee3b93ebfbed6279f7a329001433c75c50ddfcc9 powerpc/mm: Move hash64 tlbflush code into a new header
 
+Done-Vineet 12ebc1581ad114543ae822aa3a12f76072e2f902 mm,thp: introduce flush_pmd_tlb_range
+Done-Vineet bd5e88ad72b26ebf7ecb231bc22ceecd6cbdb951 mm,thp: reduce ifdef'ery for THP in generic code
+Done-Vineet 52585bcc2505d6f888d4ac68ca6c55f6d1ad736a mm: group pte related helpers together
+Done - ee3b93ebfbed6279f7a329001433c75c50ddfcc9 powerpc/mm: Move hash64 tlbflush code into a new header
 Done f64e8084c94bb0449177364856d8117e2f14c4c0 powerpc/mm: Move hash related mmu-*.h headers to book3s/
 Done-mikey 15b1624b78075d4f52e170600c81720532ca790d powerpc: Use defines for __init_tlb_power[78] (dependency for above patch)
 Done - c367a44133bcd7f94fb48b58e991dbffe7c25e22 powerpc/mm: add _PAGE_HASHPTE similar to 4K hash
