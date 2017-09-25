@@ -188,9 +188,8 @@ dd1842a2a448bb66d74aa02a550df6be8c25f20b powerpc/mm: Make page table size a vari
 13f829a5a1032ff1b96c727429bf461f7a8ad3f2 powerpc/mm: Move pte accessors that operate on common pte bits to pgtable.h
 2e8735198af0392d9032a356ee6c82686afca779 powerpc/mm: Move common pte bits and accessors to book3s/64/pgtable.h
 d2cf005038104cf383db1469a7f0bbb5b0368f33 powerpc/mm: Handle _PTE_NONE_MASK
-945537df7a107e0dad7b0d3d14df46cfba46f4c5 powerpc/mm/book3s: Rename hash specific PTE bits to carry H_ prefix
-eee24b5aafe87f3591990528eae2ad22e2c1d50c powerpc/mm: Move hash and no hash code to separate files
-
+Done-fixup 945537df7a107e0dad7b0d3d14df46cfba46f4c5 powerpc/mm/book3s: Rename hash specific PTE bits to carry H_ prefix
+Done - eee24b5aafe87f3591990528eae2ad22e2c1d50c powerpc/mm: Move hash and no hash code to separate files
 Done-David dace6c665ec59bdc4eeafa4db7228c1a673e2e2 powerpc/mm: Clean up memory hotplug failure paths
 Done-David 27828f98a0522ad4a745a80407d051e5874c8d93 powerpc/mm: Handle removing maybe-present bolted HPTEs
 Done-David abd0a0e7914a1137973119ac3b3cace26e8ffa96 powerpc/mm: Clean up error handling for htab_remove_mapping
