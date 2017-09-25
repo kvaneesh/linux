@@ -193,15 +193,15 @@ eee24b5aafe87f3591990528eae2ad22e2c1d50c powerpc/mm: Move hash and no hash code 
 50de596de8be6de75401a2190b90a822e8a1bab2 powerpc/mm/hash: Add support for Power9 Hash
 e99833448c5fa198a120db6d7087dd17149dc273 powerpc/mm/radix: Add partition table format & callback
 11a6f6abd74ab80865023200ca33515f6db43d63 powerpc/mm: Move radix/hash common data structures to book3s64 headers
-33d336d986edc544cd153e31a28a515d5648721b powerpc/mm: Use generic version of ptep_clear_flush_young()
-ff844b741e1db87a72aabb5f61f6e0ca82bfe100 powerpc/mm: Use generic version of pmdp_clear_flush_young()
-30bda41aba4efb2370c97e2cbe7385de93ccc372 powerpc/mm: Drop WIMG in favour of new constants
-72176dd0ad36c6d8e13515d085f7a229a55a2985 powerpc/mm: Use a helper for finding pte bits mapping I/O area
-e58e87adc8bf92e9c6abb1dc1f4af2500aa07ff3 powerpc/mm: Update _PAGE_KERNEL_RO
-96270b1fc25d527b015c73533119f6c85df2e0ff powerpc/mm: Remove RPN_SHIFT and RPN_SIZE
-ac29c64089b74d107edb90879e63a2f7a03cd66b powerpc/mm: Replace _PAGE_USER with _PAGE_PRIVILEGED
-e7bfc462d32fc417d3fea8ad07b62b59f000e925 powerpc/mm: Use pte_user() instead of open coding
 
+Done - 33d336d986edc544cd153e31a28a515d5648721b powerpc/mm: Use generic version of ptep_clear_flush_young()
+Done - ff844b741e1db87a72aabb5f61f6e0ca82bfe100 powerpc/mm: Use generic version of pmdp_clear_flush_young()
+Done - 30bda41aba4efb2370c97e2cbe7385de93ccc372 powerpc/mm: Drop WIMG in favour of new constants
+Done - 72176dd0ad36c6d8e13515d085f7a229a55a2985 powerpc/mm: Use a helper for finding pte bits mapping I/O area
+Done - e58e87adc8bf92e9c6abb1dc1f4af2500aa07ff3 powerpc/mm: Update _PAGE_KERNEL_RO
+Done - 96270b1fc25d527b015c73533119f6c85df2e0ff powerpc/mm: Remove RPN_SHIFT and RPN_SIZE
+Done - ac29c64089b74d107edb90879e63a2f7a03cd66b powerpc/mm: Replace _PAGE_USER with _PAGE_PRIVILEGED
+Done - e7bfc462d32fc417d3fea8ad07b62b59f000e925 powerpc/mm: Use pte_user() instead of open coding
 Done-Hugh 2f10f1a7884e97a68e52c4b6f7866e29cf3fe7e6 powerpc/mm: fix _PAGE_SWP_SOFT_DIRTY breaking swapoff
 Done - 73a1441a9b2ae05c15eb7cc90d4de379b44249bf powerpc/mm/subpage: Clear RWX bit to indicate no access
 Done - c7d54842deb1fa357cff75b988275a1c9f259140 powerpc/mm: Use _PAGE_READ to indicate Read access
