@@ -191,9 +191,11 @@ d2cf005038104cf383db1469a7f0bbb5b0368f33 powerpc/mm: Handle _PTE_NONE_MASK
 945537df7a107e0dad7b0d3d14df46cfba46f4c5 powerpc/mm/book3s: Rename hash specific PTE bits to carry H_ prefix
 eee24b5aafe87f3591990528eae2ad22e2c1d50c powerpc/mm: Move hash and no hash code to separate files
 50de596de8be6de75401a2190b90a822e8a1bab2 powerpc/mm/hash: Add support for Power9 Hash
-e99833448c5fa198a120db6d7087dd17149dc273 powerpc/mm/radix: Add partition table format & callback
-11a6f6abd74ab80865023200ca33515f6db43d63 powerpc/mm: Move radix/hash common data structures to book3s64 headers
 
+Done-paul-cherrypick 70cd4c10b290dd77fff6dc702a9a2c8c679df121
+Done-paul dbcbfee0c81c7938e40d7d6bc659a5191f490b50 powerpc/64: More definitions for POWER9
+Done - e99833448c5fa198a120db6d7087dd17149dc273 powerpc/mm/radix: Add partition table format & callback
+Done - 11a6f6abd74ab80865023200ca33515f6db43d63 powerpc/mm: Move radix/hash common data structures to book3s64 headers
 Done - 33d336d986edc544cd153e31a28a515d5648721b powerpc/mm: Use generic version of ptep_clear_flush_young()
 Done - ff844b741e1db87a72aabb5f61f6e0ca82bfe100 powerpc/mm: Use generic version of pmdp_clear_flush_young()
 Done - 30bda41aba4efb2370c97e2cbe7385de93ccc372 powerpc/mm: Drop WIMG in favour of new constants
