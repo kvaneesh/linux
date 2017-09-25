@@ -201,14 +201,15 @@ e58e87adc8bf92e9c6abb1dc1f4af2500aa07ff3 powerpc/mm: Update _PAGE_KERNEL_RO
 96270b1fc25d527b015c73533119f6c85df2e0ff powerpc/mm: Remove RPN_SHIFT and RPN_SIZE
 ac29c64089b74d107edb90879e63a2f7a03cd66b powerpc/mm: Replace _PAGE_USER with _PAGE_PRIVILEGED
 e7bfc462d32fc417d3fea8ad07b62b59f000e925 powerpc/mm: Use pte_user() instead of open coding
-73a1441a9b2ae05c15eb7cc90d4de379b44249bf powerpc/mm/subpage: Clear RWX bit to indicate no access
-c7d54842deb1fa357cff75b988275a1c9f259140 powerpc/mm: Use _PAGE_READ to indicate Read access
-5dc1ef858c12f865e3676727e03519bece4ce6c1 powerpc/mm: Use big endian Linux page tables for book3s 64
-4bece39b503c2340de154c82bf6d928e72d74d4e powerpc/mm: Drop PTE_ATOMIC_UPDATES from pmd_hugepage_update()
-8ffb4103f5e28d7e7890ed4774d8e009f253f56e IB/qib: Use cache inhibitted and guarded mapping on powerpc
-3b1dbfa14f97188ec33fdfc7acb66bea59a3bb21 cxl: Fix DAR check & use REGION_ID instead of opencoding
-458aa76d132dc1c3c60be0f0db99bcc0ce1767fc mm/thp/migration: switch from flush_tlb_range to flush_pmd_tlb_range
 
+Done-Hugh 2f10f1a7884e97a68e52c4b6f7866e29cf3fe7e6 powerpc/mm: fix _PAGE_SWP_SOFT_DIRTY breaking swapoff
+Done - 73a1441a9b2ae05c15eb7cc90d4de379b44249bf powerpc/mm/subpage: Clear RWX bit to indicate no access
+Done - c7d54842deb1fa357cff75b988275a1c9f259140 powerpc/mm: Use _PAGE_READ to indicate Read access
+Done - 5dc1ef858c12f865e3676727e03519bece4ce6c1 powerpc/mm: Use big endian Linux page tables for book3s 64
+Done - 4bece39b503c2340de154c82bf6d928e72d74d4e powerpc/mm: Drop PTE_ATOMIC_UPDATES from pmd_hugepage_update()
+Done - 8ffb4103f5e28d7e7890ed4774d8e009f253f56e IB/qib: Use cache inhibitted and guarded mapping on powerpc
+Done - 3b1dbfa14f97188ec33fdfc7acb66bea59a3bb21 cxl: Fix DAR check & use REGION_ID instead of opencoding
+Done - 458aa76d132dc1c3c60be0f0db99bcc0ce1767fc mm/thp/migration: switch from flush_tlb_range to flush_pmd_tlb_range
 Done-Vineet 12ebc1581ad114543ae822aa3a12f76072e2f902 mm,thp: introduce flush_pmd_tlb_range
 Done-Vineet bd5e88ad72b26ebf7ecb231bc22ceecd6cbdb951 mm,thp: reduce ifdef'ery for THP in generic code
 Done-Vineet 52585bcc2505d6f888d4ac68ca6c55f6d1ad736a mm: group pte related helpers together
@@ -227,7 +228,7 @@ Done - 849f86a630e9c84bf4c9d5dcbfe59dc94b2e15ce powerpc/mm/book3s-64: Move _PAGE
 Done - c61a8843124e353f4ba27c073133868da00e0335 powerpc/mm/book3s-64: Use physical addresses in upper page table tree levels
 Done - f1a9ae034a263d93ea408825afe699aebf37010a powerpc/mm/book3s-64: Free up 7 high-order bits in the Linux PTE
 Done - 1ec3f937102154b54c3ba97b79d4bd3931bb0eaa powerpc/mm/book3s-64: Clean up some obsolete or misleading comments
-Done - 7207f43665b83ed7881c5111bc45475ccf5ce48b powerpc/mm: Add page soft dirty tracking  
+Done-Laurent - 7207f43665b83ed7881c5111bc45475ccf5ce48b powerpc/mm: Add page soft dirty tracking  
 Done - ae9a71afa4d7cf29a816fbc387bfd59ad7c292b6 powerpc/mm: Don't have conditional defines for real_pte_t
 Done - 2bf59916ef033edb9f8e968ee27e486ccb8ba1ce powerpc/mm: Split pgtable types to separate header
 Done - 9ab3ac233a8b4ffcc27c8475b83dee49fc46bc76 powerpc/mm/hash: Clear the invalid slot information correctly
