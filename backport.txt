@@ -166,9 +166,10 @@ b5dcc6096971b7c11b443b79ae8b69ccb01ec04e powerpc/mm/radix: Update PTCR on second
 177ba7c647f37bc3f31667192059ee794347d79d powerpc/mm/radix: Limit paca allocation in radix
 764041e0f43cc7846f6d8eb246d65b53cc06c764 powerpc/mm/radix: Add checks in slice code to catch radix usage
 d8c476eeb697c9aac46b390e9cbd7af7032814f1 powerpc/mm/radix: Isolate hash table function from pseries guest code
-caca285e5ab4a7a19fede51688106ceed6fc45dd powerpc/mm/radix: Use STD_MMU_64 to properly isolate hash related code
-a8ed87c92adf1fd45142323e04f15b522117d575 powerpc/mm/radix: Add MMU_FTR_RADIX
 
+Done-fixup caca285e5ab4a7a19fede51688106ceed6fc45dd powerpc/mm/radix: Use STD_MMU_64 to properly isolate hash related code
+Done - a8ed87c92adf1fd45142323e04f15b522117d575 powerpc/mm/radix: Add MMU_FTR_RADIX
+Done-mpe 773edeadf672546cd554e0797fc02a9e6edf01ae powerpc/mm: Add mask of possible MMU features
 Done - 1a472c9dba6b9646fd36717968f6a531b4441c7d powerpc/mm/radix: Add tlbflush routines
 Done-mikey c3ab300ea55541014348561e7690c41c79966ac6 powerpc: Add POWER9 cputable entry
 Done - 676012a66f651a98808459bc8ab75661828ed96f powerpc/mm: Hash abstraction for tlbflush routines
