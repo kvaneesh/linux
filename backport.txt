@@ -185,13 +185,12 @@ b0b5e9b1304765d079c71373df236733765f42ac powerpc/mm/radix: Add radix pte #define
 34fbadd8e98bbd85f503298152654f677db47ae3 powerpc/mm: Move pte related functions together
 aba480e1371358b419b2b680cc632f3210280b03 powerpc/mm: Move page table index and and vaddr to pgtable.h
 
-7e1e63c5e9d694c1198d410a6c7b2d0fa06da355 powerpc/mm: Convert pte_user() to static inline
-ee3caed37d763ab28f8ac55563f38fb7530c6252 powerpc/mm: Use pte_raw() in pte_same()/pmd_same()
-3910a7f485e1222de2176ef5bf3a1d8de3152920 powerpc/mm: Add pte_xchg() helper
-670eea924198456873f3346bb247b662d7ddffd7 powerpc/mm: Always use STRICT_MM_TYPECHECKS
-
-dd1842a2a448bb66d74aa02a550df6be8c25f20b powerpc/mm: Make page table size a variable
-13f829a5a1032ff1b96c727429bf461f7a8ad3f2 powerpc/mm: Move pte accessors that operate on common pte bits to pgtable.h
+Done-mpe 7e1e63c5e9d694c1198d410a6c7b2d0fa06da355 powerpc/mm: Convert pte_user() to static inline
+Done-mpe ee3caed37d763ab28f8ac55563f38fb7530c6252 powerpc/mm: Use pte_raw() in pte_same()/pmd_same()
+Done-mpe 3910a7f485e1222de2176ef5bf3a1d8de3152920 powerpc/mm: Add pte_xchg() helper
+Done-mpe 670eea924198456873f3346bb247b662d7ddffd7 powerpc/mm: Always use STRICT_MM_TYPECHECKS
+Done - dd1842a2a448bb66d74aa02a550df6be8c25f20b powerpc/mm: Make page table size a variable
+Done - 13f829a5a1032ff1b96c727429bf461f7a8ad3f2 powerpc/mm: Move pte accessors that operate on common pte bits to pgtable.h
 Done-fixup 2e8735198af0392d9032a356ee6c82686afca779 powerpc/mm: Move common pte bits and accessors to book3s/64/pgtable.h
 Done-fixup d2cf005038104cf383db1469a7f0bbb5b0368f33 powerpc/mm: Handle _PTE_NONE_MASK
 Done-fixup 945537df7a107e0dad7b0d3d14df46cfba46f4c5 powerpc/mm/book3s: Rename hash specific PTE bits to carry H_ prefix
