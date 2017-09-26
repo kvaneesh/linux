@@ -146,27 +146,27 @@ ab62476240d59a9d7d78ca5ff32499dd50db2069 powerpc/mm/radix: Add THP support for 4
 bde3eb6222e49673d2ee9dfdc6ab6e7b6ff69e91 powerpc/mm/radix: Add radix THP callbacks
 3df33f12be2f6fa88dff12564ab1d069482e3224 powerpc/mm/thp: Abstraction for THP functions
 6a1ea36260f69f1aea85bbf8afcd6a8c193485b9 powerpc/mm: THP is only available on hash64 as of now
-c0a6c719d2a153abe5d8c3b42f0379a5bd752517 powerpc/mm/radix: Add hugetlb support 4K page size
-43a5c684270ee9b5b13c91ec048831dd5b7e0cdc powerpc/mm/radix: Make sure swapper pgdir is properly aligned
-484837601d4dd048d1f8d2cedd39934bb3ad6d59 powerpc/mm: Add radix support for hugetlb
-2f5f0dfd1e5f9840560e85ad26cb4a6f06c19e07 powerpc/mm: Fix vma_mmu_pagesize() for radix
-5ed7ecd08a0807d6d616c3d958402f9c723bb048 powerpc/mm: pte_frag abstraction
-a3dece6d69b0ad21b64104dff508c67a1a1f14dd powerpc/radix: Update MMU cache
-d6a9996e84ac4beb7713e9485f4563e100a9b03e powerpc/mm: vmalloc abstraction in preparation for radix
-4dfb88ca9b66690d21030ccacc1cca73db90655e powerpc/mm: Update pte filter for radix
-a2f41eb99208adf4732529c4df1fd12b39f4c333 powerpc/mm: Add radix pgalloc details
-934828edfadc43be07e53429ce501741bedf4a5e powerpc/mm: Make 4K and 64K use pte_t for pgtable_t
-74701d5947a6fb38ece37c1ff1e5a77c36ee7b9c powerpc/mm: Rename function to indicate we are allocating fragments
-bcbe7f777eb396f9bbf4cb1cab3b206f50881191 powerpc/mm: Simplify the code dropping 4-level table #ifdef
-27209206a60fa6ffc92e8d9886ae32abaad5b442 powerpc/mm: Revert changes made to nohash pgalloc-64.h
-75a9b8a6c2533064a8d5d090ada7bf9e4c4c84c1 powerpc/mm: Copy pgalloc (part 2)
-101ad5c65ef2631f402643c760574a6f0f7f64d0 powerpc/mm: Make a copy of pgalloc.h for 32 and 64 book3s
-b5dcc6096971b7c11b443b79ae8b69ccb01ec04e powerpc/mm/radix: Update PTCR on secondary CPUs
-7a0eedeedd5d192f64fd4cd46634e409cb7a513b powerpc/mm/radix: Pick the address layout for radix config
-177ba7c647f37bc3f31667192059ee794347d79d powerpc/mm/radix: Limit paca allocation in radix
-764041e0f43cc7846f6d8eb246d65b53cc06c764 powerpc/mm/radix: Add checks in slice code to catch radix usage
-d8c476eeb697c9aac46b390e9cbd7af7032814f1 powerpc/mm/radix: Isolate hash table function from pseries guest code
 
+Done - c0a6c719d2a153abe5d8c3b42f0379a5bd752517 powerpc/mm/radix: Add hugetlb support 4K page size
+Done - 43a5c684270ee9b5b13c91ec048831dd5b7e0cdc powerpc/mm/radix: Make sure swapper pgdir is properly aligned
+Done - 484837601d4dd048d1f8d2cedd39934bb3ad6d59 powerpc/mm: Add radix support for hugetlb
+Done - 2f5f0dfd1e5f9840560e85ad26cb4a6f06c19e07 powerpc/mm: Fix vma_mmu_pagesize() for radix
+Done - 5ed7ecd08a0807d6d616c3d958402f9c723bb048 powerpc/mm: pte_frag abstraction
+Done - a3dece6d69b0ad21b64104dff508c67a1a1f14dd powerpc/radix: Update MMU cache
+Done - d6a9996e84ac4beb7713e9485f4563e100a9b03e powerpc/mm: vmalloc abstraction in preparation for radix
+Done - 4dfb88ca9b66690d21030ccacc1cca73db90655e powerpc/mm: Update pte filter for radix
+Done - a2f41eb99208adf4732529c4df1fd12b39f4c333 powerpc/mm: Add radix pgalloc details
+Done - 934828edfadc43be07e53429ce501741bedf4a5e powerpc/mm: Make 4K and 64K use pte_t for pgtable_t
+Done - 74701d5947a6fb38ece37c1ff1e5a77c36ee7b9c powerpc/mm: Rename function to indicate we are allocating fragments
+Done - bcbe7f777eb396f9bbf4cb1cab3b206f50881191 powerpc/mm: Simplify the code dropping 4-level table #ifdef
+Done - 27209206a60fa6ffc92e8d9886ae32abaad5b442 powerpc/mm: Revert changes made to nohash pgalloc-64.h
+Done - 75a9b8a6c2533064a8d5d090ada7bf9e4c4c84c1 powerpc/mm: Copy pgalloc (part 2)
+Done - 101ad5c65ef2631f402643c760574a6f0f7f64d0 powerpc/mm: Make a copy of pgalloc.h for 32 and 64 book3s
+Done - b5dcc6096971b7c11b443b79ae8b69ccb01ec04e powerpc/mm/radix: Update PTCR on secondary CPUs
+Done - 7a0eedeedd5d192f64fd4cd46634e409cb7a513b powerpc/mm/radix: Pick the address layout for radix config
+Done - 177ba7c647f37bc3f31667192059ee794347d79d powerpc/mm/radix: Limit paca allocation in radix
+Done - 764041e0f43cc7846f6d8eb246d65b53cc06c764 powerpc/mm/radix: Add checks in slice code to catch radix usage
+Done - d8c476eeb697c9aac46b390e9cbd7af7032814f1 powerpc/mm/radix: Isolate hash table function from pseries guest code
 Done-fixup caca285e5ab4a7a19fede51688106ceed6fc45dd powerpc/mm/radix: Use STD_MMU_64 to properly isolate hash related code
 Done - a8ed87c92adf1fd45142323e04f15b522117d575 powerpc/mm/radix: Add MMU_FTR_RADIX
 Done-mpe 773edeadf672546cd554e0797fc02a9e6edf01ae powerpc/mm: Add mask of possible MMU features
