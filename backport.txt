@@ -280,3 +280,7 @@ Done - ec2640b114d535ba7d895b6ee353791d542f2407 powerpc/mm: Disable hugepd for 6
 Done - f78f7ed72632a0794161f290b89e2cd752f55202 powerpc: Fix _ALIGN_* errors due to type difference.
 Done - 65d3223a853ac8598694064c1d37b0955e7d99cc powerpc/mm: Add virt_to_pfn and use this instead of opencoding
 
+
+Kiril- thp -rework series
+aa88b68c3b1dce8bc3fd54c8a7372a777ff265cd
+Also pulls in pageflags cleanup for compound pages etc
