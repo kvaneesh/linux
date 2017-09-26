@@ -168,23 +168,24 @@ b5dcc6096971b7c11b443b79ae8b69ccb01ec04e powerpc/mm/radix: Update PTCR on second
 d8c476eeb697c9aac46b390e9cbd7af7032814f1 powerpc/mm/radix: Isolate hash table function from pseries guest code
 caca285e5ab4a7a19fede51688106ceed6fc45dd powerpc/mm/radix: Use STD_MMU_64 to properly isolate hash related code
 a8ed87c92adf1fd45142323e04f15b522117d575 powerpc/mm/radix: Add MMU_FTR_RADIX
-1a472c9dba6b9646fd36717968f6a531b4441c7d powerpc/mm/radix: Add tlbflush routines
-676012a66f651a98808459bc8ab75661828ed96f powerpc/mm: Hash abstraction for tlbflush routines
-f5df4b4be9ae5abf748065d7f40d6027bf9af148 powerpc/mm: Rename mmu_context_hash64.c to mmu_context_book3s64.c
-7e381c0ff618cab3e687e953b72f59ef2a891ba9 powerpc/mm/radix: Add mmu context handling callback for radix
-d2adba3fd137b46903dad813e2a4777b96c85e0f powerpc/mm: Abstraction for switch_mmu_context()
-d9225ad923514252ec8d10dac67e5a7a2f0aa345 powerpc/mm/radix: Add radix callbacks for vmemmap and map_kernel page()
-31a14fae92b29b7a7fcc65600f072bf448d3b0eb powerpc/mm: Abstraction for vmemmap and map_kernel_page()
-2bfd65e45e877fb5704730244da67c748d28a1b8 powerpc/mm/radix: Add radix callbacks for early init routines
-756d08d1ba169ed9eae4d48e9a0af014e86593fc powerpc/mm: Abstract early MMU init in preparation for radix
-6cc1a0ee4ce29ad1cbdc622db6f9bc16d3056067 powerpc/mm/radix: Add radix callback for pmd accessors
-a9252aaefe7e72133e7a37e0eff4e950a4f33af1 powerpc/mm: Move hugetlb and THP related pmd accessors to pgtable.h
-ac94ac79dc0fc473aebcbe2ba4c26a5341b866be powerpc/mm: Add radix callbacks to pte accessors
-566ca99af026d43c7cf7ab72f78463dbcc7e6ac2 powerpc/mm/radix: Add dummy radix_enabled()
-b0b5e9b1304765d079c71373df236733765f42ac powerpc/mm/radix: Add radix pte #defines
-34fbadd8e98bbd85f503298152654f677db47ae3 powerpc/mm: Move pte related functions together
-aba480e1371358b419b2b680cc632f3210280b03 powerpc/mm: Move page table index and and vaddr to pgtable.h
 
+Done - 1a472c9dba6b9646fd36717968f6a531b4441c7d powerpc/mm/radix: Add tlbflush routines
+Done-mikey c3ab300ea55541014348561e7690c41c79966ac6 powerpc: Add POWER9 cputable entry
+Done - 676012a66f651a98808459bc8ab75661828ed96f powerpc/mm: Hash abstraction for tlbflush routines
+Done - f5df4b4be9ae5abf748065d7f40d6027bf9af148 powerpc/mm: Rename mmu_context_hash64.c to mmu_context_book3s64.c
+Done - 7e381c0ff618cab3e687e953b72f59ef2a891ba9 powerpc/mm/radix: Add mmu context handling callback for radix
+Done - d2adba3fd137b46903dad813e2a4777b96c85e0f powerpc/mm: Abstraction for switch_mmu_context()
+Done - d9225ad923514252ec8d10dac67e5a7a2f0aa345 powerpc/mm/radix: Add radix callbacks for vmemmap and map_kernel page()
+Done - 31a14fae92b29b7a7fcc65600f072bf448d3b0eb powerpc/mm: Abstraction for vmemmap and map_kernel_page()
+Done - 2bfd65e45e877fb5704730244da67c748d28a1b8 powerpc/mm/radix: Add radix callbacks for early init routines
+Done - 756d08d1ba169ed9eae4d48e9a0af014e86593fc powerpc/mm: Abstract early MMU init in preparation for radix
+Done - 6cc1a0ee4ce29ad1cbdc622db6f9bc16d3056067 powerpc/mm/radix: Add radix callback for pmd accessors
+Done - a9252aaefe7e72133e7a37e0eff4e950a4f33af1 powerpc/mm: Move hugetlb and THP related pmd accessors to pgtable.h
+Done - ac94ac79dc0fc473aebcbe2ba4c26a5341b866be powerpc/mm: Add radix callbacks to pte accessors
+Done - 566ca99af026d43c7cf7ab72f78463dbcc7e6ac2 powerpc/mm/radix: Add dummy radix_enabled()
+Done - b0b5e9b1304765d079c71373df236733765f42ac powerpc/mm/radix: Add radix pte #defines
+Done - 34fbadd8e98bbd85f503298152654f677db47ae3 powerpc/mm: Move pte related functions together
+Done - aba480e1371358b419b2b680cc632f3210280b03 powerpc/mm: Move page table index and and vaddr to pgtable.h
 Done-mpe 7e1e63c5e9d694c1198d410a6c7b2d0fa06da355 powerpc/mm: Convert pte_user() to static inline
 Done-mpe ee3caed37d763ab28f8ac55563f38fb7530c6252 powerpc/mm: Use pte_raw() in pte_same()/pmd_same()
 Done-mpe 3910a7f485e1222de2176ef5bf3a1d8de3152920 powerpc/mm: Add pte_xchg() helper
