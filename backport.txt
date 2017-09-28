@@ -142,11 +142,11 @@ d6c886006c948141f24e84acebfb757d3200f20c powerpc/mm/radix: Update LPCR only if i
 2d566537dd2c69bd6898ef5d95ecccdfbab97eef powerpc/mm/subpage: Initialise user psize correctly
 69dfbaeb657bad13dddb3204603490206b859a7e powerpc/mm/radix: Document software bits for radix
 17a3dd2f5fc75fc12d0a2ebf05327cf965bdf84b powerpc/mm/radix: Use firmware feature to enable Radix MMU
-ab62476240d59a9d7d78ca5ff32499dd50db2069 powerpc/mm/radix: Add THP support for 4K linux page size
-bde3eb6222e49673d2ee9dfdc6ab6e7b6ff69e91 powerpc/mm/radix: Add radix THP callbacks
-3df33f12be2f6fa88dff12564ab1d069482e3224 powerpc/mm/thp: Abstraction for THP functions
-6a1ea36260f69f1aea85bbf8afcd6a8c193485b9 powerpc/mm: THP is only available on hash64 as of now
 
+pending - ab62476240d59a9d7d78ca5ff32499dd50db2069 powerpc/mm/radix: Add THP support for 4K linux page size
+pending - bde3eb6222e49673d2ee9dfdc6ab6e7b6ff69e91 powerpc/mm/radix: Add radix THP callbacks
+pending - 3df33f12be2f6fa88dff12564ab1d069482e3224 powerpc/mm/thp: Abstraction for THP functions
+Done-fixup - 6a1ea36260f69f1aea85bbf8afcd6a8c193485b9 powerpc/mm: THP is only available on hash64 as of now
 Done - c0a6c719d2a153abe5d8c3b42f0379a5bd752517 powerpc/mm/radix: Add hugetlb support 4K page size
 Done - 43a5c684270ee9b5b13c91ec048831dd5b7e0cdc powerpc/mm/radix: Make sure swapper pgdir is properly aligned
 Done - 484837601d4dd048d1f8d2cedd39934bb3ad6d59 powerpc/mm: Add radix support for hugetlb
