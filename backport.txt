@@ -131,9 +131,10 @@ bf16cdf48a5369ba29614a0ade4ae5daf7a9e47c powerpc/mm/radix: Update LPCR HR bit as
 b23d9c5b9c83c05e013aa52460f12a8365062cf4 powerpc/mm/radix: Update Radix tree size as per ISA 3.0
 e568006b9d828403397668864d9797dc4bfefd28 powerpc/mm/hash: Don't add memory coherence if cache inhibited is set
 8550e2fa34f077c8a87cf1ba2453102bbbc9ade9 powerpc/mm/hash: Use the correct PPP mask when updating HPTE
-a145abf12c9f7d30d8c330c9d8a97428cbf0589b powerpc/mm/radix: Flush page walk cache when freeing page table
-36194812a4063dd2a72070aec3ee7890d135a587 powerpc/mm/radix: Update to tlb functions ric argument
 
+Done-mpe 8017ea35d33f9e0950d369773ab48bcb1efb9ba0 powerpc/nohash: Fix build break with 64K pages
+Done - a145abf12c9f7d30d8c330c9d8a97428cbf0589b powerpc/mm/radix: Flush page walk cache when freeing page table
+Done - 36194812a4063dd2a72070aec3ee7890d135a587 powerpc/mm/radix: Update to tlb functions ric argument
 Done-mpe 2c2a63e301fd19ccae673e79de59b30a232ff7f9 powerpc/pseries: Fix IBM_ARCH_VEC_NRCORES_OFFSET since POWER8NVL was added
 Done - 3b6d1eb7ea65f4aa64115cf9ba02c190e5c9f6de powerpc/mm/hash: Compute the segment size correctly for ISA 3.0
 Done - 9690c15742688e9cb5ee4aa0b08e458551ceea13 powerpc/mm/radix: Fix always false comparison against MMU_NO_CONTEXT
