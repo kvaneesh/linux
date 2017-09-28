@@ -118,20 +118,22 @@ e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remo
 9af3f56ba19ef377170ab3614b9388cc7b7f3d74 powerpc/mm: check for irq disabled() only if DEBUG_VM is enabled
 a54f9aebaa9f0ea2ce6b01f12b65062fb2e74e6c include/linux/mmdebug.h: add VM_WARN which maps to WARN()
 a4b349540a26af9a544e2e858223140fb9ddc35c powerpc/mm: Cleanup LPCR defines
-b275bfb2696387be216db5b7372ee9dcf3f05b80 powerpc/mm/radix: Add a kernel command line to disable radix
-912cc87a654d3d30f5da6220489a97a5beb7d313 powerpc/mm/radix: Add LPID based tlb flush helpers
-83209bc86129f7800dfd0e3e211e9b96b397b4b7 powerpc/mm/radix: Update machine call back to support new HCALL.
-09cf5bcb0c93550db87f738b6012d97dbf73beb7 powerpc/mm/radix: Update PID switch sequence
-4b7a350480506bf292193e9c1db6fc19d57321ec powerpc/mm/hash: Update SDR1 size encoding as documented in ISA 3.0
-56547411a07b0aabf55ce8b841dfdb7daced1250 powerpc/mm: Print formation regarding the the MMU mode
-accfad7d0a85c5678eef76083972426032d64469 powerpc/mm: Clear top 16 bits of va only on older cpus
-e21fc93b7020905c9f3672969ddd276aa152b9b7 powerpc/mm: Compile out radix related functions if RADIX_MMU is disabled
-66c570f545e056babdd9510595ce762dcedadd71 powerpc/mm: use _raw variant of page table accessors
-bf16cdf48a5369ba29614a0ade4ae5daf7a9e47c powerpc/mm/radix: Update LPCR HR bit as per ISA
-b23d9c5b9c83c05e013aa52460f12a8365062cf4 powerpc/mm/radix: Update Radix tree size as per ISA 3.0
-e568006b9d828403397668864d9797dc4bfefd28 powerpc/mm/hash: Don't add memory coherence if cache inhibited is set
-8550e2fa34f077c8a87cf1ba2453102bbbc9ade9 powerpc/mm/hash: Use the correct PPP mask when updating HPTE
 
+
+Done - b275bfb2696387be216db5b7372ee9dcf3f05b80 powerpc/mm/radix: Add a kernel command line to disable radix
+Done - 912cc87a654d3d30f5da6220489a97a5beb7d313 powerpc/mm/radix: Add LPID based tlb flush helpers
+Done - 83209bc86129f7800dfd0e3e211e9b96b397b4b7 powerpc/mm/radix: Update machine call back to support new HCALL.
+Done - 09cf5bcb0c93550db87f738b6012d97dbf73beb7 powerpc/mm/radix: Update PID switch sequence
+Done - 4b7a350480506bf292193e9c1db6fc19d57321ec powerpc/mm/hash: Update SDR1 size encoding as documented in ISA 3.0
+Done - 56547411a07b0aabf55ce8b841dfdb7daced1250 powerpc/mm: Print formation regarding the the MMU mode
+Done - accfad7d0a85c5678eef76083972426032d64469 powerpc/mm: Clear top 16 bits of va only on older cpus
+Done - e21fc93b7020905c9f3672969ddd276aa152b9b7 powerpc/mm: Compile out radix related functions if RADIX_MMU is disabled
+Done - 66c570f545e056babdd9510595ce762dcedadd71 powerpc/mm: use _raw variant of page table accessors
+Done - bf16cdf48a5369ba29614a0ade4ae5daf7a9e47c powerpc/mm/radix: Update LPCR HR bit as per ISA
+Done-balbir 8cd6d3c23e226ec6cb8825e1aa6a391ebda71c72 powerpc/mm: Fix .long's in tlb-radix.c to more meaningful
+Done - b23d9c5b9c83c05e013aa52460f12a8365062cf4 powerpc/mm/radix: Update Radix tree size as per ISA 3.0
+Done - e568006b9d828403397668864d9797dc4bfefd28 powerpc/mm/hash: Don't add memory coherence if cache inhibited is set
+Done - 8550e2fa34f077c8a87cf1ba2453102bbbc9ade9 powerpc/mm/hash: Use the correct PPP mask when updating HPTE
 Done-mpe 8017ea35d33f9e0950d369773ab48bcb1efb9ba0 powerpc/nohash: Fix build break with 64K pages
 Done - a145abf12c9f7d30d8c330c9d8a97428cbf0589b powerpc/mm/radix: Flush page walk cache when freeing page table
 Done - 36194812a4063dd2a72070aec3ee7890d135a587 powerpc/mm/radix: Update to tlb functions ric argument
