@@ -140,8 +140,12 @@ dc47c0c1f8099fccb2c1e2f3775855066a9e4484 powerpc/mm/hash: Fix the reference bit 
 d6c886006c948141f24e84acebfb757d3200f20c powerpc/mm/radix: Update LPCR only if it is powernv
 62ccf5bf1f4704986844440069df70b6509a9213 powerpc/mm/slice: Remove slice_mm_new_context()
 2d566537dd2c69bd6898ef5d95ecccdfbab97eef powerpc/mm/subpage: Initialise user psize correctly
-69dfbaeb657bad13dddb3204603490206b859a7e powerpc/mm/radix: Document software bits for radix
-17a3dd2f5fc75fc12d0a2ebf05327cf965bdf84b powerpc/mm/radix: Use firmware feature to enable Radix MMU
+
+Done-fixup 69dfbaeb657bad13dddb3204603490206b859a7e powerpc/mm/radix: Document software bits for radix
+Done - 17a3dd2f5fc75fc12d0a2ebf05327cf965bdf84b powerpc/mm/radix: Use firmware feature to enable Radix MMU
+Done-anton 4705e02498d6d5a7ab98dfee9595cd5e91db2017 powerpc: Update TM user feature bits in scan_features()
+Done-anton beff82374b259d726e2625ec6c518a5f2613f0ae powerpc: Update cpu_user_features2 in scan_features()
+Done-anton 6997e57d693b07289694239e52a10d2f02c3a46f powerpc: scan_features() updates incorrect bits for REAL_LE
 
 pending - ab62476240d59a9d7d78ca5ff32499dd50db2069 powerpc/mm/radix: Add THP support for 4K linux page size
 pending - bde3eb6222e49673d2ee9dfdc6ab6e7b6ff69e91 powerpc/mm/radix: Add radix THP callbacks
