@@ -117,14 +117,38 @@ e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remo
 31d49da5ad01728e48a1bb2b43795598b23de68a mm/hugetlb: simplify hugetlb unmap
 9af3f56ba19ef377170ab3614b9388cc7b7f3d74 powerpc/mm: check for irq disabled() only if DEBUG_VM is enabled
 a54f9aebaa9f0ea2ce6b01f12b65062fb2e74e6c include/linux/mmdebug.h: add VM_WARN which maps to WARN()
-a4b349540a26af9a544e2e858223140fb9ddc35c powerpc/mm: Cleanup LPCR defines
 
+Done - a4b349540a26af9a544e2e858223140fb9ddc35c powerpc/mm: Cleanup LPCR defines
+Done-benh b1923caa6e64  powerpc: Merge 32-bit and 64-bit setup_arch()
+Done-benh 009776baa184  powerpc/64: Make a few boot functions __init
+Done-benh f7b9ebb79e90  powerpc: Re-order setup_panic()
+Done-benh e39afba3aa11  powerpc: Re-order the call to smp_setup_cpu_maps()
+Done-benh 8f212cb26fc7  powerpc/32: Move cache info inits to a separate function
+Done-benh fa745a129cae  powerpc/64: Move the content of setup_system() to setup_arch()
+Done-benh 9df549afeab4  powerpc/64: Move setting of {i,d}cache_bsize to initialize_cache_info()
+Done-benh bf1b61fb574b  powerpc/64: Move the boot time info banner to a separate function
+Done-benh f2d576948d6c  powerpc: Get rid of ppc_md.init_early()
+Done-benh 565713840445  powerpc: Move 32-bit probe() machine to later in the boot process
+Done-benh 406b0b6ae3fc  powerpc/64: Move 64-bit probe_machine() to later in the boot process
+Done-benh 84b62c72faa1  powerpc: Ensure that ppc_md is empty before probing for machine type
+Done-benh 7025776ed1eb  powerpc/mm: Move hash table ops to a separate structure
+Done-benh b521f576df6c  powerpc/pmac: Remove spurrious machine type test
+Done-benh 2b4e3ad8f579  powerpc/mm/hash64: Don't test for machine type to detect HEA special case
+Done-benh 5556ecf5e9fa  powerpc/mm/hash: Don't use machine_is() early during boot
+Done-benh 388dc1c3f003  powerpc/pasemi: Remove IOBMAP allocation from platform probe()
+Done-benh 166dd7d3fbf2  powerpc/64: Move MMU backend selection out of platform code
+Done-benh 91b6fad5cf16  powerpc/pmac: Remove early allocation of the SMU command buffer
+Done-benh d3cbff1b5a90  powerpc: Put exception configuration in a common place
+Done-benh 3808a88985b4  powerpc: Move FW feature probing out of pseries probe()
+Done-benh c40785ad305b  powerpc/dart: Use a cachable DART
+Done-benh de4cf3de594f  powerpc: Move 64-bit memory reserves to setup_arch()
+Done-benh c4bd6cb87c9e  powerpc: Move 64-bit feature fixup earlier
+Done-benh 9402c6846131  powerpc: Factor do_feature_fixup calls
 Done-Darren bfa37087aa04e45f56c41142dfceecb79b8e6ef9 powerpc: Initialise pci_io_base as early as possible
-Done-mpe 6e914ee629c4 | * powerpc: Fix faults caused by radix patching of SLB miss handler
-Done-benh da6a97bf12d5 * powerpc: Move epapr_paravirt_early_init() to early_init_devtree()
-Done-benh 63c254a50104 * powerpc: Add comment explaining the purpose of setup_kdump_trampoline()
-Done-benh bd7c93cca369 * powerpc: Update obsolete comments in setup_32.c about entry conditions
-
+Done-mpe 6e914ee629c4   powerpc: Fix faults caused by radix patching of SLB miss handler
+Done-benh da6a97bf12d5  powerpc: Move epapr_paravirt_early_init() to early_init_devtree()
+Done-benh 63c254a50104  powerpc: Add comment explaining the purpose of setup_kdump_trampoline()
+Done-benh bd7c93cca369  powerpc: Update obsolete comments in setup_32.c about entry conditions
 Done - b275bfb2696387be216db5b7372ee9dcf3f05b80 powerpc/mm/radix: Add a kernel command line to disable radix
 Done - 912cc87a654d3d30f5da6220489a97a5beb7d313 powerpc/mm/radix: Add LPID based tlb flush helpers
 Done - 83209bc86129f7800dfd0e3e211e9b96b397b4b7 powerpc/mm/radix: Update machine call back to support new HCALL.
