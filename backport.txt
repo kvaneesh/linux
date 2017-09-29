@@ -99,52 +99,39 @@ ad410674f5606a53ea2f2d45a78448a95e271fa0 powerpc/mm: Update the HID bit when swi
 c6d1a767b9eaa74f0969378ec47791ff8318a65c powerpc/mm/radix: Use different pte update sequence for different POWER9 revs
 694c4951922d114e789f669deb409b2aef440ae9 powerpc/mm/radix: Use different RTS encoding for different POWER9 revs
 7dccfbc325bb59f94521d544a8ae12148622b4f2 powerpc/book3s: Add a cpu table entry for different POWER9 revs
-703b41ad1a8759949adc1b641a82c2b227d18223 powerpc/mm: remove flush_tlb_page_nohash
-5491ae7b6f48499b8892822cff371746f0b4102f powerpc/mm/hugetlb: Add flush_hugetlb_tlb_range
-fbfa26d85418a155feacdb0f73cbf938f1027a8c powerpc/mm/radix/hugetlb: Add helper for finding page size from hstate
-f22dfc9158a8a999325e5aeb4b2ceda553430575 powerpc/mm/radix: Rename function and drop unused arg
-d8e91e93e97817e8ba069c9c44fb712619cf0a43 powerpc/mm/radix: Add tlb flush of THP ptes
-9d4dab11585ab2ef25d5d2a00a23b25b552c4080 powerpc/mm: Drop multiple definition of mm_is_core_local
-13dce033637b8e4d3266667c4df4d72fc37dc0a9 powerpc/mm: Use hugetlb flush functions
-138ee7ee0186dec230dde0c0774dbf5d310bdc39 powerpc/mm/hash: Add helper for finding SLBE LLP encoding
-8cb8140c4c93975d7db8fbfd2fd68f7a91f74a5d powerpc/mm/radix: Implement tlb mmu gather flush efficiently
-c812c7d8f1470ac9c8aa6d7e29b56e5845ee05fc powerpc/mm: Catch usage of cpu/mmu_has_feature() before jump label init
-309b315b6ec686ce050758cc4e29f6ad1125a83f powerpc: Call jump_label_init() in apply_feature_fixups()
-b8f1b4f8606b40b478072fb551f79e2984d44fad powerpc/mm: Convert early cpu/mmu feature check to use the new helpers
-5a25b6f527f9f5bbf5747b1b97e538e6d61bd2f2 powerpc/mm: Make MMU_FTR_RADIX a MMU family feature
 
-703b41ad1a87 * powerpc/mm: remove flush_tlb_page_nohash
-5491ae7b6f48 * powerpc/mm/hugetlb: Add flush_hugetlb_tlb_range
-fbfa26d85418 * powerpc/mm/radix/hugetlb: Add helper for finding page size from hstate
-f22dfc9158a8 * powerpc/mm/radix: Rename function and drop unused arg
-d8e91e93e978 * powerpc/mm/radix: Add tlb flush of THP ptes
-9d4dab11585a * powerpc/mm: Drop multiple definition of mm_is_core_local
-13dce033637b * powerpc/mm: Use hugetlb flush functions
-138ee7ee0186 * powerpc/mm/hash: Add helper for finding SLBE LLP encoding
-8cb8140c4c93 * powerpc/mm/radix: Implement tlb mmu gather flush efficiently
-e2985fd9b8de * powerpc/jump_label: Annotate jump label assembly
-c812c7d8f147 * powerpc/mm: Catch usage of cpu/mmu_has_feature() before jump label init
-c12e6f24d413 * powerpc: Add option to use jump label for mmu_has_feature()
-4db7327194db * powerpc: Add option to use jump label for cpu_has_feature()
-bfbfc8a43c02 * powerpc: Add kconfig option to use jump labels for cpu/mmu_has_feature()
-b92a226e5284 * powerpc: Move cpu_has_feature() to a separate file
-905259e33d0c * powerpc: Remove mfvtb()
-309b315b6ec6 * powerpc: Call jump_label_init() in apply_feature_fixups()
-e3f91083facb * jump_label: Make it possible for arches to invoke jump_label_init() earlier
-b8f1b4f8606b * powerpc/mm: Convert early cpu/mmu feature check to use the new helpers
-a141cca3892b * powerpc/mm: Add early_[cpu|mmu]_has_feature()
-bab4c8de6289 * powerpc/mm: Define radix_enabled() in one place & use static inline
-6574ba950bbe * powerpc/kernel: Convert cpu_has_feature() to returning bool
-a81dc9d99573 * powerpc/kernel: Convert mmu_has_feature() to returning bool
-5a25b6f527f9 * powerpc/mm: Make MMU_FTR_RADIX a MMU family feature
-a28e46f109c9 * powerpc/kernel: Check features don't change after patching
-9e8066f39839 * powerpc/64: Do feature patching before MMU init
-2537b09c939f * powerpc/mm: Do radix device tree scanning earlier
-bacf9cf88303 * powerpc/mm: Do hash device tree scanning earlier
-c610ec60ed63 * powerpc/mm: Move disable_radix handling into mmu_early_init_devtree()
-1a01dc87e09b * powerpc/mm: Add mmu_early_init_devtree()
-
-STart 703b41ad1a87 * powerpc/mm: remove flush_tlb_page_nohash
+Done - d957fb4d173647640a2b83e7c7e56a580e7fc7e7 powerpc: Fix booting P9 hash with CONFIG_PPC_RADIX_MMU=N
+Done - e9eb0278dad9c7a2631d5432180a130710110c09 powerpc/64: Used named initialisers for ibm_pa_features
+Done - 703b41ad1a87  powerpc/mm: remove flush_tlb_page_nohash
+Done - 5491ae7b6f48  powerpc/mm/hugetlb: Add flush_hugetlb_tlb_range
+Done - fbfa26d85418  powerpc/mm/radix/hugetlb: Add helper for finding page size from hstate
+Done - f22dfc9158a8  powerpc/mm/radix: Rename function and drop unused arg
+Done - d8e91e93e978  powerpc/mm/radix: Add tlb flush of THP ptes
+Done - 9d4dab11585a  powerpc/mm: Drop multiple definition of mm_is_core_local
+Done - 13dce033637b  powerpc/mm: Use hugetlb flush functions
+Done - 138ee7ee0186  powerpc/mm/hash: Add helper for finding SLBE LLP encoding
+Done - 8cb8140c4c93  powerpc/mm/radix: Implement tlb mmu gather flush efficiently
+Done - e2985fd9b8de  powerpc/jump_label: Annotate jump label assembly
+Done - c812c7d8f147  powerpc/mm: Catch usage of cpu/mmu_has_feature() before jump label init
+Done - c12e6f24d413  powerpc: Add option to use jump label for mmu_has_feature()
+Done - 4db7327194db  powerpc: Add option to use jump label for cpu_has_feature()
+Done - bfbfc8a43c02  powerpc: Add kconfig option to use jump labels for cpu/mmu_has_feature()
+Done - b92a226e5284  powerpc: Move cpu_has_feature() to a separate file
+Done - 905259e33d0c  powerpc: Remove mfvtb()
+Done - 309b315b6ec6  powerpc: Call jump_label_init() in apply_feature_fixups()
+Done - e3f91083facb  jump_label: Make it possible for arches to invoke jump_label_init() earlier
+Done - b8f1b4f8606b  powerpc/mm: Convert early cpu/mmu feature check to use the new helpers
+Done - a141cca3892b  powerpc/mm: Add early_[cpu|mmu]_has_feature()
+Done - bab4c8de6289  powerpc/mm: Define radix_enabled() in one place & use static inline
+Done - 6574ba950bbe  powerpc/kernel: Convert cpu_has_feature() to returning bool
+Done - a81dc9d99573  powerpc/kernel: Convert mmu_has_feature() to returning bool
+Done - 5a25b6f527f9  powerpc/mm: Make MMU_FTR_RADIX a MMU family feature
+Done - a28e46f109c9  powerpc/kernel: Check features don't change after patching
+Done - 9e8066f39839  powerpc/64: Do feature patching before MMU init
+Done - 2537b09c939f  powerpc/mm: Do radix device tree scanning earlier
+Done - bacf9cf88303  powerpc/mm: Do hash device tree scanning earlier
+Done - c610ec60ed63  powerpc/mm: Move disable_radix handling into mmu_early_init_devtree()
+Done - 1a01dc87e09b  powerpc/mm: Add mmu_early_init_devtree()
 Done-mpe 6364e84e855ae9a0558ac873e3ff50ecb75bb40a powerpc/mm: Rename hpte_init_lpar() and move the fallback to a header
 Done-mpe 7353644fa9df875aee778a802e3d28f1e3578512 powerpc/mm: Fix build break when PPC_NATIVE=n
 Done - e77b0852b551ffd8b29fa0225e1ef62c195e3160 mm/mmu_gather: track page size with mmu gather and force flush if page size change
