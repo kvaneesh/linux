@@ -113,6 +113,8 @@ c812c7d8f1470ac9c8aa6d7e29b56e5845ee05fc powerpc/mm: Catch usage of cpu/mmu_has_
 b8f1b4f8606b40b478072fb551f79e2984d44fad powerpc/mm: Convert early cpu/mmu feature check to use the new helpers
 5a25b6f527f9f5bbf5747b1b97e538e6d61bd2f2 powerpc/mm: Make MMU_FTR_RADIX a MMU family feature
 
+Done-mpe 6364e84e855ae9a0558ac873e3ff50ecb75bb40a powerpc/mm: Rename hpte_init_lpar() and move the fallback to a header
+Done-mpe 7353644fa9df875aee778a802e3d28f1e3578512 powerpc/mm: Fix build break when PPC_NATIVE=n
 Done - e77b0852b551ffd8b29fa0225e1ef62c195e3160 mm/mmu_gather: track page size with mmu gather and force flush if page size change
 Done - e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remove_page()
 Done-fixup - 31d49da5ad01728e48a1bb2b43795598b23de68a mm/hugetlb: simplify hugetlb unmap
