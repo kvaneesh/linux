@@ -112,12 +112,13 @@ c812c7d8f1470ac9c8aa6d7e29b56e5845ee05fc powerpc/mm: Catch usage of cpu/mmu_has_
 309b315b6ec686ce050758cc4e29f6ad1125a83f powerpc: Call jump_label_init() in apply_feature_fixups()
 b8f1b4f8606b40b478072fb551f79e2984d44fad powerpc/mm: Convert early cpu/mmu feature check to use the new helpers
 5a25b6f527f9f5bbf5747b1b97e538e6d61bd2f2 powerpc/mm: Make MMU_FTR_RADIX a MMU family feature
-e77b0852b551ffd8b29fa0225e1ef62c195e3160 mm/mmu_gather: track page size with mmu gather and force flush if page size change
-e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remove_page()
-31d49da5ad01728e48a1bb2b43795598b23de68a mm/hugetlb: simplify hugetlb unmap
-9af3f56ba19ef377170ab3614b9388cc7b7f3d74 powerpc/mm: check for irq disabled() only if DEBUG_VM is enabled
-a54f9aebaa9f0ea2ce6b01f12b65062fb2e74e6c include/linux/mmdebug.h: add VM_WARN which maps to WARN()
 
+Done - e77b0852b551ffd8b29fa0225e1ef62c195e3160 mm/mmu_gather: track page size with mmu gather and force flush if page size change
+Done - e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remove_page()
+Done-fixup - 31d49da5ad01728e48a1bb2b43795598b23de68a mm/hugetlb: simplify hugetlb unmap
+Done-Naoya 5d317b2b6536592a9b51fe65faed43d65ca9158e mm: hugetlb: proc: add HugetlbPages field to /proc/PID/status
+Done - 9af3f56ba19ef377170ab3614b9388cc7b7f3d74 powerpc/mm: check for irq disabled() only if DEBUG_VM is enabled
+Done - a54f9aebaa9f0ea2ce6b01f12b65062fb2e74e6c include/linux/mmdebug.h: add VM_WARN which maps to WARN()
 Done - a4b349540a26af9a544e2e858223140fb9ddc35c powerpc/mm: Cleanup LPCR defines
 Done-benh b1923caa6e64  powerpc: Merge 32-bit and 64-bit setup_arch()
 Done-benh 009776baa184  powerpc/64: Make a few boot functions __init
