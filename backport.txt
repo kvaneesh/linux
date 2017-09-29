@@ -119,6 +119,11 @@ e9d55e157034a9efd99405c99c1565d64619d82b mm: change the interface for __tlb_remo
 a54f9aebaa9f0ea2ce6b01f12b65062fb2e74e6c include/linux/mmdebug.h: add VM_WARN which maps to WARN()
 a4b349540a26af9a544e2e858223140fb9ddc35c powerpc/mm: Cleanup LPCR defines
 
+Done-Darren bfa37087aa04e45f56c41142dfceecb79b8e6ef9 powerpc: Initialise pci_io_base as early as possible
+Done-mpe 6e914ee629c4 | * powerpc: Fix faults caused by radix patching of SLB miss handler
+Done-benh da6a97bf12d5 * powerpc: Move epapr_paravirt_early_init() to early_init_devtree()
+Done-benh 63c254a50104 * powerpc: Add comment explaining the purpose of setup_kdump_trampoline()
+Done-benh bd7c93cca369 * powerpc: Update obsolete comments in setup_32.c about entry conditions
 
 Done - b275bfb2696387be216db5b7372ee9dcf3f05b80 powerpc/mm/radix: Add a kernel command line to disable radix
 Done - 912cc87a654d3d30f5da6220489a97a5beb7d313 powerpc/mm/radix: Add LPID based tlb flush helpers
