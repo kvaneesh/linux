@@ -48,21 +48,21 @@ a525108cf1cc14651602d678da38fa627a76a724 powerpc/mm/hugetlb: Filter out hugepage
 3a4c26011da3ed8df1f4f93af82bd5f2b420751f powerpc/mm: Add translation mode information in /proc/cpuinfo
 ddb014b68dc620e76b7831b5e09d9b8ff07c570e powerpc/mm/radix: rename _PAGE_LARGE to R_PAGE_LARGE
 f5bd0fdc0c74dc4cdc5d81319441c4ef9b47cd65 powerpc/mm: Cleanup bits definition between hash and radix.
-98beda74de246520653b42147443292d9814426d powerpc/mm/slice: Fix off-by-1 error when computing slice mask
-b42279f0165cdfb093718ec368e56dde7e8d80af powerpc/mm/nohash: MM_SLICE is only used by book3s 64
-d19469e8415813cceaa494b6f538e327b9a95f3b power/mm: update pte_write and pte_wrprotect to handle savedwrite
-52c50ca75c534c0772b71900a29b3a71439b32ef powerpc/mm: handle protnone ptes on fork
-9a8b300f2f7812ebf4630b8b40499da38b38e882 mm/thp/autonuma: use TNF flag instead of vm fault
-db08f2030a173fdb95b2e8e28d82c4e8c04df2ac mm/gup: check for protnone only if it is a PTE entry
-c137a2757b88658ce61c74b25ff650ecda7f09d8 powerpc/mm/autonuma: switch ppc64 to its own implementation of saved write
-595cd8f256d24face93b2722927ec9c980419c26 mm/ksm: handle protnone saved writes when making page write protect
-288bc54949fc2625a4fd811a188fb200cc498946 mm/autonuma: let architecture override how the write bit should be stashed in a protnone pte.
-cee216a696b2004017a5ecb583366093d90b1568 mm/autonuma: don't use set_pte_at when updating protnone ptes
-fda2d27db6eae5c2468f9e4657539b72bbc238bb powerpc/mm/hash: Always clear UPRT and Host Radix bits when setting up CPU
-438e69b52be776c035aa2a851ccc1709033d729b powerpc/mm/radix: Skip ptesync in pte update helpers
-f4894b80b1ddfef00d4d2e5c58613ccef358a1b2 powerpc/mm/radix: Use ptep_get_and_clear_full when clearing pte for full mm
-ca94573b9c69d224e50e1084a2776772f4ea030d powerpc/mm/radix: Update pte update sequence for pte clear case
 
+Done - 98beda74de246520653b42147443292d9814426d powerpc/mm/slice: Fix off-by-1 error when computing slice mask
+pending - b42279f0165cdfb093718ec368e56dde7e8d80af powerpc/mm/nohash: MM_SLICE is only used by book3s 64
+pending - d19469e8415813cceaa494b6f538e327b9a95f3b power/mm: update pte_write and pte_wrprotect to handle savedwrite
+pending - 52c50ca75c534c0772b71900a29b3a71439b32ef powerpc/mm: handle protnone ptes on fork
+pending - 9a8b300f2f7812ebf4630b8b40499da38b38e882 mm/thp/autonuma: use TNF flag instead of vm fault
+pending - db08f2030a173fdb95b2e8e28d82c4e8c04df2ac mm/gup: check for protnone only if it is a PTE entry
+pending - c137a2757b88658ce61c74b25ff650ecda7f09d8 powerpc/mm/autonuma: switch ppc64 to its own implementation of saved write
+pending - 595cd8f256d24face93b2722927ec9c980419c26 mm/ksm: handle protnone saved writes when making page write protect
+pending - 288bc54949fc2625a4fd811a188fb200cc498946 mm/autonuma: let architecture override how the write bit should be stashed in a protnone pte.
+pending - cee216a696b2004017a5ecb583366093d90b1568 mm/autonuma: don't use set_pte_at when updating protnone ptes
+Done - fda2d27db6eae5c2468f9e4657539b72bbc238bb powerpc/mm/hash: Always clear UPRT and Host Radix bits when setting up CPU
+Done - 438e69b52be776c035aa2a851ccc1709033d729b powerpc/mm/radix: Skip ptesync in pte update helpers
+Done - f4894b80b1ddfef00d4d2e5c58613ccef358a1b2 powerpc/mm/radix: Use ptep_get_and_clear_full when clearing pte for full mm
+Done - ca94573b9c69d224e50e1084a2776772f4ea030d powerpc/mm/radix: Update pte update sequence for pte clear case
 Done - 18061c17c8ecdbdbf1e7d1695ec44e7388b4f601 powerpc/mm: Update PROTFAULT handling in the page fault path
 Done - a5ecdad4847897007399d7a14c9109b65ce4c9b7 powerpc/mm: Add MMU_FTR_KERNEL_RO to possible feature mask
 Done - 79270e0a3fd124388a0407f9edbd6ace75eacb69 powerpc/mm/hash: Properly mask the ESID bits when building proto VSID
