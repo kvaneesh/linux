@@ -95,11 +95,12 @@ bd77c4498616e27d5725b5959d880ce2272fefa9 powerpc/mm/radix: Use tlbiel only if we
 c9634cf012321243ee8e4ea0fb0709904cd58395 mm: use zonelist name instead of using hardcoded index
 be34d300597a7a4fb38c6e3f9929af2f1faa23b8 powerpc/mm: Add radix flush all with IS=3
 d5a1e42cb4be016a45a787953dd70c3bc4509da5 powerpc/mm: Update FORCE_MAX_ZONEORDER range to allow hugetlb w/4K
-ad410674f5606a53ea2f2d45a78448a95e271fa0 powerpc/mm: Update the HID bit when switching from radix to hash
-c6d1a767b9eaa74f0969378ec47791ff8318a65c powerpc/mm/radix: Use different pte update sequence for different POWER9 revs
-694c4951922d114e789f669deb409b2aef440ae9 powerpc/mm/radix: Use different RTS encoding for different POWER9 revs
-7dccfbc325bb59f94521d544a8ae12148622b4f2 powerpc/book3s: Add a cpu table entry for different POWER9 revs
 
+Done - ad410674f5606a53ea2f2d45a78448a95e271fa0 powerpc/mm: Update the HID bit when switching from radix to hash
+Done - c6d1a767b9eaa74f0969378ec47791ff8318a65c powerpc/mm/radix: Use different pte update sequence for different POWER9 revs
+Done - 694c4951922d114e789f669deb409b2aef440ae9 powerpc/mm/radix: Use different RTS encoding for different POWER9 revs
+Done - 7dccfbc325bb59f94521d544a8ae12148622b4f2 powerpc/book3s: Add a cpu table entry for different POWER9 revs
+Done - ce5732a28dd09956540f61ba9d902b63e73a1232 powerpc/powernv: Create separate subcores CPU feature bit
 Done - d957fb4d173647640a2b83e7c7e56a580e7fc7e7 powerpc: Fix booting P9 hash with CONFIG_PPC_RADIX_MMU=N
 Done - e9eb0278dad9c7a2631d5432180a130710110c09 powerpc/64: Used named initialisers for ibm_pa_features
 Done - 703b41ad1a87  powerpc/mm: remove flush_tlb_page_nohash
