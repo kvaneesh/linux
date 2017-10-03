@@ -89,9 +89,12 @@ ccf17c8b5c8465750a6c514be9ef6f5b156b6c67 powerpc/mm/hugetlb: Handle hugepage siz
 bee8b3b56d1dfc4075254a61340ee3898a732e63 powerpc/mm: Rename hugetlb-radix.h to hugetlb.h
 984d7a1ec67ce3a46324fa4bcb4c745bbc266cf2 powerpc/mm: Fixup kernel read only mapping
 64168f4296fa507ba059307984cddcf957a81d5f powerpc/mm/coproc: Handle bad address on coproc slb fault
-cac4a185405d4415eca269cae976438b44a37ae0 powerpc/mm: Fix missing update of HID register on secondary CPUs
-bd77c4498616e27d5725b5959d880ce2272fefa9 powerpc/mm/radix: Use tlbiel only if we ever ran on the current cpu
 
+Done-balbir f923efbcfdbaa4391874eeda676b08fcf9ad6e99 powerpc/hash64: Be more careful when generating tlbiel
+Done-suraj 555c16328ae6d75a90e234eac9b51998d68f185b powerpc/mm: Correct process and partition table max size
+Done-mikey 96ed1fe511a8b4948e53f3bad431d8737e8f231f powerpc/mm/radix: Invalidate ERAT on tlbiel for POWER9 DD1
+Done - cac4a185405d4415eca269cae976438b44a37ae0 powerpc/mm: Fix missing update of HID register on secondary CPUs
+Done - bd77c4498616e27d5725b5959d880ce2272fefa9 powerpc/mm/radix: Use tlbiel only if we ever ran on the current cpu
 Drop - 8467801cc8744511bd2664fae7d72ab704816844 powerpc: Fix numa topology console print
 Drop - c9634cf012321243ee8e4ea0fb0709904cd58395 mm: use zonelist name instead of using hardcoded index
 Done-benh b970b41ea68a  powerpc/64/kexec: Copy image with MMU off when possible
