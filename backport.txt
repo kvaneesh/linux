@@ -62,24 +62,25 @@ fda2d27db6eae5c2468f9e4657539b72bbc238bb powerpc/mm/hash: Always clear UPRT and 
 438e69b52be776c035aa2a851ccc1709033d729b powerpc/mm/radix: Skip ptesync in pte update helpers
 f4894b80b1ddfef00d4d2e5c58613ccef358a1b2 powerpc/mm/radix: Use ptep_get_and_clear_full when clearing pte for full mm
 ca94573b9c69d224e50e1084a2776772f4ea030d powerpc/mm/radix: Update pte update sequence for pte clear case
-18061c17c8ecdbdbf1e7d1695ec44e7388b4f601 powerpc/mm: Update PROTFAULT handling in the page fault path
-a5ecdad4847897007399d7a14c9109b65ce4c9b7 powerpc/mm: Add MMU_FTR_KERNEL_RO to possible feature mask
-79270e0a3fd124388a0407f9edbd6ace75eacb69 powerpc/mm/hash: Properly mask the ESID bits when building proto VSID
-4ab2537c4204b976e4ca350bbdc193b4649cad28 powerpc/mm: Fixup wrong LPCR_VRMASD value
-8ad43336b5c1ad9ac945148cb5e26a1200ccd45c powerpc/mm/4k: don't allocate larger pmd page table for 4k
-9859f0c7e05b424a7a42032e639a8c44dd537328 powerpc/mm: Remove the debug hugepd_ok check
-20717e1ff52672e31f9399c45d88936bbbc7e175 powerpc/mm: Fix little-endian 4K hugetlb
-ff8b85796dad5de869dc29903c95664fb444bbcc powerpc/mm/hugetlb: Don't panic when we don't find the default huge page size
-d670ffd87509b6b136d8ed6f757851a8ebe442b2 mm/thp/pagecache/collapse: free the pte page table on collapse for thp page cache.
-953c66c2b22a304dbc3c3d7fc8e8c25cd97a03d8 mm: THP page cache support for ppc64
-1dd38b6c27d59414e89c08dd1ae9677a8e12cbc4 mm: move vma_is_anonymous check within pmd_move_must_withdraw
-692a68c1544d6be4ba7c6e929e9c7b2ba0447b91 mm: remove the page size change check in tlb_remove_page
-07e326610e5634e5038fce32fff370949eb42101 mm: add tlb_remove_check_page_size_change to track page size change
-b528e4b6405b9fd656a6a308a7e2aa6afa50e77d mm/hugetlb: add tlb_remove_hugetlb_entry for handling hugetlb pages
-b5bc66b713108710e341bb164f8ffbc11896706e mm: update mmu_gather range correctly
-c0f2e176f87bd989835bd098a52779df41a9243c mm: use the correct page size when removing the page
-8bea805207500068b70778b707299a9b5920ca72 mm/hugetlb.c: use huge_pte_lock instead of opencoding the lock
-3999f52e3198e76607446ab1a4610c1ddc406c56 mm/hugetlb.c: use the right pte val for compare in hugetlb_cow
+
+Done - 18061c17c8ecdbdbf1e7d1695ec44e7388b4f601 powerpc/mm: Update PROTFAULT handling in the page fault path
+Done - a5ecdad4847897007399d7a14c9109b65ce4c9b7 powerpc/mm: Add MMU_FTR_KERNEL_RO to possible feature mask
+Done - 79270e0a3fd124388a0407f9edbd6ace75eacb69 powerpc/mm/hash: Properly mask the ESID bits when building proto VSID
+Done - 4ab2537c4204b976e4ca350bbdc193b4649cad28 powerpc/mm: Fixup wrong LPCR_VRMASD value
+pending - 8ad43336b5c1ad9ac945148cb5e26a1200ccd45c powerpc/mm/4k: don't allocate larger pmd page table for 4k
+pending - 9859f0c7e05b424a7a42032e639a8c44dd537328 powerpc/mm: Remove the debug hugepd_ok check
+pending - 20717e1ff52672e31f9399c45d88936bbbc7e175 powerpc/mm: Fix little-endian 4K hugetlb
+pending - ff8b85796dad5de869dc29903c95664fb444bbcc powerpc/mm/hugetlb: Don't panic when we don't find the default huge page size
+pending - d670ffd87509b6b136d8ed6f757851a8ebe442b2 mm/thp/pagecache/collapse: free the pte page table on collapse for thp page cache.
+pending - 953c66c2b22a304dbc3c3d7fc8e8c25cd97a03d8 mm: THP page cache support for ppc64
+pending - 1dd38b6c27d59414e89c08dd1ae9677a8e12cbc4 mm: move vma_is_anonymous check within pmd_move_must_withdraw
+pending - 692a68c1544d6be4ba7c6e929e9c7b2ba0447b91 mm: remove the page size change check in tlb_remove_page
+pending - 07e326610e5634e5038fce32fff370949eb42101 mm: add tlb_remove_check_page_size_change to track page size change
+pending - b528e4b6405b9fd656a6a308a7e2aa6afa50e77d mm/hugetlb: add tlb_remove_hugetlb_entry for handling hugetlb pages
+pending - b5bc66b713108710e341bb164f8ffbc11896706e mm: update mmu_gather range correctly
+pending - c0f2e176f87bd989835bd098a52779df41a9243c mm: use the correct page size when removing the page
+Done - 8bea805207500068b70778b707299a9b5920ca72 mm/hugetlb.c: use huge_pte_lock instead of opencoding the lock
+Done - 3999f52e3198e76607446ab1a4610c1ddc406c56 mm/hugetlb.c: use the right pte val for compare in hugetlb_cow
 
 Done - d522ae1e49a4f0bcbd0efa0a3afb2b8d52d1fbd6 powerpc/mm: Batch tlb flush when invalidating pte entries
 Done - e58d1cf24309b3b58c7cff7ea1f873e498fdaa39 powerpc/mm: update radix__pte_update to not do full mm tlb flush
