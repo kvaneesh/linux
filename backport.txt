@@ -1,3 +1,41 @@
+8f5ca0b3195a * powerpc/mm: Cleanup check for stack expansion
+f43bb27ebf27 * powerpc/mm: Don't lose "major" fault indication on retry
+bd0d63f8095a * powerpc/mm: Move page fault VMA access checks to a helper
+d2e0d2c51adf * powerpc/mm: Set fault flags earlier
+b15021d994f0 * powerpc/mm: Add a bunch of (un)likely annotations to do_page_fault
+11ccdd33d6ad * powerpc/mm: Move/simplify faulthandler_disabled() and !mm check
+2865d08dd9ea * powerpc/mm: Move the DSISR_PROTFAULT sanity check
+04aafdc6018f * powerpc/mm: Cosmetic fix to page fault accounting
+3da026480a75 * powerpc/mm: Move CMO accounting out of do_page_fault into a helper
+b5c8f0fd595d * powerpc/mm: Rework mm_fault_error()
+c3350602e876 * powerpc/mm: Make bad_area* helper functions
+d3ca587404b3 * powerpc/mm: Fix reporting of kernel execute faults
+65d47fd4a37c * powerpc/mm: Simplify returns from __do_page_fault
+bb4be50e619b * powerpc/mm: Move debugger check to notify_page_fault()
+f3d96e698ed0 * powerpc/mm: Overhaul handling of bad page faults
+e6c8290a894b * powerpc/mm: Move error_code checks for bad faults earlier
+41b464e5e567 * powerpc/mm: Move out definition of CPU specific is_write bits
+b4c001dc44f0 * powerpc/mm: Use symbolic constants for filtering SRR1 bits on ISIs
+398a719d34a1 * powerpc/mm: Update bits used to skip hash_page
+870cfe77a91e * powerpc/mm: Update definitions of DSISR bits
+d300627c6a53 * powerpc/6xx: Handle DABR match before calling do_page_fault
+c433ec0455f9 * powerpc/mm: Pre-filter SRR1 bits before do_page_fault()
+7afad422ac61 * powerpc/mm: Move exception_enter/exit to a do_page_fault wrapper
+424de9c6e3f8 * powerpc/mm/radix: Avoid flushing the PWC on every flush_tlb_range
+a46cc7a90fd8 * powerpc/mm/radix: Improve TLB/PWC flushes
+
+
+commit 7cd2a8695ef9c31e8f51773f0de9e6007d6dc083
+41d0c2ecde19cfe93071ed7b979a53ba60b12840
+commit 398a719d34a1b65f9fb1e26f999c197a1446ce48
+commit 870cfe77a91e91cac5937784d73b9d27b6a12296                                       
+commit 3a6a04706fd08eb5677fdfc086e26fcd5eb154f4
+commit c6bb0b8d426a8cf865ca9c8a532cc3a2927cfceb
+1a92a80ad386a1a6e3b36d576d52a1a456394b70
+09539f9b123652e969894d6299ae0df2fe12cb5d
+commit 1c0eaf0f56d6128af7f0f252855173fcee85d202
+commit ba6d334ac230065243a92bb7cb3fd6a5f6a7f8ac
+
 22259a6e800cdb8e06e65432fcd019983214be0c powerpc/mm/cxl: Add barrier when setting mm cpumask
 0f4bc0932e51817105fdee77a4668069a89581d5 powerpc/mm/cxl: Add the fault handling cpu to mm cpumask
 fa4531f753f1c80d21b5eb86ec5c0229310c5fb0 powerpc/mm: Don't send IPI to all cpus on THP updates
@@ -41,14 +79,14 @@ e6f81a92015b2c1d12fad32b8456f99855da6e13 powerpc/mm/hash: Support 68 bit VA
 a4d3621503290f73b2ca65a6de58f01296c0b85c powerpc/mm/slice: Update the function prototype
 f3207c124e7aa8d4d9cf32cc45b10ceb4defedb9 powerpc/mm/slice: Convert slice_mask high slice to a bitmap
 6aa59f5162fcca09c7dcc84d64e2ebd1e7449884 powerpc/mm: Move hash specific pte bits to be top bits of RPN
-2f18d533757da3899f4bedab0b2c051b080079dc powerpc/mm: Lower the max real address to 53 bits
-32789d3821898cf8038394772d41e32902018068 powerpc/mm: Define all PTE bits based on radix definitions.
-54c4025efc0fbc2a145d1b80ddc4875d5037c887 powerpc/mm: Define _PAGE_SOFT_DIRTY unconditionally
-a525108cf1cc14651602d678da38fa627a76a724 powerpc/mm/hugetlb: Filter out hugepage size not supported by page table layout
-3a4c26011da3ed8df1f4f93af82bd5f2b420751f powerpc/mm: Add translation mode information in /proc/cpuinfo
-ddb014b68dc620e76b7831b5e09d9b8ff07c570e powerpc/mm/radix: rename _PAGE_LARGE to R_PAGE_LARGE
-f5bd0fdc0c74dc4cdc5d81319441c4ef9b47cd65 powerpc/mm: Cleanup bits definition between hash and radix.
 
+Done - 2f18d533757da3899f4bedab0b2c051b080079dc powerpc/mm: Lower the max real address to 53 bits
+Done - 32789d3821898cf8038394772d41e32902018068 powerpc/mm: Define all PTE bits based on radix definitions.
+Done - 54c4025efc0fbc2a145d1b80ddc4875d5037c887 powerpc/mm: Define _PAGE_SOFT_DIRTY unconditionally
+Done - a525108cf1cc14651602d678da38fa627a76a724 powerpc/mm/hugetlb: Filter out hugepage size not supported by page table layout
+Done - 3a4c26011da3ed8df1f4f93af82bd5f2b420751f powerpc/mm: Add translation mode information in /proc/cpuinfo
+Done - ddb014b68dc620e76b7831b5e09d9b8ff07c570e powerpc/mm/radix: rename _PAGE_LARGE to R_PAGE_LARGE
+Done - f5bd0fdc0c74dc4cdc5d81319441c4ef9b47cd65 powerpc/mm: Cleanup bits definition between hash and radix.
 Done - 98beda74de246520653b42147443292d9814426d powerpc/mm/slice: Fix off-by-1 error when computing slice mask
 pending - b42279f0165cdfb093718ec368e56dde7e8d80af powerpc/mm/nohash: MM_SLICE is only used by book3s 64
 pending - d19469e8415813cceaa494b6f538e327b9a95f3b power/mm: update pte_write and pte_wrprotect to handle savedwrite
