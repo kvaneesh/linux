@@ -80,16 +80,16 @@ b5bc66b713108710e341bb164f8ffbc11896706e mm: update mmu_gather range correctly
 c0f2e176f87bd989835bd098a52779df41a9243c mm: use the correct page size when removing the page
 8bea805207500068b70778b707299a9b5920ca72 mm/hugetlb.c: use huge_pte_lock instead of opencoding the lock
 3999f52e3198e76607446ab1a4610c1ddc406c56 mm/hugetlb.c: use the right pte val for compare in hugetlb_cow
-d522ae1e49a4f0bcbd0efa0a3afb2b8d52d1fbd6 powerpc/mm: Batch tlb flush when invalidating pte entries
-e58d1cf24309b3b58c7cff7ea1f873e498fdaa39 powerpc/mm: update radix__pte_update to not do full mm tlb flush
-b3603e174fc81598e8b060d5e9aafe19ee6e65cf powerpc/mm: update radix__ptep_set_access_flag to not do full mm tlb flush
-6d3a0379ebdc8e35662343f5359ac4589b79aec2 powerpc/mm: Add radix__tlb_flush_pte_p9_dd1()
-049d567af209b093eefa9f26eae6e15226db3520 powerpc/mm: Introduce _PAGE_LARGE software pte bits
-ccf17c8b5c8465750a6c514be9ef6f5b156b6c67 powerpc/mm/hugetlb: Handle hugepage size supported by hash config
-bee8b3b56d1dfc4075254a61340ee3898a732e63 powerpc/mm: Rename hugetlb-radix.h to hugetlb.h
-984d7a1ec67ce3a46324fa4bcb4c745bbc266cf2 powerpc/mm: Fixup kernel read only mapping
-64168f4296fa507ba059307984cddcf957a81d5f powerpc/mm/coproc: Handle bad address on coproc slb fault
 
+Done - d522ae1e49a4f0bcbd0efa0a3afb2b8d52d1fbd6 powerpc/mm: Batch tlb flush when invalidating pte entries
+Done - e58d1cf24309b3b58c7cff7ea1f873e498fdaa39 powerpc/mm: update radix__pte_update to not do full mm tlb flush
+Done - b3603e174fc81598e8b060d5e9aafe19ee6e65cf powerpc/mm: update radix__ptep_set_access_flag to not do full mm tlb flush
+Done - 6d3a0379ebdc8e35662343f5359ac4589b79aec2 powerpc/mm: Add radix__tlb_flush_pte_p9_dd1()
+Done - 049d567af209b093eefa9f26eae6e15226db3520 powerpc/mm: Introduce _PAGE_LARGE software pte bits
+Done - ccf17c8b5c8465750a6c514be9ef6f5b156b6c67 powerpc/mm/hugetlb: Handle hugepage size supported by hash config
+Done - bee8b3b56d1dfc4075254a61340ee3898a732e63 powerpc/mm: Rename hugetlb-radix.h to hugetlb.h
+Done - 984d7a1ec67ce3a46324fa4bcb4c745bbc266cf2 powerpc/mm: Fixup kernel read only mapping
+Done - 64168f4296fa507ba059307984cddcf957a81d5f powerpc/mm/coproc: Handle bad address on coproc slb fault
 Done-balbir f923efbcfdbaa4391874eeda676b08fcf9ad6e99 powerpc/hash64: Be more careful when generating tlbiel
 Done-suraj 555c16328ae6d75a90e234eac9b51998d68f185b powerpc/mm: Correct process and partition table max size
 Done-mikey 96ed1fe511a8b4948e53f3bad431d8737e8f231f powerpc/mm/radix: Invalidate ERAT on tlbiel for POWER9 DD1
