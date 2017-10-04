@@ -56,6 +56,11 @@ d5ed7444dafb94b6877410d1b66a846eb7184a09 mm/hugetlb: export hugetlb_entry_migrat
 080dbb618b4bc25883a7654c1e92b2c49e3d6d63 mm/follow_page_mask: split follow_page_mask to smaller functions.
 383321ab8578dfe3bbcc0bc5604c0f8ae08a5c98 mm/hugetlb/migration: use set_huge_pte_at instead of set_pte_at
 
+
+Done - 80f23935cadb1c654e81951f5a8b7ceae0acc1b4 powerpc: Convert cmp to cmpd in idle enter sequence
+Done - 5045ea37377ce8cca6890d32b127ad6770e6dce5 powerpc/vdso64: Use double word compare on pointers
+Done - e708c24cd01ce80b1609d8baccee40ccc3608a01 powerpc: Add HWCAP bits for Power9
+
 Done - a5998fcb92552a18713b6aa5c146aa400e4d75ee powerpc/mm/radix: Optimise tlbiel flush all case
 Done - cf4f08bed876fbc50e64da92d2e1cfdf7653ddb2 powerpc/mm/radix: Optimise Page Walk Cache flush
 Done - f7327e0ba3805470cced2acfa053e795362ee41d powerpc/mm/radix: Remove unnecessary ptesync
