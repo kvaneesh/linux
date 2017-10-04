@@ -55,11 +55,12 @@ e22992923f741c951b830121655b58342fce202e mm/hugetlb: move default definition of 
 d5ed7444dafb94b6877410d1b66a846eb7184a09 mm/hugetlb: export hugetlb_entry_migration helper
 080dbb618b4bc25883a7654c1e92b2c49e3d6d63 mm/follow_page_mask: split follow_page_mask to smaller functions.
 383321ab8578dfe3bbcc0bc5604c0f8ae08a5c98 mm/hugetlb/migration: use set_huge_pte_at instead of set_pte_at
-a5998fcb92552a18713b6aa5c146aa400e4d75ee powerpc/mm/radix: Optimise tlbiel flush all case
-cf4f08bed876fbc50e64da92d2e1cfdf7653ddb2 powerpc/mm/radix: Optimise Page Walk Cache flush
-f7327e0ba3805470cced2acfa053e795362ee41d powerpc/mm/radix: Remove unnecessary ptesync
-f6b0df55cad252fedd60aa2ba75a0207d0006283 powerpc/mm/radix: Don't do page walk cache flush when doing full mm flush
 
+Done - a5998fcb92552a18713b6aa5c146aa400e4d75ee powerpc/mm/radix: Optimise tlbiel flush all case
+Done - cf4f08bed876fbc50e64da92d2e1cfdf7653ddb2 powerpc/mm/radix: Optimise Page Walk Cache flush
+Done - f7327e0ba3805470cced2acfa053e795362ee41d powerpc/mm/radix: Remove unnecessary ptesync
+Done-benh 90c1e3c2fafec57fcb55b5d69bcf293b1a5fc8b3 powerpc/mm/radix: Update ERAT flushes when invalidating TLB
+Done - f6b0df55cad252fedd60aa2ba75a0207d0006283 powerpc/mm/radix: Don't do page walk cache flush when doing full mm flush
 Done - 2f18d533757da3899f4bedab0b2c051b080079dc powerpc/mm: Lower the max real address to 53 bits
 Done - 32789d3821898cf8038394772d41e32902018068 powerpc/mm: Define all PTE bits based on radix definitions.
 Done - 54c4025efc0fbc2a145d1b80ddc4875d5037c887 powerpc/mm: Define _PAGE_SOFT_DIRTY unconditionally
