@@ -55,30 +55,10 @@ e22992923f741c951b830121655b58342fce202e mm/hugetlb: move default definition of 
 d5ed7444dafb94b6877410d1b66a846eb7184a09 mm/hugetlb: export hugetlb_entry_migration helper
 080dbb618b4bc25883a7654c1e92b2c49e3d6d63 mm/follow_page_mask: split follow_page_mask to smaller functions.
 383321ab8578dfe3bbcc0bc5604c0f8ae08a5c98 mm/hugetlb/migration: use set_huge_pte_at instead of set_pte_at
-92d9dfda8b547cc292af27e11e11c9eff3bb574f powerpc/mm/4k: Limit 4k page size config to 64TB virtual address space
 a5998fcb92552a18713b6aa5c146aa400e4d75ee powerpc/mm/radix: Optimise tlbiel flush all case
 cf4f08bed876fbc50e64da92d2e1cfdf7653ddb2 powerpc/mm/radix: Optimise Page Walk Cache flush
-321f7d29e5163d7f1c9c0b705acc45bd1be34aa6 powerpc/mmap: Any hint > 128TB searches the full VA space
-be77e999e3937322b7e15274b8fc7da309a040a0 powerpc/mm/radix: Use mm->task_size for boundary checking instead of addr_limit
-5f8122611b35c563a7c907485aafd8d4682e9184 powerpc/mm/hash: Don't open code VMALLOC_INDEX
 f7327e0ba3805470cced2acfa053e795362ee41d powerpc/mm/radix: Remove unnecessary ptesync
 f6b0df55cad252fedd60aa2ba75a0207d0006283 powerpc/mm/radix: Don't do page walk cache flush when doing full mm flush
-f4ea6dcb08ea2c6c996c373573caf74d48d23b84 powerpc/mm: Enable mappings above 128TB
-fbfef9027c2a7ad9277755509fdb849dbccfe8c1 powerpc/mm: Switch some TASK_SIZE checks to use mm_context addr_limit
-82228e362f9b7f4b876d0fbb1036c235797c6b1d powerpc/pseries: Skip using reserved virtual address range
-bb1832217a859f6dbe4a45ff2ba7fdcab0bb3958 powerpc/mm/hash: Store addr_limit in PACA
-957b778a166e32e242a33fdab693ffb256a19cbd powerpc/mm: Add addr_limit to mm_context and use it to derive max slice index
-f6eedbba7a26fdaee9ea8121336dc86236c136c7 powerpc/mm/hash: Increase VA range to 128TB
-59248aecc4aea80c2c8b444ff8af9b894302a41d powerpc/mm/hash: Convert mask to unsigned long
-e6f81a92015b2c1d12fad32b8456f99855da6e13 powerpc/mm/hash: Support 68 bit VA
-941711a3a049abc012be0eb8856ff6eec40a4570 powerpc/mm/hash: Use context ids 1-4 for the kernel
-302413cad56820d4cd0d4fb66d01c81b4fcb1a10 powerpc/mm/slice: Update slice mask printing to use bitmap printing.
-82185222ff984edb50fc2adc752a46490843ecee powerpc/mm/slice: Move slice_mask struct definition to slice.c
-1b2fa5a046b4716cf4b11bb29a581e680cc6e9ef powerpc/mm: Remove checks that TASK_SIZE_USER64 is too small
-52b1e66587b6b4f2e5a09102b3a40eed8ec3675f powerpc/mm: Move copy_mm_to_paca to paca.c
-a4d3621503290f73b2ca65a6de58f01296c0b85c powerpc/mm/slice: Update the function prototype
-f3207c124e7aa8d4d9cf32cc45b10ceb4defedb9 powerpc/mm/slice: Convert slice_mask high slice to a bitmap
-6aa59f5162fcca09c7dcc84d64e2ebd1e7449884 powerpc/mm: Move hash specific pte bits to be top bits of RPN
 
 Done - 2f18d533757da3899f4bedab0b2c051b080079dc powerpc/mm: Lower the max real address to 53 bits
 Done - 32789d3821898cf8038394772d41e32902018068 powerpc/mm: Define all PTE bits based on radix definitions.
