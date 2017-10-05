@@ -83,6 +83,9 @@ static inline void icp_native_set_qirr(int n_cpu, u8 value)
 
 static void icp_native_set_cpu_priority(unsigned char cppr)
 {
+	if (pvr_version_is(PVR_POWER9))
+		return;
+
 	xics_set_base_cppr(cppr);
 	icp_native_set_cppr(cppr);
 	iosync();
@@ -325,6 +328,11 @@ int __init icp_native_init(void)
 	struct device_node *np;
 	u32 indx = 0;
 	int found = 0;
+
+	if (pvr_version_is(PVR_POWER9)) {
+		icp_ops = &icp_native_ops;
+		return 0;
+	}
 
 	for_each_compatible_node(np, NULL, "ibm,ppc-xicp")
 		if (icp_native_init_one_node(np, &indx) == 0)
