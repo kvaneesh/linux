@@ -605,19 +605,18 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 		/* if the guest wants write access, see if that is OK */
 		if (!writing && hpte_is_writable(r)) {
 			pte_t *ptep, pte;
-			unsigned long flags;
 			/*
 			 * We need to protect against page table destruction
 			 * hugepage split and collapse.
 			 */
-			local_irq_save(flags);
-			ptep = find_current_mm_pte(mm->pgd, hva, NULL, NULL);
+			spin_lock(&kvm->mmu_lock);
+			ptep = find_kvm_host_pte(kvm, mmu_seq, hva, NULL);
 			if (ptep) {
 				pte = kvmppc_read_update_linux_pte(ptep, 1);
 				if (__pte_write(pte))
 					write_ok = 1;
 			}
-			local_irq_restore(flags);
+			spin_unlock(&kvm->mmu_lock);
 		}
 	}
 
