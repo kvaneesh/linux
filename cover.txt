@@ -1,0 +1,97 @@
+Avoid IPI while updating page table entries.
+
+Problem Summary:
+Slow termination of KVM guest with large guest RAM config due to a large number
+of IPIs that were caused by clearing level 1 PTE entries (THP) entries.
+This is shown in the stack trace below.
+
+
+- qemu-system-ppc  [kernel.vmlinux]            [k] smp_call_function_many
+   - smp_call_function_many
+      - 36.09% smp_call_function_many
+           serialize_against_pte_lookup
+           radix__pmdp_huge_get_and_clear
+           zap_huge_pmd
+           unmap_page_range
+           unmap_vmas
+           unmap_region
+           __do_munmap
+           __vm_munmap
+           sys_munmap
+          system_call
+           __munmap
+           qemu_ram_munmap
+           qemu_anon_ram_free
+           reclaim_ramblock
+           call_rcu_thread
+           qemu_thread_start
+           start_thread
+           __clone
+
+Why we need to do IPI when clearing PMD entries:
+This was added as part of commit: 13bd817bb884 ("powerpc/thp: Serialize pmd clear against a linux page table walk")
+
+serialize_against_pte_lookup makes sure that all parallel lockless page table
+walk completes before we convert a PMD pte entry to regular pmd entry.
+We end up doing that conversion in the below scenarios
+
+1) __split_huge_zero_page_pmd
+2) do_huge_pmd_wp_page_fallback
+3) MADV_DONTNEED running parallel to page faults.
+
+local_irq_disable and lockless page table walk:
+
+The lockless page table walk work with the assumption that we can dereference
+the page table contents without holding a lock. For this to work, we need to
+make sure we read the page table contents atomically and page table pages are
+not going to be freed/released while we are walking the
+table pages. We can achieve by using a rcu based freeing for page table pages or
+if the architecture implements broadcast tlbie, we can block the IPI as we walk the
+page table pages.
+
+To support both the above framework, lockless page table walk is done with
+irq disabled instead of rcu_read_lock()
+
+We do have two interface for lockless page table walk, gup fast and __find_linux_pte.
+This patch series makes __find_linux_pte table walk safe against the conversion of PMD PTE
+to regular PMD.
+
+gup fast:
+
+gup fast is already safe against THP split because kernel now differentiate between a pmd
+split and a compound page split. gup fast can run parallel to a pmd split and we prevent
+a parallel gup fast to a hugepage split, by freezing the page refcount and failing the
+speculative page ref increment.
+
+
+Similar to how gup is safe against parallel pmd split, this patch series updates the
+__find_linux_pte callers to be safe against a parallel pmd split. We do that by enforcing
+the following rules.
+
+1) Don't reload the pte value, because that can be updated in parallel.
+2) Code should be able to work with a stale PTE value and not the recent one. ie,
+the pte value that we are looking at may not be the latest value in the page table.
+3) Before looking at pte value check for _PAGE_PTE bit. We now do this as part of pte_present()
+check.
+
+Performance:
+
+This speeds up Qemu guest RAM del/unplug time as below
+128 core, 496GB guest:
+
+Without patch:
+munmap start: timer = 13162 ms, PID=7684
+munmap finish: timer = 95312 ms, PID=7684 - delta = 82150 ms
+
+With patch (upto removing IPI)
+munmap start: timer = 196449 ms, PID=6681
+munmap finish: timer = 196488 ms, PID=6681 - delta = 39ms
+
+With patch (with adding the tlb invalidate in pmdp_huge_get_and_clear_full)
+munmap start: timer = 196345 ms, PID=6879
+munmap finish: timer = 196714 ms, PID=6879 - delta = 369ms
+
+
+NOTE: I am still looking for details w.r.t corruption fixed by
+Commit: 33258a1db165 ("powerpc/64s: Fix THP PMD collapse serialisation")
+Understanding that is important to make sure this series is not creating a regression around that.
