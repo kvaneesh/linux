@@ -55,9 +55,11 @@ struct pt_regs
 #endif
 #ifdef CONFIG_PPC_PKEY
 			unsigned long kuap;
+			unsigned long kuep;
 #endif
+
 		};
-		unsigned long __pad[2];	/* Maintain 16 byte interrupt stack alignment */
+		unsigned long __pad[4];	/* Maintain 16 byte interrupt stack alignment */
 	};
 };
 #endif
