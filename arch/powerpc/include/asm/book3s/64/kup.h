@@ -175,6 +175,24 @@ DECLARE_STATIC_KEY_FALSE(uaccess_flush_key);
 #include <asm/mmu.h>
 #include <asm/ptrace.h>
 
+/*
+ * For kernel thread that doesn't have thread.regs return
+ * default AMR/IAMR values.
+ */
+static inline u64 current_thread_amr(void)
+{
+	if (current->thread.regs)
+		return current->thread.regs->kuap;
+	return AMR_KUAP_BLOCKED;
+}
+
+static inline u64 current_thread_iamr(void)
+{
+	if (current->thread.regs)
+		return current->thread.regs->kuep;
+	return AMR_KUEP_BLOCKED;
+}
+
 static inline void kuap_restore_user_amr(struct pt_regs *regs)
 {
 	if (!mmu_has_feature(MMU_FTR_PKEY))
