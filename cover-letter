@@ -1,0 +1,41 @@
+Kernel userspace access/execution prevention with hash translation
+
+This patch series implements KUAP and KUEP with hash translation mode using
+memory keys. The kernel now uses memory protection key 3 to control access
+to the kernel. Kernel page table entries are now configured with key 3.
+Access to locations configured with any other key value is denied when in
+kernel mode (MSR_PR=0). This includes userspace which is by default configured
+with key 0.
+
+null-syscall benchmark results:
+
+With smap/smep disabled:
+Without patch:
+	845.29 ns    2451.44 cycles
+With patch series:
+	858.38 ns    2489.30 cycles
+
+With smap/smep enabled:
+Without patch:
+	NA
+With patch series:
+	1021.51 ns    2962.44 cycles
+
+Changes from v5:
+* Rework the patch based on suggestion from Michael to avoid the
+  usage of CONFIG_PPC_PKEY on BOOKE platforms. 
+
+Changes from v4:
+* Repost with other pkey related changes split out as a separate series.
+* Improve null-syscall benchmark by optimizing SPRN save and restore.
+
+Changes from v3:
+* Fix build error reported by kernel test robot <lkp@intel.com>
+
+Changes from v2:
+* Rebase to the latest kernel.
+* Fixed a bug with disabling KUEP/KUAP on kernel command line
+* Added a patch to make kup key dynamic.
+
+Changes from V1:
+* Rebased on latest kernel
