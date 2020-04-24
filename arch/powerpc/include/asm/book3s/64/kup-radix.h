@@ -65,7 +65,7 @@
 
 DECLARE_STATIC_KEY_FALSE(uaccess_flush_key);
 
-#ifdef CONFIG_PPC_KUAP
+#ifdef CONFIG_PPC_PKEY
 
 #include <asm/mmu.h>
 #include <asm/ptrace.h>
@@ -100,6 +100,24 @@ static inline void kuap_check_amr(void)
 		WARN_ON_ONCE(mfspr(SPRN_AMR) != AMR_KUAP_BLOCKED);
 }
 
+#else /* CONFIG_PPC_PKEY */
+
+static inline void kuap_restore_amr(struct pt_regs *regs, unsigned long amr)
+{
+}
+
+static inline void kuap_check_amr(void)
+{
+}
+
+static inline unsigned long kuap_get_and_check_amr(void)
+{
+	return 0;
+}
+#endif /* CONFIG_PPC_PKEY */
+
+
+#ifdef CONFIG_PPC_KUAP
 /*
  * We support individually allowing read or write, but we don't support nesting
  * because that would require an expensive read/modify write of the AMR.
@@ -143,13 +161,6 @@ bad_kuap_fault(struct pt_regs *regs, unsigned long address, bool is_write)
 		    "Bug: %s fault blocked by AMR!", is_write ? "Write" : "Read");
 }
 #else /* CONFIG_PPC_KUAP */
-static inline void kuap_restore_amr(struct pt_regs *regs, unsigned long amr) { }
-
-static inline unsigned long kuap_get_and_check_amr(void)
-{
-	return 0UL;
-}
-
 static inline unsigned long get_kuap(void)
 {
 	return AMR_KUAP_BLOCKED;
