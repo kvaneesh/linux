@@ -1769,6 +1769,15 @@ int copy_thread(unsigned long clone_flags, unsigned long usp,
 
 	p->thread.tidr = 0;
 #endif
+	/*
+	 * Run with the current AMR value of the kernel
+	 */
+#if defined(CONFIG_PPC_MEM_KEYS)
+	if (mmu_has_feature(MMU_FTR_KUAP))
+		kregs->kuap = AMR_KUAP_BLOCKED;
+	if (mmu_has_feature(MMU_FTR_KUEP))
+		kregs->kuep = AMR_KUEP_BLOCKED;
+#endif
 	kregs->nip = ppc_function_entry(f);
 	return 0;
 }
