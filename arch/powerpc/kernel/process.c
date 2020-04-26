@@ -1530,10 +1530,32 @@ void flush_thread(void)
 #ifdef CONFIG_PPC_BOOK3S_64
 void arch_setup_new_exec(void)
 {
-	if (radix_enabled())
-		return;
-	hash__setup_new_exec();
+	if (!radix_enabled())
+		hash__setup_new_exec();
+
+	/*
+	 * If we exec out of a kernel thread then thread.regs will not be
+	 * set.  Do it now.
+	 */
+	if (!current->thread.regs) {
+		struct pt_regs *regs = task_stack_page(current) + THREAD_SIZE;
+		current->thread.regs = regs - 1;
+	}
+
 }
+#else
+void arch_setup_new_exec(void)
+{
+	/*
+	 * If we exec out of a kernel thread then thread.regs will not be
+	 * set.  Do it now.
+	 */
+	if (!current->thread.regs) {
+		struct pt_regs *regs = task_stack_page(current) + THREAD_SIZE;
+		current->thread.regs = regs - 1;
+	}
+}
+
 #endif
 
 #ifdef CONFIG_PPC64
@@ -1764,15 +1786,6 @@ void start_thread(struct pt_regs *regs, unsigned long start, unsigned long sp)
 	if (IS_ENABLED(CONFIG_PPC_BOOK3S_64) && !radix_enabled())
 		preload_new_slb_context(start, sp);
 #endif
-
-	/*
-	 * If we exec out of a kernel thread then thread.regs will not be
-	 * set.  Do it now.
-	 */
-	if (!current->thread.regs) {
-		struct pt_regs *regs = task_stack_page(current) + THREAD_SIZE;
-		current->thread.regs = regs - 1;
-	}
 
 #ifdef CONFIG_PPC_TRANSACTIONAL_MEM
 	/*
