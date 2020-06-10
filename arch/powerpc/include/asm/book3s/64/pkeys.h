@@ -8,6 +8,7 @@
 extern u64 __ro_after_init default_uamor;
 extern u64 __ro_after_init default_amr;
 extern u64 __ro_after_init default_iamr;
+extern int kup_key;
 
 static inline u64 vmflag_to_pte_pkey_bits(u64 vm_flags)
 {
