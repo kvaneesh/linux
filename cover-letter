@@ -1,0 +1,18 @@
+
+mm/debug_vm_pgtable fixes
+
+This patch series includes fixes for debug_vm_pgtable test code so that
+they follow page table updates rules correctly. The first two patches introduce
+changes w.r.t ppc64. The patches are included in this series for completeness. We can
+merge them via ppc64 tree if required.
+
+Hugetlb test is disabled on ppc64 because that needs larger change to satisfy
+page table update rules.
+
+Changes from v2:
+* Fix build failure with different configs and architecture.
+
+Changes from v1:
+* Address review feedback
+* drop test specific pfn_pte and pfn_pmd.
+* Update ppc64 page table helper to add _PAGE_PTE 
