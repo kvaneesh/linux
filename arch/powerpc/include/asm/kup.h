@@ -16,7 +16,13 @@
 
 #ifdef CONFIG_PPC_BOOK3S_64
 #include <asm/book3s/64/kup.h>
+#else
+#ifdef __ASSEMBLY__
+.macro kuap_check_amr gpr1, gpr2
+.endm
 #endif
+#endif
+
 #ifdef CONFIG_PPC_8xx
 #include <asm/nohash/32/kup-8xx.h>
 #endif
