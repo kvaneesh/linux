@@ -543,9 +543,11 @@ static void __init pgd_populate_tests(struct mm_struct *mm, pgd_t *pgdp,
 #endif /* PAGETABLE_P4D_FOLDED */
 
 static void __init pte_clear_tests(struct mm_struct *mm, pte_t *ptep,
-				   unsigned long vaddr)
+				   unsigned long pfn, unsigned long vaddr,
+				   pgprot_t prot)
 {
-	pte_t pte =  ptep_get_and_clear(mm, vaddr, ptep);
+
+	pte_t pte = pfn_pte(pfn, prot);
 
 	pr_debug("Validating PTE clear\n");
 	pte = __pte(pte_val(pte) | RANDOM_ORVALUE);
@@ -943,7 +945,7 @@ static int __init debug_vm_pgtable(void)
 	p4d_t *p4dp, *saved_p4dp;
 	pud_t *pudp, *saved_pudp;
 	pmd_t *pmdp, *saved_pmdp, pmd;
-	pte_t *ptep, pte;
+	pte_t *ptep;
 	pgtable_t saved_ptep;
 	pgprot_t prot, protnone;
 	phys_addr_t paddr;
@@ -1048,9 +1050,7 @@ static int __init debug_vm_pgtable(void)
 	 */
 	ptl = pte_lockptr(mm, pmdp);
 	spin_lock(ptl);
-	pte = pfn_pte(pte_aligned, prot);
-	set_pte_at(mm, vaddr, ptep, pte);
-	pte_clear_tests(mm, ptep, vaddr);
+	pte_clear_tests(mm, ptep, pte_aligned, vaddr, prot);
 	pte_advanced_tests(mm, vma, ptep, pte_aligned, vaddr, prot);
 	pte_unmap_unlock(ptep, ptl);
 
