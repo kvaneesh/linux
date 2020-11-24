@@ -218,6 +218,9 @@ static inline u64 current_thread_iamr(void)
 	return AMR_KUEP_BLOCKED;
 }
 
+#endif /* CONFIG_PPC_PKEY */
+
+#ifdef CONFIG_PPC_KUAP
 static inline void kuap_restore_user_amr(struct pt_regs *regs)
 {
 	bool restore_amr = false, restore_iamr = false;
@@ -298,10 +301,6 @@ static inline void kuap_restore_user_amr(struct pt_regs *regs)
 }
 
 static inline void kuap_restore_kernel_amr(struct pt_regs *regs, unsigned long amr)
-{
-}
-
-static inline void kuap_check_amr(void)
 {
 }
 
