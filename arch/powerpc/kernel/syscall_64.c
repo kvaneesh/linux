@@ -269,10 +269,12 @@ again:
 
 	account_cpu_user_exit();
 
+#ifdef CONFIG_PPC_BOOK3S /* BOOK3E not yet using this */
 	/*
 	 * We do this at the end so that we do context switch with KERNEL AMR
 	 */
 	kuap_restore_user_amr(regs);
+#endif
 	return ret;
 }
 
@@ -358,10 +360,12 @@ again:
 
 	account_cpu_user_exit();
 
+#ifdef CONFIG_PPC_BOOK3S /* BOOK3E not yet using this */
 	/*
 	 * We do this at the end so that we do context switch with KERNEL AMR
 	 */
 	kuap_restore_user_amr(regs);
+#endif
 	return ret;
 }
 
