@@ -1772,11 +1772,10 @@ int copy_thread(unsigned long clone_flags, unsigned long usp,
 	/*
 	 * Run with the current AMR value of the kernel
 	 */
-#ifdef CONFIG_PPC_KUAP
+#ifdef CONFIG_PPC_PKEY
 	if (mmu_has_feature(MMU_FTR_KUAP))
-		kregs->kuap = AMR_KUAP_BLOCKED;
-#endif
-#ifdef CONFIG_PPC_KUEP
+		kregs->amr = AMR_KUAP_BLOCKED;
+
 	if (mmu_has_feature(MMU_FTR_KUEP))
 		kregs->iamr = AMR_KUEP_BLOCKED;
 #endif
