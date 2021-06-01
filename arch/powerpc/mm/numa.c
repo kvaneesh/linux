@@ -56,12 +56,17 @@ static int n_mem_addr_cells, n_mem_size_cells;
 
 #define FORM0_AFFINITY 0
 #define FORM1_AFFINITY 1
+#define FORM2_AFFINITY 2
 static int affinity_form;
 
 #define MAX_DISTANCE_REF_POINTS 4
 static int max_associativity_domain_index;
 static const __be32 *distance_ref_points;
 static int distance_lookup_table[MAX_NUMNODES][MAX_DISTANCE_REF_POINTS];
+static int numa_distance_table[MAX_NUMNODES][MAX_NUMNODES] = {
+	[0 ... MAX_NUMNODES - 1] = { [0 ... MAX_NUMNODES - 1] = -1 }
+};
+static int numa_id_index_table[MAX_NUMNODES];
 
 /*
  * Allocate node_to_cpumask_map based on number of available nodes
@@ -166,6 +171,27 @@ static void unmap_cpu_from_node(unsigned long cpu)
 }
 #endif /* CONFIG_HOTPLUG_CPU || CONFIG_PPC_SPLPAR */
 
+/*
+ * With FORM2 if we are not using logical domain ids, we will find
+ * both primary and seconday domains with same value. Hence always
+ * start comparison from secondary domains
+ */
+static int __cpu_form2_distance(__be32 *cpu1_assoc, __be32 *cpu2_assoc)
+{
+	int dist = 0;
+
+	int i, index;
+
+	for (i = 1; i < max_associativity_domain_index; i++) {
+		index = be32_to_cpu(distance_ref_points[i]);
+		if (cpu1_assoc[index] == cpu2_assoc[index])
+			break;
+		dist++;
+	}
+
+	return dist;
+}
+
 static int __cpu_form1_distance(__be32 *cpu1_assoc, __be32 *cpu2_assoc)
 {
 	int dist = 0;
@@ -178,7 +204,6 @@ static int __cpu_form1_distance(__be32 *cpu1_assoc, __be32 *cpu2_assoc)
 			break;
 		dist++;
 	}
-
 	return dist;
 }
 
@@ -186,8 +211,9 @@ int cpu_distance(__be32 *cpu1_assoc, __be32 *cpu2_assoc)
 {
 	/* We should not get called with FORM0 */
 	VM_WARN_ON(affinity_form == FORM0_AFFINITY);
-
-	return __cpu_form1_distance(cpu1_assoc, cpu2_assoc);
+	if (affinity_form == FORM1_AFFINITY)
+		return __cpu_form1_distance(cpu1_assoc, cpu2_assoc);
+	return __cpu_form2_distance(cpu1_assoc, cpu2_assoc);
 }
 
 /* must hold reference to node during call */
@@ -201,7 +227,9 @@ int __node_distance(int a, int b)
 	int i;
 	int distance = LOCAL_DISTANCE;
 
-	if (affinity_form == FORM0_AFFINITY)
+	if (affinity_form == FORM2_AFFINITY)
+		return numa_distance_table[a][b];
+	else if (affinity_form == FORM0_AFFINITY)
 		return ((a == b) ? LOCAL_DISTANCE : REMOTE_DISTANCE);
 
 	for (i = 0; i < max_associativity_domain_index; i++) {
@@ -303,14 +331,115 @@ static void initialize_form1_numa_distance(struct device_node *node)
 
 /*
  * Used to update distance information w.r.t newly added node.
+ * ibm,numa-lookup-index -> 4
+ * ibm,numa-distance -> {5, 20, 40, 60, 80, 10 }
  */
 void update_numa_distance(struct device_node *node)
 {
+	int i, nid, other_nid, other_nid_index = 0;
+	const __be32 *numa_indexp;
+	const __u8  *numa_distancep;
+	int numa_index, max_numa_index, numa_distance;
+
 	if (affinity_form == FORM0_AFFINITY)
 		return;
 	else if (affinity_form == FORM1_AFFINITY) {
 		initialize_form1_numa_distance(node);
 		return;
+	}
+	/* FORM2 affinity  */
+
+	nid = of_node_to_nid_single(node);
+	if (nid == NUMA_NO_NODE)
+		return;
+
+	/* Already initialized */
+	if (numa_distance_table[nid][nid] != -1)
+		return;
+	/*
+	 * update node distance if not already populated.
+	 */
+	numa_distancep = of_get_property(node, "ibm,numa-distance", NULL);
+	if (!numa_distancep)
+		return;
+
+	numa_indexp = of_get_property(node, "ibm,numa-lookup-index", NULL);
+	if (!numa_indexp)
+		return;
+
+	numa_index = of_read_number(numa_indexp, 1);
+	/*
+	 * update the numa_id_index_table. Device tree look at index table as
+	 * 1 based array indexing.
+	 */
+	numa_id_index_table[numa_index - 1] = nid;
+
+	max_numa_index = of_read_number((const __be32 *)numa_distancep, 1);
+	VM_WARN_ON(max_numa_index != 2 * numa_index);
+	/* Skip the size which is encoded int */
+	numa_distancep += sizeof(__be32);
+
+	/*
+	 * First fill the distance information from other node to this node.
+	 */
+	other_nid_index = 0;
+	for (i = 0; i < numa_index; i++) {
+		numa_distance = numa_distancep[i];
+		other_nid = numa_id_index_table[other_nid_index++];
+		numa_distance_table[other_nid][nid] = numa_distance;
+	}
+
+	other_nid_index = 0;
+	for (; i < max_numa_index; i++) {
+		numa_distance = numa_distancep[i];
+		other_nid = numa_id_index_table[other_nid_index++];
+		numa_distance_table[nid][other_nid] = numa_distance;
+	}
+}
+
+/*
+ * ibm,numa-lookup-index-table= {N, domainid1, domainid2, ..... domainidN}
+ * ibm,numa-distance-table = { N, 1, 2, 4, 5, 1, 6, .... N elements}
+ */
+static void initialize_form2_numa_distance_lookup_table(struct device_node *root)
+{
+	const __u8 *numa_dist_table;
+	const __be32 *numa_lookup_index;
+	int numa_dist_table_length;
+	int max_numa_index, distance_index;
+	int i, curr_row = 0, curr_column = 0;
+
+	numa_lookup_index = of_get_property(root, "ibm,numa-lookup-index-table", NULL);
+	max_numa_index = of_read_number(&numa_lookup_index[0], 1);
+
+	/* first element of the array is the size and is encode-int */
+	numa_dist_table = of_get_property(root, "ibm,numa-distance-table", NULL);
+	numa_dist_table_length = of_read_number((const __be32 *)&numa_dist_table[0], 1);
+	/* Skip the size which is encoded int */
+	numa_dist_table += sizeof(__be32);
+
+	pr_debug("numa_dist_table_len = %d, numa_dist_indexes_len = %d \n",
+		 numa_dist_table_length, max_numa_index);
+
+	for (i = 0; i < max_numa_index; i++)
+		/* +1 skip the max_numa_index in the property */
+		numa_id_index_table[i] = of_read_number(&numa_lookup_index[i + 1], 1);
+
+
+	VM_WARN_ON(numa_dist_table_length != max_numa_index * max_numa_index);
+
+	for (distance_index = 0; distance_index < numa_dist_table_length; distance_index++) {
+		int nodeA = numa_id_index_table[curr_row];
+		int nodeB = numa_id_index_table[curr_column++];
+
+		numa_distance_table[nodeA][nodeB] = numa_dist_table[distance_index];
+
+		pr_debug("dist[%d][%d]=%d ", nodeA, nodeB, numa_distance_table[nodeA][nodeB]);
+		if (curr_column >= max_numa_index) {
+			curr_row++;
+			/* reset the column */
+			curr_column = 0;
+		}
 	}
 }
 
@@ -324,6 +453,9 @@ static int __init find_primary_domain_index(void)
 	 */
 	if (firmware_has_feature(FW_FEATURE_OPAL)) {
 		affinity_form = FORM1_AFFINITY;
+	} else if (firmware_has_feature(FW_FEATURE_FORM2_AFFINITY)) {
+		dbg("Using form 2 affinity\n");
+		affinity_form = FORM2_AFFINITY;
 	} else if (firmware_has_feature(FW_FEATURE_FORM1_AFFINITY)) {
 		dbg("Using form 1 affinity\n");
 		affinity_form = FORM1_AFFINITY;
@@ -368,8 +500,17 @@ static int __init find_primary_domain_index(void)
 
 		index = of_read_number(&distance_ref_points[1], 1);
 	} else {
+		/*
+		 * Both FORM1 and FORM2 affinity find the primary domain details
+		 * at the same offset.
+		 */
 		index = of_read_number(distance_ref_points, 1);
 	}
+	/*
+	 * If it is FORM2 also initialize the distance table here.
+	 */
+	if (affinity_form == FORM2_AFFINITY)
+		initialize_form2_numa_distance_lookup_table(root);
 
 	/*
 	 * Warn and cap if the hardware supports more than
