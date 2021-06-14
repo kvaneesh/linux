@@ -1,0 +1,77 @@
+Add support for FORM2 associativity
+
+Form2 associativity adds a much more flexible NUMA topology layout
+than what is provided by Form1. This also allows PAPR SCM device
+to use better associativity when using the device as DAX KMEM
+device. More details can be found in patch 7.
+
+$ ndctl list -N -v
+[
+  {
+    "dev":"namespace0.0",
+    "mode":"devdax",
+    "map":"dev",
+    "size":1071644672,
+    "uuid":"37dea198-ddb5-4e42-915a-99a915e24188",
+    "raw_uuid":"148deeaa-4a2f-41d1-8d74-fd9a942d26ba",
+    "daxregion":{
+      "id":0,
+      "size":1071644672,
+      "devices":[
+        {
+          "chardev":"dax0.0",
+          "size":1071644672,
+          "target_node":4,
+          "mode":"devdax"
+        }
+      ]
+    },
+    "align":2097152,
+    "numa_node":1
+  }
+]
+
+$ numactl -H
+...
+node distances:
+node   0   1   2   3 
+  0:  10  11  222  33 
+  1:  44  10  55  66 
+  2:  77  88  10  99 
+  3:  101  121  132  10 
+$
+
+After DAX KMEM
+# numactl -H
+available: 5 nodes (0-4)
+...
+node distances:
+node   0   1   2   3   4 
+  0:  10  11  22  33  255 
+  1:  44  10  55  66  255 
+  2:  77  88  10  99  255 
+  3:  101  121  132  10  255 
+  4:  255  255  255  255  10 
+# 
+
+The above output is with a Qemu command line
+
+-numa node,nodeid=4 \
+-numa dist,src=0,dst=1,val=11 -numa dist,src=0,dst=2,val=22 -numa dist,src=0,dst=3,val=33 -numa dist,src=0,dst=4,val=255 \
+-numa dist,src=1,dst=0,val=44 -numa dist,src=1,dst=2,val=55 -numa dist,src=1,dst=3,val=66 -numa dist,src=1,dst=4,val=255 \
+-numa dist,src=2,dst=0,val=77 -numa dist,src=2,dst=1,val=88 -numa dist,src=2,dst=3,val=99 -numa dist,src=2,dst=4,val=255 \
+-numa dist,src=3,dst=0,val=101 -numa dist,src=3,dst=1,val=121 -numa dist,src=3,dst=2,val=132 -numa dist,src=3,dst=4,val=255 \
+-numa dist,src=4,dst=0,val=255 -numa dist,src=4,dst=1,val=255 -numa dist,src=4,dst=2,val=255 -numa dist,src=4,dst=3,val=255 \
+-object memory-backend-file,id=memnvdimm1,prealloc=yes,mem-path=$PMEM_DISK,share=yes,size=${PMEM_SIZE}  \
+-device nvdimm,label-size=128K,memdev=memnvdimm1,id=nvdimm1,slot=4,uuid=72511b67-0b3b-42fd-8d1d-5be3cae8bcaa,node=4,device-node=1
+
+Qemu changes can be found at https://lore.kernel.org/qemu-devel/20210616011944.2996399-1-danielhb413@gmail.com/
+
+Changes from v2:
+* Add nvdimm list to Cc:
+* update PATCH 8 commit message.
+
+Changes from v1:
+* Update FORM2 documentation.
+* rename max_domain_index to max_associativity_domain_index
+
