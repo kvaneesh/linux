@@ -84,92 +84,14 @@ ibm,numa-distance-table     =  {9, 10, 20, 80, 20, 10, 160, 80, 160, 10}
   |
 40| 80   160  10
 
-With Form2 "ibm,associativity" for resources is listed as below:
 
 "ibm,associativity" property for resources in node 0, 8 and 40
+
 { 3, 6, 7, 0 }
 { 3, 6, 9, 8 }
-{ 4, 6, 7, 0, 40}
+{ 3, 6, 7, 40}
 
-With "ibm,associativity-reference-points"  { 0x3, 0x2 }
-
-Form2 adds additional property which can be used with devices like persistence
-memory devices which would also like to be presented as memory-only NUMA nodes.
-
-"ibm,associativity-memory-node-reference-point" property contains a number
-representing the domainID index to be used to find the domainID that should be used
-when using the resource as memory only NUMA node. The NUMA distance information
-w.r.t this domainID will take into consideration the latency of the media. A
-high latency memory device will have a large NUMA distance value assigned w.r.t
-the domainID found at at "ibm,associativity-memory-node-reference-point" domainID index.
-
-prop-encoded-array: An integer encoded as with encode-int specifying the domainID index
-
-In the above example:
-"ibm,associativity-memory-node-reference-point"  { 0x4 }
-
-ex:
-
-   --------------------------------------
-  |                            NUMA node0 |
-  |    ProcA -----> MEMA                  |
-  |     |                                 |
-  |	|                                 |
-  |	-------------------> PMEMB        |
-  |                                       |
-   ---------------------------------------
-
-   ---------------------------------------
-  |                            NUMA node1 |
-  |                                       |
-  |    ProcB -------> MEMC                |
-  |	|                                 |
-  |	-------------------> PMEMD        |
-  |                                       |
-  |                                       |
-   ---------------------------------------
-
- --------------------------------------------------------------------------------
-|                                                      domainID 20               |
-|   ---------------------------------------                                      |
-|  |                            NUMA node0 |                                     |
-|  |                                       |            --------------------     |
-|  |    ProcA -------> MEMA                |           |        NUMA node40 |    |
-|  |	|                                  |           |                    |    |
-|  |	---------------------------------- |-------->  |  PMEMB             |    |
-|  |                                       |            --------------------     |
-|  |                                       |                                     |
-|   ---------------------------------------                                      |
-|                                                                                |
-|   ---------------------------------------                                      |
-|  |                            NUMA node1 |                                     |
-|  |                                       |                                     |
-|  |    ProcB -------> MEMC                |           -------------------       |
-|  |	|                                  |          |       NUMA node41 |      |
-|  |	--------------------------------------------> | PMEMD             |      |
-|  |                                       |           -------------------       |
-|  |                                       |                                     |
-|   ---------------------------------------                                      |
-|                                                                                |
- --------------------------------------------------------------------------------
-
-For a topology like the above application running of ProcA wants to find out
-persistent memory mount local to its NUMA node. Hence when using it as
-pmem fsdax mount or devdax device we want PMEMB to have associativity
-of NUMA node0 and PMEMD to have associativity of NUMA node1. But when
-we want to use it as memory using dax kmem driver, we want both PMEMB
-and PMEMD to appear as memory only NUMA node at a distance that is
-derived based on the latency of the media.
-
-"ibm,associativity":
-PROCA/MEMA -> { 2, 20, 0 } 
-PROCB/MEMC -> { 2, 20, 1 } 
-PMEMB      -> { 3, 20, 0, 40}
-PMEMB      -> { 3, 20, 1, 41}
-
-"ibm,associativity-reference-points" -> { 2, 1 }
-"ibm,associativity-memory-node-reference-point" -> { 3 }
-
+With "ibm,associativity-reference-points"  { 0x3 }
 
 Each resource (drcIndex) now also supports additional optional device tree properties.
 These properties are marked optional because the platform can choose not to export
@@ -195,7 +117,7 @@ prop-encoded-array: The number N of the distance values encoded as with encode-i
 N distance values encoded as with encode-bytes. The max distance value we could encode is 255.
 
 For ex:
-ibm,associativity     = { 4, 5, 6, 7, 50}
+ibm,associativity     = { 4, 5, 10, 50}
 ibm,numa-lookup-index = { 4 }
 ibm,numa-distance   =  {8, 160, 255, 80, 10, 160, 255, 80, 10}
 
