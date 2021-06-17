@@ -32,18 +32,17 @@ The “ibm,associativity” property contains one or more lists of numbers (doma
 representing the resource’s platform grouping domains.
 
 The “ibm,associativity-reference-points” property contains one or more list of numbers
-(domainID index) that represents the 1 based ordinal in the associativity lists of the
-least significant boundary, with subsequent entries indicating progressively higher
-significant boundaries.
+(domainID index) that represents the 1 based ordinal in the associativity lists.
+The list of domainID index represnets increasing hierachy of resource grouping. 
 
 ex:
 { primary domainID index, secondary domainID index, tertiary domainID index.. }
 
-Linux kernel uses the domainID of the least significant boundary (aka primary domain)
-as the NUMA node id. Linux kernel computes NUMA distance between two domains by
-recursively comparing if they belong to the same higher-level domains. For mismatch
-at every higher level of the resource group, the kernel doubles the NUMA distance between
-the comparing domains.
+Linux kernel uses the domainID at the primary domainID index as the NUMA node id.
+Linux kernel computes NUMA distance between two domains by recursively comparing
+if they belong to the same higher-level domains. For mismatch at every higher
+level of the resource group, the kernel doubles the NUMA distance between the
+comparing domains.
 
 Form 2
 -------
@@ -126,6 +125,29 @@ ex:
   |                                       |
    ---------------------------------------
 
+ --------------------------------------------------------------------------------
+|                                                      domainID 20               |
+|   ---------------------------------------                                      |
+|  |                            NUMA node0 |                                     |
+|  |                                       |            --------------------     |
+|  |    ProcA -------> MEMA                |           |        NUMA node40 |    |
+|  |	|                                  |           |                    |    |
+|  |	---------------------------------- |-------->  |  PMEMB             |    |
+|  |                                       |            --------------------     |
+|  |                                       |                                     |
+|   ---------------------------------------                                      |
+|                                                                                |
+|   ---------------------------------------                                      |
+|  |                            NUMA node1 |                                     |
+|  |                                       |                                     |
+|  |    ProcB -------> MEMC                |           -------------------       |
+|  |	|                                  |          |       NUMA node41 |      |
+|  |	--------------------------------------------> | PMEMD             |      |
+|  |                                       |           -------------------       |
+|  |                                       |                                     |
+|   ---------------------------------------                                      |
+|                                                                                |
+ --------------------------------------------------------------------------------
 
 For a topology like the above application running of ProcA wants to find out
 persistent memory mount local to its NUMA node. Hence when using it as
@@ -134,6 +156,12 @@ of NUMA node0 and PMEMD to have associativity of NUMA node1. But when
 we want to use it as memory using dax kmem driver, we want both PMEMB
 and PMEMD to appear as memory only NUMA node at a distance that is
 derived based on the latency of the media.
+
+"ibm,associativity":
+PROCA/MEMA -> { 20, 0, 0 } 
+PROCB/MEMC -> { 20, 1, 1 } 
+PMEMB      -> { 20, 0, 40}
+PMEMB      -> { 20, 1, 41}
 
 Each resource (drcIndex) now also supports additional optional device tree properties.
 These properties are marked optional because the platform can choose not to export
