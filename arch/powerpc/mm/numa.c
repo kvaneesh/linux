@@ -265,34 +265,6 @@ out:
 	return nid;
 }
 
-int get_primary_and_secondary_domain(struct device_node *node, int *primary, int *secondary)
-{
-	int secondary_index;
-	const __be32 *associativity;
-
-	if (!numa_enabled) {
-		*primary = NUMA_NO_NODE;
-		*secondary = NUMA_NO_NODE;
-		return 0;
-	}
-
-	associativity = of_get_associativity(node);
-	if (!associativity)
-		return -ENODEV;
-
-	if (of_read_number(associativity, 1) >= primary_domain_index) {
-		*primary = of_read_number(&associativity[primary_domain_index], 1);
-		secondary_index = of_read_number(&distance_ref_points[1], 1);
-		*secondary = of_read_number(&associativity[secondary_index], 1);
-	}
-	if (*primary == 0xffff || *primary >= nr_node_ids)
-		*primary = NUMA_NO_NODE;
-
-	if (*secondary == 0xffff || *secondary >= nr_node_ids)
-		*secondary = NUMA_NO_NODE;
-	return 0;
-}
-
 /* Returns the nid associated with the given device tree node,
  * or -1 if not found.
  */

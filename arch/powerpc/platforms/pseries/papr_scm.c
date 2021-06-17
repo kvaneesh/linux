@@ -18,7 +18,6 @@
 #include <asm/plpar_wrappers.h>
 #include <asm/papr_pdsm.h>
 #include <asm/mce.h>
-#include "pseries.h"
 
 #define BIND_ANY_ADDR (~0ul)
 
@@ -89,8 +88,6 @@ struct papr_scm_perf_stats {
 struct papr_scm_priv {
 	struct platform_device *pdev;
 	struct device_node *dn;
-	int numa_node;
-	int target_node;
 	uint32_t drc_index;
 	uint64_t blocks;
 	uint64_t block_size;
@@ -926,6 +923,7 @@ static int papr_scm_nvdimm_init(struct papr_scm_priv *p)
 	struct nd_mapping_desc mapping;
 	struct nd_region_desc ndr_desc;
 	unsigned long dimm_flags;
+	int target_nid, online_nid;
 	ssize_t stat_size;
 
 	p->bus_desc.ndctl = papr_scm_ndctl;
@@ -976,8 +974,10 @@ static int papr_scm_nvdimm_init(struct papr_scm_priv *p)
 	mapping.size = p->blocks * p->block_size; // XXX: potential overflow?
 
 	memset(&ndr_desc, 0, sizeof(ndr_desc));
-	ndr_desc.numa_node = p->numa_node;
-	ndr_desc.target_node = p->target_node;
+	target_nid = dev_to_node(&p->pdev->dev);
+	online_nid = numa_map_to_online_node(target_nid);
+	ndr_desc.numa_node = online_nid;
+	ndr_desc.target_node = target_nid;
 	ndr_desc.res = &p->res;
 	ndr_desc.of_node = p->dn;
 	ndr_desc.provider_data = p;
@@ -1001,6 +1001,9 @@ static int papr_scm_nvdimm_init(struct papr_scm_priv *p)
 				ndr_desc.res, p->dn);
 		goto err;
 	}
+	if (target_nid != online_nid)
+		dev_info(dev, "Region registered with target node %d and online node %d",
+			 target_nid, online_nid);
 
 	mutex_lock(&papr_ndr_lock);
 	list_add_tail(&p->region_list, &papr_nd_regions);
@@ -1093,7 +1096,7 @@ static int papr_scm_probe(struct platform_device *pdev)
 	struct papr_scm_priv *p;
 	const char *uuid_str;
 	u64 uuid[2];
-	int rc, numa_node;
+	int rc;
 
 	/* check we have all the required DT properties */
 	if (of_property_read_u32(dn, "ibm,my-drc-index", &drc_index)) {
@@ -1116,19 +1119,10 @@ static int papr_scm_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
+
 	p = kzalloc(sizeof(*p), GFP_KERNEL);
 	if (!p)
 		return -ENOMEM;
-
-	if (get_primary_and_secondary_domain(dn, &p->target_node, &numa_node)) {
-		dev_err(&pdev->dev, "%pOF: missing NUMA attributes!\n", dn);
-		rc = -ENODEV;
-		goto err;
-	}
-	p->numa_node = numa_map_to_online_node(numa_node);
-	if (numa_node != p->numa_node)
-		dev_info(&pdev->dev, "Region registered with online node %d and device tree node %d",
-			 p->numa_node, numa_node);
 
 	/* Initialize the dimm mutex */
 	mutex_init(&p->health_mutex);
