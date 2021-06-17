@@ -87,22 +87,26 @@ ibm,numa-distance-table     =  {9, 10, 20, 80, 20, 10, 160, 80, 160, 10}
 With Form2 "ibm,associativity" for resources is listed as below:
 
 "ibm,associativity" property for resources in node 0, 8 and 40
-{ 4, 6, 7, 0, 0}
-{ 4, 6, 9, 8, 8}
+{ 3, 6, 7, 0 }
+{ 3, 6, 9, 8 }
 { 4, 6, 7, 0, 40}
 
-With "ibm,associativity-reference-points"  { 0x4, 0x3, 0x2 }
+With "ibm,associativity-reference-points"  { 0x3, 0x2 }
 
-With Form2 the primary domainID and secondary domainID are used to identify the NUMA nodes
-the kernel should use when using persistent memory devices. Persistent memory devices
-can also be used as regular memory using DAX KMEM driver and primary domainID indicates
-the numa node number OS should use when using these devices as regular memory. Secondary
-domainID is the numa node number that should be used when using this device as
-persistent memory device. In the later case, we are interested in the locality of the
-device to an established numa node. In the above example, if the last row represents a
-persistent memory device/resource, NUMA node number 40 will be used when using the device
-as regular memory and NUMA node number 0 will be the device numa node when using it as
-a persistent memory device.
+Form2 adds additional property which can be used with devices like persistence
+memory devices which would also like to be presented as memory-only NUMA nodes.
+
+"ibm,associativity-memory-node-reference-point" property contains a number
+representing the domainID index to be used to find the domainID that should be used
+when using the resource as memory only NUMA node. The NUMA distance information
+w.r.t this domainID will take into consideration the latency of the media. A
+high latency memory device will have a large NUMA distance value assigned w.r.t
+the domainID found at at "ibm,associativity-memory-node-reference-point" domainID index.
+
+prop-encoded-array: An integer encoded as with encode-int specifying the domainID index
+
+In the above example:
+"ibm,associativity-memory-node-reference-point"  { 0x4 }
 
 ex:
 
@@ -158,10 +162,14 @@ and PMEMD to appear as memory only NUMA node at a distance that is
 derived based on the latency of the media.
 
 "ibm,associativity":
-PROCA/MEMA -> { 20, 0, 0 } 
-PROCB/MEMC -> { 20, 1, 1 } 
-PMEMB      -> { 20, 0, 40}
-PMEMB      -> { 20, 1, 41}
+PROCA/MEMA -> { 2, 20, 0 } 
+PROCB/MEMC -> { 2, 20, 1 } 
+PMEMB      -> { 3, 20, 0, 40}
+PMEMB      -> { 3, 20, 1, 41}
+
+"ibm,associativity-reference-points" -> { 2, 1 }
+"ibm,associativity-memory-node-reference-point" -> { 3 }
+
 
 Each resource (drcIndex) now also supports additional optional device tree properties.
 These properties are marked optional because the platform can choose not to export
