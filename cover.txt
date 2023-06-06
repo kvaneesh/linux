@@ -1,0 +1,33 @@
+Add support for DAX vmemmap optimization for ppc64
+
+This patch series implements changes required to support DAX vmemmap
+optimization for ppc64. The vmemmap optimization is only enabled with radix MMU
+translation and 1GB PUD mapping with 64K page size. The patch series also split
+hugetlb vmemmap optimization as a separate Kconfig variable so that
+architectures can enable DAX vmemmap optimization without enabling hugetlb
+vmemmap optimization. This should enable architectures like arm64 to enable DAX
+vmemmap optimization while they can't enable hugetlb vmemmap optimization. More
+details of the same are in patch "mm/vmemmap optimization: Split hugetlb and
+devdax vmemmap optimization"
+
+Changes from v4:
+* Address review feedback
+* Add the Reviewed-by:
+
+Changes from v3:
+* Rebase to latest linus tree
+* Build fix with SPARSEMEM_VMEMMP disabled
+* Add hash_pud_same outisde THP Kconfig
+
+Changes from v2:
+* Rebase to latest linus tree
+* Address review feedback
+
+Changes from V1:
+* Fix make htmldocs warning
+* Fix vmemmap allocation bugs with different alignment values.
+* Correctly check for section validity to before we free vmemmap area
+
+
+send-email  --thread --no-chain-reply-to --to linux-mm@kvack.org --to akpm@linux-foundation.org  --to mpe@ellerman.id.au --to linuxppc-dev@lists.ozlabs.org --to npiggin@gmail.com --to christophe.leroy@csgroup.eu --cc "Oscar Salvador <osalvador@suse.de>" --cc "Mike Kravetz <mike.kravetz@oracle.com>" --cc "Dan Williams <dan.j.williams@intel.com>" --cc "Joao Martins <joao.m.martins@oracle.com>" --cc "Catalin Marinas <catalin.marinas@arm.com>" --cc "Muchun Song <muchun.song@linux.dev>" --cc "Will Deacon <will@kernel.org>" /tmp/kernel/
+
