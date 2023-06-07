@@ -3190,6 +3190,9 @@
 			Note that even when enabled, there are a few cases where
 			the feature is not effective.
 
+	memory_block_size=size [PPC]
+			 Use this parameter to configure the memory block size value.
+
 	memtest=	[KNL,X86,ARM,M68K,PPC,RISCV] Enable memtest
 			Format: <integer>
 			default : 0 <disable>

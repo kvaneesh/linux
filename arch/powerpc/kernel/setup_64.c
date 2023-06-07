@@ -892,6 +892,29 @@ unsigned long memory_block_size_bytes(void)
 
 	return MIN_MEMORY_BLOCK_SIZE;
 }
+
+/*
+ * Restrict to a power of 2 value for memblock which is larger than
+ * section size
+ */
+static int __init parse_mem_block_size(char *ptr)
+{
+	unsigned int order;
+	unsigned long size = memparse(ptr, NULL);
+
+	order = fls64(size);
+	if (!order)
+		return 0;
+
+	order--;
+	if (order < SECTION_SIZE_BITS)
+		return 0;
+
+	memory_block_size = 1UL << order;
+
+	return 0;
+}
+early_param("memory_block_size", parse_mem_block_size);
 #endif
 
 #if defined(CONFIG_PPC_INDIRECT_PIO) || defined(CONFIG_PPC_INDIRECT_MMIO)

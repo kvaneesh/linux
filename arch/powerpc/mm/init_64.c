@@ -543,13 +543,20 @@ static int __init probe_memory_block_size(unsigned long node, const char *uname,
 	return 0;
 }
 
-/*
- * start with 1G memory block size. Early init will
- * fix this with correct value.
- */
-unsigned long memory_block_size __ro_after_init = 1UL << 30;
+unsigned long memory_block_size __ro_after_init;
 static void __init early_init_memory_block_size(void)
 {
+	/*
+	 * if it is set via early param just return.
+	 */
+	if (memory_block_size)
+		return;
+
+	/*
+	 * start with 1G memory block size. update_memory_block_size()
+	 * will derive the right value based on device tree details.
+	 */
+	memory_block_size = 1UL << 30;
 	/*
 	 * We need to do memory_block_size probe early so that
 	 * radix__early_init_mmu() can use this as limit for
