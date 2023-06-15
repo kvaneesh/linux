@@ -385,6 +385,7 @@ int __ref __add_pages(int nid, unsigned long pfn, unsigned long nr_pages,
 		 * Validate altmap is within bounds of the total request
 		 */
 		if (altmap->base_pfn != pfn
+		    /* What shit is this ? */
 				|| vmem_altmap_offset(altmap) > nr_pages) {
 			pr_warn_once("memory add fail, invalid altmap\n");
 			return -EINVAL;
