@@ -189,12 +189,18 @@ bool altmap_cross_boundary(struct vmem_altmap *altmap, unsigned long start,
 	unsigned long nr_pfn = page_size / sizeof(struct page);
 	unsigned long start_pfn = page_to_pfn((struct page *)start);
 
-	if ((start_pfn + nr_pfn - 1) > altmap->end_pfn)
+	pr_info("Checking altmap start  %ld and nr_pfn  %ld\n", start_pfn, nr_pfn);
+	if ((start_pfn + nr_pfn - 1) > altmap->end_pfn) {
+		pr_info("Checking altmap start and nr_pfn failed\n");
 		return true;
+	}
 
-	if (start_pfn < altmap->base_pfn)
+	if (start_pfn < altmap->base_pfn) {
+		pr_info("Checking altmap start and base_pfn failed\n");
 		return true;
+	}
 
+	pr_info("Checking altmap passed \n");
 	return false;
 }
 

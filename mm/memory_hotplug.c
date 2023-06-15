@@ -1149,6 +1149,7 @@ int __ref online_pages(unsigned long pfn, unsigned long nr_pages,
 	 * of the physical memory space for vmemmaps. That space is pageblock
 	 * aligned.
 	 */
+	pr_info("%s pfn %ld nr pages %ld\n", __func__, pfn, nr_pages);
 	if (WARN_ON_ONCE(!nr_pages || !pageblock_aligned(pfn) ||
 			 !IS_ALIGNED(pfn + nr_pages, PAGES_PER_SECTION)))
 		return -EINVAL;
@@ -1454,8 +1455,10 @@ int __ref add_memory_resource(int nid, struct resource *res, mhp_t mhp_flags)
 
 	/* call arch's memory hotadd */
 	ret = arch_add_memory(nid, start, size, &params);
-	if (ret < 0)
+	if (ret < 0) {
+		pr_info("Failing the arch_add_memory\n");
 		goto error_free;
+	}
 
 	/* create memory block devices after memory was added */
 	ret = create_memory_block_devices(start, size, params.altmap, group);

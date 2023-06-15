@@ -799,15 +799,20 @@ static void __meminit remove_pte_table(pte_t *pte_start, unsigned long addr,
 			continue;
 
 		if (PAGE_ALIGNED(addr) && PAGE_ALIGNED(next)) {
-			if (!direct)
+			if (!direct) {
 				free_vmemmap_pages(pte_page(*pte), altmap, 0);
+				pr_info("Clearing full pte range 0x%lx - 0x%lx\n", addr, addr + PAGE_SIZE);
+			}
 			pte_clear(&init_mm, addr, pte);
 			pages++;
 		}
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 		else if (!direct && vmemmap_page_is_unused(addr, next)) {
 			free_vmemmap_pages(pte_page(*pte), altmap, 0);
+
 			pte_clear(&init_mm, addr, pte);
+			addr = ALIGN_DOWN(addr, PAGE_SIZE);
+			pr_info("Clearing pte range after validating 0x%lx - 0x%lx\n", addr, addr + PAGE_SIZE);
 		}
 #endif
 	}
@@ -833,15 +838,21 @@ static void __meminit remove_pmd_table(pmd_t *pmd_start, unsigned long addr,
 		if (pmd_is_leaf(*pmd)) {
 			if (IS_ALIGNED(addr, PMD_SIZE) &&
 			    IS_ALIGNED(next, PMD_SIZE)) {
-				if (!direct)
+				if (!direct) {
 					free_vmemmap_pages(pmd_page(*pmd), altmap, get_order(PMD_SIZE));
+					pr_info("Clearing full pmd range 0x%lx - 0x%lx\n", addr, addr + PMD_SIZE);
+				}
+
 				pte_clear(&init_mm, addr, (pte_t *)pmd);
 				pages++;
 			}
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
 			else if (!direct && vmemmap_pmd_is_unused(addr, next)) {
 				free_vmemmap_pages(pmd_page(*pmd), altmap, get_order(PMD_SIZE));
+
 				pte_clear(&init_mm, addr, (pte_t *)pmd);
+				addr = ALIGN_DOWN(addr, PMD_SIZE);
+				pr_info("Clearing pmd after validating range 0x%lx - 0x%lx\n", addr, addr + PMD_SIZE);
 			}
 #endif
 			continue;

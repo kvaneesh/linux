@@ -1076,6 +1076,7 @@ void __ref memmap_init_zone_device(struct zone *zone,
 		nr_pages = end_pfn - start_pfn;
 	}
 
+	pr_info("Initializing page 0x%lx\n", (unsigned long)pfn_to_page(start_pfn));
 	for (pfn = start_pfn; pfn < end_pfn; pfn += pfns_per_compound) {
 		struct page *page = pfn_to_page(pfn);
 

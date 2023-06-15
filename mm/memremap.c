@@ -115,6 +115,14 @@ static void pageunmap_range(struct dev_pagemap *pgmap, int range_id)
 	/* make sure to access a memmap that was actually initialized */
 	first_page = pfn_to_page(pfn_first(pgmap, range_id));
 
+	if(!pfn_valid(page_to_pfn(first_page)))
+		dump_stack();
+	pr_info("Trying to unmap first pfn %ld range_start %ld range nr_pfn %ld\n",
+		page_to_pfn(first_page), PHYS_PFN(range->start), PHYS_PFN(range_len(range)));
+	pr_info("Value of page 0x%lx\n", (unsigned long)first_page);
+	pr_info("Value of nid 0x%lx\n", (unsigned long)page_to_nid(first_page));
+	pr_info("Value of zonenum 0x%lx\n", (unsigned long)page_zonenum(first_page));
+	pr_info("Value of zone 0x%lx\n", (unsigned long)page_zone(first_page));
 	/* pages are dead and unused, undo the arch mapping */
 	mem_hotplug_begin();
 	remove_pfn_range_from_zone(page_zone(first_page), PHYS_PFN(range->start),
@@ -221,6 +229,9 @@ static int pagemap_range(struct dev_pagemap *pgmap, struct mhp_params *params,
 	}
 
 	mem_hotplug_begin();
+
+	pr_info("Trying to map range_start %ld range nr_pfn %ld\n",
+		 PHYS_PFN(range->start), PHYS_PFN(range_len(range)));
 
 	/*
 	 * For device private memory we call add_pages() as we only need to
