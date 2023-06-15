@@ -12,6 +12,7 @@
 #include <linux/mm.h>
 #include <linux/mman.h>
 #include <linux/memory-tiers.h>
+#include <linux/memory_hotplug.h>
 #include "dax-private.h"
 #include "bus.h"
 
@@ -105,6 +106,7 @@ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
 	data->mgid = rc;
 
 	for (i = 0; i < dev_dax->nr_range; i++) {
+		u64 cur_start, cur_len, remaining;
 		struct resource *res;
 		struct range range;
 
@@ -137,21 +139,42 @@ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
 		res->flags = IORESOURCE_SYSTEM_RAM;
 
 		/*
-		 * Ensure that future kexec'd kernels will not treat
-		 * this as RAM automatically.
+		 * Add memory in chunks of memory_block_size_bytes() so that
+		 * it is considered for MHP_MEMMAP_ON_MEMORY
+		 * @range has already been aligned to memory_block_size_bytes(),
+		 * so the following loop will always break it down cleanly.
 		 */
-		rc = add_memory_driver_managed(data->mgid, range.start,
-				range_len(&range), kmem_name, MHP_NID_IS_MGID);
+		cur_start = range.start;
+		cur_len = memory_block_size_bytes();
+		remaining = range_len(&range);
+		while (remaining) {
+			/*
+			 * If alignment rules are not satisified we will
+			 * fallback normal memmap allocation.
+			 */
+			mhp_t mhp_flags = MHP_NID_IS_MGID | MHP_MEMMAP_ON_MEMORY;
+			/*
+			 * Ensure that future kexec'd kernels will not treat
+			 * this as RAM automatically.
+			 */
+			rc = add_memory_driver_managed(data->mgid, cur_start,
+						       cur_len, kmem_name,
+						       mhp_flags);
 
-		if (rc) {
-			dev_warn(dev, "mapping%d: %#llx-%#llx memory add failed\n",
-					i, range.start, range.end);
-			remove_resource(res);
-			kfree(res);
-			data->res[i] = NULL;
-			if (mapped)
-				continue;
-			goto err_request_mem;
+			if (rc) {
+				dev_warn(dev,
+					 "mapping%d: %#llx-%#llx memory add failed\n",
+					 i, cur_start, cur_start + cur_len - 1);
+				remove_resource(res);
+				kfree(res);
+				data->res[i] = NULL;
+				if (mapped)
+					continue;
+				goto err_request_mem;
+			}
+
+			cur_start += cur_len;
+			remaining -= cur_len;
 		}
 		mapped++;
 	}
@@ -186,25 +209,39 @@ static void dev_dax_kmem_remove(struct dev_dax *dev_dax)
 	 * unbind will succeed even if we return failure.
 	 */
 	for (i = 0; i < dev_dax->nr_range; i++) {
+
+		u64 cur_start, cur_len, remaining;
 		struct range range;
+		bool resource_remove;
 		int rc;
 
 		rc = dax_kmem_range(dev_dax, i, &range);
 		if (rc)
 			continue;
 
-		rc = remove_memory(range.start, range_len(&range));
-		if (rc == 0) {
+		resource_remove = true;
+		cur_start = range.start;
+		cur_len = memory_block_size_bytes();
+		remaining = range_len(&range);
+		while (remaining) {
+
+			rc = remove_memory(cur_start, cur_len);
+			if (rc) {
+				resource_remove = false;
+				dev_err(dev,
+					"mapping%d: %#llx-%#llx cannot be hotremoved until the next reboot\n",
+					i, cur_start, cur_len);
+			}
+			cur_start += cur_len;
+			remaining -= cur_len;
+		}
+		if (resource_remove) {
 			remove_resource(data->res[i]);
 			kfree(data->res[i]);
 			data->res[i] = NULL;
 			success++;
-			continue;
-		}
-		any_hotremove_failed = true;
-		dev_err(dev,
-			"mapping%d: %#llx-%#llx cannot be hotremoved until the next reboot\n",
-				i, range.start, range.end);
+		} else
+			any_hotremove_failed = true;
 	}
 
 	if (success >= dev_dax->nr_range) {
