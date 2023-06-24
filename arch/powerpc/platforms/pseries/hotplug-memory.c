@@ -617,6 +617,7 @@ static int dlpar_memory_remove_by_ic(u32 lmbs_to_remove, u32 drc_index)
 
 static int dlpar_add_lmb(struct drmem_lmb *lmb)
 {
+//	mhp_t mhp_flags = MHP_NID_IS_MGID;
 	unsigned long block_sz;
 	int nid, rc;
 
