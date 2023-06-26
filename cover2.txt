@@ -1,0 +1,39 @@
+Add support for memmap on memory feature on ppc64
+
+This patch series update memmap on memory feature to fall back to
+memmap allocation outside the memory block if the alignment rules are
+not met. This makes the feature more useful on architectures like
+ppc64 where alignment rules are different with 64K page size.
+
+This patch series is dependent on dax vmemmap optimization series
+posted here
+https://lore.kernel.org/linux-mm/20230718022934.90447-1-aneesh.kumar@linux.ibm.com/
+
+Changes from v6:
+* Update comments in the code
+* Update commit message for patch 7
+
+Changes from v5:
+* Update commit message
+* Move memory alloc/free to the callers in patch 6
+* Address review feedback w.r.t patch 4
+
+Changes from v4:
+* Use altmap.free instead of altmap.reserve
+* Address review feedback
+
+Changes from v3:
+* Extend the module parameter memmap_on_memory to force allocation even
+  though we can waste hotplug memory.
+
+Changes from v2:
+* Rebase to latest linus tree
+* Redo the series based on review feedback. Multiple changes to the patchset.
+
+Changes from v1:
+* update the memblock to store vmemmap_altmap details. This is required
+so that when we remove the memory we can find the altmap details which
+is needed on some architectures.
+* rebase to latest linus tree
+
+git send-email  --thread --no-chain-reply-to --to linux-mm@kvack.org --to akpm@linux-foundation.org  --to mpe@ellerman.id.au --to linuxppc-dev@lists.ozlabs.org --to npiggin@gmail.com --to christophe.leroy@csgroup.eu --cc "Oscar Salvador <osalvador@suse.de>" --cc "David Hildenbrand <david@redhat.com>" --cc "Michal Hocko <mhocko@suse.com>" --cc "Vishal Verma <vishal.l.verma@intel.com>"  /tmp/kernel/
