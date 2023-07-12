@@ -89,7 +89,10 @@ static int set_memmap_mode(const char *val, const struct kernel_param *kp)
 		else
 			mode = MEMMAP_ON_MEMORY_DISABLE;
 	}
+	/* Avoid changing memmap mode during hotplug. */
+	get_online_mems();
 	*((int *)kp->arg) = mode;
+	put_online_mems();
 	if (mode == MEMMAP_ON_MEMORY_FORCE) {
 		unsigned long memmap_pages = memory_block_memmap_on_memory_pages();
 
@@ -110,7 +113,7 @@ static const struct kernel_param_ops memmap_mode_ops = {
 	.set = set_memmap_mode,
 	.get = get_memmap_mode,
 };
-module_param_cb(memmap_on_memory, &memmap_mode_ops, &memmap_mode, 0444);
+module_param_cb(memmap_on_memory, &memmap_mode_ops, &memmap_mode, 0644);
 MODULE_PARM_DESC(memmap_on_memory, "Enable memmap on memory for memory hotplug\n"
 		 "With value \"force\" it could result in memory wastage due "
 		 "to memmap size limitations (Y/N/force)");
@@ -2171,22 +2174,20 @@ static int __ref try_remove_memory(u64 start, u64 size)
 	 * We only support removing memory added with MHP_MEMMAP_ON_MEMORY in
 	 * the same granularity it was added - a single memory block.
 	 */
-	if (mhp_memmap_on_memory()) {
-		rc = walk_memory_blocks(start, size, &mem, test_has_altmap_cb);
-		if (rc) {
-			if (size != memory_block_size_bytes()) {
-				pr_warn("Refuse to remove %#llx - %#llx,"
-					"wrong granularity\n",
-					start, start + size);
-				return -EINVAL;
-			}
-			altmap = mem->altmap;
-			/*
-			 * Mark altmap NULL so that we can add a debug
-			 * check on memblock free.
-			 */
-			mem->altmap = NULL;
+	rc = walk_memory_blocks(start, size, &mem, test_has_altmap_cb);
+	if (rc) {
+		if (size != memory_block_size_bytes()) {
+			pr_warn("Refuse to remove %#llx - %#llx,"
+				"wrong granularity\n",
+				start, start + size);
+			return -EINVAL;
 		}
+		altmap = mem->altmap;
+		/*
+		 * Mark altmap NULL so that we can add a debug
+		 * check on memblock free.
+		 */
+		mem->altmap = NULL;
 	}
 
 	/* remove memmap entry */
