@@ -109,6 +109,7 @@ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
 		u64 cur_start, cur_len, remaining;
 		struct resource *res;
 		struct range range;
+		bool block_added;
 
 		rc = dax_kmem_range(dev_dax, i, &range);
 		if (rc)
@@ -147,6 +148,7 @@ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
 		cur_start = range.start;
 		cur_len = memory_block_size_bytes();
 		remaining = range_len(&range);
+		block_added = false;
 		while (remaining) {
 			/*
 			 * If alignment rules are not satisified we will
@@ -161,29 +163,36 @@ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
 						       cur_len, kmem_name,
 						       mhp_flags);
 
-			if (rc) {
+			if (rc)
 				dev_warn(dev,
 					 "mapping%d: %#llx-%#llx memory add failed\n",
 					 i, cur_start, cur_start + cur_len - 1);
-				remove_resource(res);
-				kfree(res);
-				data->res[i] = NULL;
-				if (mapped)
-					continue;
-				goto err_request_mem;
-			}
+			else
+				block_added = true;
 
 			cur_start += cur_len;
 			remaining -= cur_len;
 		}
-		mapped++;
+		if (!block_added) {
+			/*
+			 * None of the blocks got added, remove the resource.
+			 */
+			remove_resource(res);
+			kfree(res);
+			data->res[i] = NULL;
+		} else
+			mapped++;
+	}
+	if (mapped) {
+		dev_set_drvdata(dev, data);
+		return 0;
 	}
 
-	dev_set_drvdata(dev, data);
-
-	return 0;
-
 err_request_mem:
+	/*
+	 *  If none of the resources got mapped.
+	 *  unregister the group.
+	 */
 	memory_group_unregister(data->mgid);
 err_reg_mgid:
 	kfree(data->res_name);
