@@ -106,7 +106,7 @@ static void memory_block_release(struct device *dev)
 {
 	struct memory_block *mem = to_memory_block(dev);
 
-	kfree(mem->altmap);
+	WARN_ON(mem->altmap);
 	kfree(mem);
 }
 
@@ -751,14 +751,8 @@ static int add_memory_block(unsigned long block_id, unsigned long state,
 	mem->start_section_nr = block_id * sections_per_block;
 	mem->state = state;
 	mem->nid = NUMA_NO_NODE;
-	if (altmap) {
-		mem->altmap = kmalloc(sizeof(struct vmem_altmap), GFP_KERNEL);
-		if (!mem->altmap) {
-			kfree(mem);
-			return -ENOMEM;
-		}
-		memcpy(mem->altmap, altmap, sizeof(*altmap));
-	}
+	if (altmap)
+		mem->altmap = altmap;
 	INIT_LIST_HEAD(&mem->group_next);
 
 #ifndef CONFIG_NUMA
