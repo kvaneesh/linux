@@ -2148,7 +2148,6 @@ EXPORT_SYMBOL(try_offline_node);
 
 static int __ref try_remove_memory(u64 start, u64 size)
 {
-	int ret;
 	struct memory_block *mem;
 	int rc = 0, nid = NUMA_NO_NODE;
 	struct vmem_altmap *altmap = NULL;
@@ -2173,8 +2172,8 @@ static int __ref try_remove_memory(u64 start, u64 size)
 	 * the same granularity it was added - a single memory block.
 	 */
 	if (mhp_memmap_on_memory()) {
-		ret = walk_memory_blocks(start, size, &mem, test_has_altmap_cb);
-		if (ret) {
+		rc = walk_memory_blocks(start, size, &mem, test_has_altmap_cb);
+		if (rc) {
 			if (size != memory_block_size_bytes()) {
 				pr_warn("Refuse to remove %#llx - %#llx,"
 					"wrong granularity\n",
